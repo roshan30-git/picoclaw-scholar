@@ -31,7 +31,7 @@ func (a *Agent) Process(ctx context.Context, sender, text, mediaPath string) (st
 
 	// 3. (Mock) Call Gemini Flash API
 	// In a real implementation, this would use google.golang.org/genai
-	fmt.Printf("[AI System Prompt Log]: Using %s mode\n", mode)
+	fmt.Printf("[AI System Prompt Log]: Using %s mode. Prompt len: %d\n", mode, len(prompt))
 	
 	// Simple mock logic for now
 	if strings.Contains(strings.ToLower(text), "quiz") {
