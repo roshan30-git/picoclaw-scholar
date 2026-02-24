@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/user/studyclaw/pkg/study"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 )
 
 type QuizTool struct {

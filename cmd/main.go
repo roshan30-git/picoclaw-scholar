@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/user/studyclaw/integrations/whatsapp"
-	"github.com/user/studyclaw/integrations/gdrive"
-	"github.com/user/studyclaw/ai"
-	"github.com/user/studyclaw/database"
+	"github.com/roshan30-git/picoclaw-scholar/integrations/whatsapp"
+	"github.com/roshan30-git/picoclaw-scholar/integrations/gdrive"
+	"github.com/roshan30-git/picoclaw-scholar/ai"
+	"github.com/roshan30-git/picoclaw-scholar/database"
 )
 
 func main() {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/user/studyclaw/pkg/database"
-	"github.com/user/studyclaw/pkg/tools"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 )
 
 type QuizEngine struct {

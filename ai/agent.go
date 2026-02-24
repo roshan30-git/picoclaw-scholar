@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/studyclaw/database"
+	"github.com/roshan30-git/picoclaw-scholar/database"
 )
 
 type Agent struct {

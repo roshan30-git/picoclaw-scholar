@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/user/studyclaw/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
 )
 
 type IngestionEngine struct {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/user/studyclaw/pkg/tools"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
