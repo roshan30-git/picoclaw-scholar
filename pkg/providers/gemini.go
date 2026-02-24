@@ -70,6 +70,7 @@ func (g *GeminiProvider) Chat(
 		return nil, fmt.Errorf("gemini generate: %w", err)
 	}
 
+	var contentBuilder strings.Builder
 	var toolCalls []tools.ToolCall
 	for _, cand := range resp.Candidates {
 		if cand.Content != nil {
@@ -81,14 +82,14 @@ func (g *GeminiProvider) Chat(
 						Args: funcCall.Args,
 					})
 				} else if text, ok := part.(genai.Text); ok {
-					sb.WriteString(string(text))
+					contentBuilder.WriteString(string(text))
 				}
 			}
 		}
 	}
 
 	return &tools.LLMResponse{
-		Content:   sb.String(),
+		Content:   contentBuilder.String(),
 		ToolCalls: toolCalls,
 	}, nil
 }

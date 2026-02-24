@@ -16,6 +16,7 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"google.golang.org/protobuf/proto"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 )
 
