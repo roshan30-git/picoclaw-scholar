@@ -13,7 +13,7 @@ type DB struct {
 	conn *sql.DB
 }
 
-func InitDB(path string) (*DB, error) {
+func New(path string) (*DB, error) {
 	conn, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
@@ -65,7 +65,8 @@ func (db *DB) SaveEmbedding(noteID int64, vector []float64) error {
 }
 
 func (db *DB) GetNotesForTopic(topic string) ([]string, error) {
-	rows, err := db.conn.Query(`SELECT content FROM notes WHERE topic = ? LIMIT 10`, topic)
+	query := "%" + topic + "%"
+	rows, err := db.conn.Query(`SELECT content FROM notes WHERE topic LIKE ? OR content LIKE ? LIMIT 10`, query, query)
 	if err != nil {
 		return nil, err
 	}

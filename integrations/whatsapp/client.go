@@ -5,8 +5,10 @@ package whatsapp
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
+	"regexp"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -14,23 +16,18 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"go.mau.fi/whatsmeow/proto/waE2E"
-	"google.golang.org/protobuf/proto"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 )
 
-// MessageHandler is the callback signature for incoming WhatsApp messages.
-// The StudyClaw agent loop receives (sender, text, mediaPath) and calls Gemini.
-type MessageHandler func(sender, text, mediaPath string)
-
-// Client wraps a whatsmeow.Client and routes events to StudyClaw.
+// Client wraps a whatsmeow.Client and routes events to StudyClaw via MassageBus.
 type Client struct {
-	wac     *whatsmeow.Client
-	handler MessageHandler
+	wac *whatsmeow.Client
+	bus *bus.MessageBus
 }
 
 // New creates and connects a new WhatsApp client.
 // sessionPath: where to persist the login session (so QR scan is only needed once).
-func New(sessionPath string, handler MessageHandler) (*Client, error) {
+func New(sessionPath string, msgBus *bus.MessageBus) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	// Open the SQLite session store
@@ -45,7 +42,7 @@ func New(sessionPath string, handler MessageHandler) (*Client, error) {
 	}
 
 	wac := whatsmeow.NewClient(deviceStore, logger)
-	c := &Client{wac: wac, handler: handler}
+	c := &Client{wac: wac, bus: msgBus}
 	wac.AddEventHandler(c.handleEvent)
 
 	// If not logged in, show QR code in terminal (user scans once)
@@ -83,24 +80,61 @@ func (c *Client) handleEvent(evt interface{}) {
 		}
 
 		sender := v.Info.Sender.String()
+		chatID := v.Info.Chat.String()
 		mediaPath := "" // TODO: media download in Phase 1 Week 2
 
 		if text != "" || mediaPath != "" {
-			c.handler(sender, text, mediaPath)
+			c.bus.Publish(bus.InboundMessage{
+				From:    sender,
+				ChatID:  chatID,
+				Content: text,
+				Channel: "whatsapp",
+			})
 		}
 	}
 }
 
+func (c *Client) Name() string { return "whatsapp" }
+
+func (c *Client) Start(ctx context.Context) error {
+	if !c.wac.IsConnected() {
+		return c.wac.Connect()
+	}
+	return nil
+}
+
+func (c *Client) Stop(ctx context.Context) error {
+	c.Disconnect()
+	return nil
+}
+
+func (c *Client) IsRunning() bool {
+	return c.wac.IsConnected()
+}
+
+var diagramRegex = regexp.MustCompile("(?s)```mermaid(.*?)```")
+
 // Send delivers a text message to a WhatsApp JID (contact or group).
-func (c *Client) Send(to, message string) error {
-	jid, err := parseJID(to)
+func (c *Client) Send(ctx context.Context, msg bus.OutboundMessage) error {
+	jid, err := parseJID(msg.ChatID)
 	if err != nil {
 		return err
 	}
-	msg := &waE2E.Message{
-		Conversation: proto.String(message),
+
+	content := msg.Content
+	matches := diagramRegex.FindAllStringSubmatch(content, -1)
+	if len(matches) > 0 {
+		for _, match := range matches {
+			mermaidCode := match[1]
+			b64 := base64.StdEncoding.EncodeToString([]byte(mermaidCode))
+			content += fmt.Sprintf("\n\n📊 View Diagram: http://127.0.0.1:8080/?d=%s", b64)
+		}
 	}
-	_, err = c.wac.SendMessage(context.Background(), jid, msg)
+
+	e2eMsg := &waE2E.Message{
+		Conversation: proto.String(content),
+	}
+	_, err = c.wac.SendMessage(ctx, jid, e2eMsg)
 	return err
 }
 

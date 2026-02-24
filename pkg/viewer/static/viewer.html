@@ -77,16 +77,18 @@
 
         async function renderDiagram() {
             const params = new URLSearchParams(window.location.search);
-            const encoded = params.get('code');
+            const encoded = params.get('d') || params.get('code');
             const container = document.getElementById('diagram');
 
             if (!encoded) {
-                container.innerHTML = '<p class="empty-state">No diagram code provided. Use ?code=BASE64_ENCODED_MERMAID</p>';
+                container.innerHTML = '<p class="empty-state">No diagram code provided. Use ?d=BASE64_ENCODED_MERMAID</p>';
                 return;
             }
 
             try {
-                const decoded = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
+                // Handle standard and URL-safe base64
+                const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+                const decoded = atob(normalized);
                 const { svg } = await mermaid.render('mermaid-svg', decoded);
                 container.innerHTML = svg;
 
