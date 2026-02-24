@@ -3,7 +3,7 @@ module github.com/roshan30-git/picoclaw-scholar
 go 1.21
 
 require (
-	go.mau.fi/whatsmeow v0.0.0-20240101000000-000000000000
+	go.mau.fi/whatsmeow latest
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/google/generative-ai-go v0.11.0
