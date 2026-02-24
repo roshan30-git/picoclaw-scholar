@@ -5,6 +5,7 @@ package gdrive
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -150,16 +151,20 @@ func loadToken(path string) (*oauth2.Token, error) {
 	}
 	defer f.Close()
 	token := &oauth2.Token{}
-	if err := newJSONDecoder(f).Decode(token); err != nil {
+	if err := json.NewDecoder(f).Decode(token); err != nil {
 		return nil, err
 	}
 	return token, nil
 }
 
 func saveToken(path string, token *oauth2.Token) {
-	f, _ := os.Create(path)
+	f, err := os.Create(path)
+	if err != nil {
+		fmt.Printf("Warning: Unable to cache oauth token: %v\n", err)
+		return
+	}
 	defer f.Close()
-	newJSONEncoder(f).Encode(token)
+	json.NewEncoder(f).Encode(token)
 }
 
 func getTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
@@ -176,14 +181,4 @@ func expandHome(path string) string {
 		return filepath.Join(home, path[2:])
 	}
 	return path
-}
-
-// newJSONDecoder / newJSONEncoder are thin wrappers to avoid importing encoding/json at top level.
-func newJSONDecoder(r io.Reader) interface{ Decode(v any) error } {
-	import_json_decoder, _ := r.(interface{ Decode(v any) error })
-	return import_json_decoder
-}
-func newJSONEncoder(w io.Writer) interface{ Encode(v any) error } {
-	import_json_encoder, _ := w.(interface{ Encode(v any) error })
-	return import_json_encoder
 }

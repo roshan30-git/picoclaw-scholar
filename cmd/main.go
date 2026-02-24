@@ -11,13 +11,19 @@ import (
 	"github.com/user/studyclaw/integrations/whatsapp"
 	"github.com/user/studyclaw/integrations/gdrive"
 	"github.com/user/studyclaw/ai"
+	"github.com/user/studyclaw/config"
 	"github.com/user/studyclaw/database"
 )
 
 func main() {
 	fmt.Println("🦞 PicoClaw: Scholar Edition — Initializing...")
 
-	// 1. Load config (minimal impl for now)
+	// 1. Load config
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
 	ctx := context.Background()
 	
 	// 2. Initialize Database
@@ -28,7 +34,7 @@ func main() {
 	defer db.Close()
 
 	// 3. Initialize AI Agent
-	agent, err := ai.NewAgent(db)
+	agent, err := ai.NewAgent(db, cfg.Gemini.APIKey)
 	if err != nil {
 		log.Fatalf("Failed to init AI agent: %v", err)
 	}

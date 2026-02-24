@@ -5,17 +5,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"google.golang.org/genai"
 	"github.com/user/studyclaw/database"
 )
 
 type Agent struct {
-	db *database.DB
+	db     *database.DB
+	apiKey string
 }
 
-func NewAgent(db *database.DB) (*Agent, error) {
-	return &Agent{db: db}, nil
+func NewAgent(db *database.DB, apiKey string) (*Agent, error) {
+	return &Agent{db: db, apiKey: apiKey}, nil
 }
 
 // Process handles an incoming message and returns a personalized AI response.
@@ -29,16 +30,33 @@ func (a *Agent) Process(ctx context.Context, sender, text, mediaPath string) (st
 		return "", err
 	}
 
-	// 3. (Mock) Call Gemini Flash API
-	// In a real implementation, this would use google.golang.org/genai
-	fmt.Printf("[AI System Prompt Log]: Using %s mode\n", mode)
-	
-	// Simple mock logic for now
-	if strings.Contains(strings.ToLower(text), "quiz") {
-		return "📝 Ready for your daily drill? Here's a question based on your 'Circuit Theory' notes from yesterday: What is the primary difference between a mesh and a loop?", nil
+	// 3. Call Gemini Flash API
+	if a.apiKey == "" {
+		return "⚠️ API Key not found. Please add 'gemini.api_key' to ~/.studyclaw/config.json", nil
 	}
 
-	return "🦞 StudyClaw here! I've indexed your latest notes. Feeling ready for next week's Mock Exam?", nil
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: a.apiKey})
+	if err != nil {
+		return "", fmt.Errorf("genai client: %w", err)
+	}
+
+	// Combine system prompt + user message
+	fullPrompt := prompt + "\n\nUser: " + text
+	// If mediaPath is present, we would add it here (TODO)
+
+	resp, err := client.Models.GenerateContent(ctx, "gemini-1.5-flash", genai.Text(fullPrompt), nil)
+	if err != nil {
+		return "", fmt.Errorf("generate content: %w", err)
+	}
+
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+		return "⚠️ No response from Gemini.", nil
+	}
+
+	// Extract text response
+	// Assuming Part is of type Text
+	part := resp.Candidates[0].Content.Parts[0]
+	return part.Text, nil
 }
 
 func (a *Agent) determineMode() string {
@@ -54,6 +72,10 @@ func (a *Agent) buildPrompt(mode string) (string, error) {
 	// Fallback to local project path if not in home
 	if _, err := os.Stat(basePath); os.IsNotExist(err) {
 		basePath = "workspace/PROMPTS/base_soul.md"
+		// Check if we are running from a subdirectory (e.g. tests)
+		if _, err := os.Stat(basePath); os.IsNotExist(err) {
+			basePath = "../workspace/PROMPTS/base_soul.md"
+		}
 	}
 
 	base, err := os.ReadFile(basePath)

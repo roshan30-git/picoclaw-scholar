@@ -3,9 +3,6 @@ package pdf
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
 )
 
 // SyllabusProcessor handles the extraction of topics from university syllabus PDFs.

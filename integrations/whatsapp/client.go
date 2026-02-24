@@ -9,9 +9,12 @@ import (
 	"os"
 
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
+	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
+	"google.golang.org/protobuf/proto"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -31,12 +34,12 @@ func New(sessionPath string, handler MessageHandler) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	// Open the SQLite session store
-	container, err := sqlstore.New("sqlite3", sessionPath, logger)
+	container, err := sqlstore.New(context.Background(), "sqlite3", sessionPath, logger)
 	if err != nil {
 		return nil, fmt.Errorf("sqlstore: %w", err)
 	}
 
-	deviceStore, err := container.GetFirstDevice()
+	deviceStore, err := container.GetFirstDevice(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("get device: %w", err)
 	}
@@ -94,7 +97,8 @@ func (c *Client) Send(to, message string) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.wac.SendMessage(context.Background(), jid, c.wac.BuildTextMessage(message))
+	msg := &waE2E.Message{Conversation: proto.String(message)}
+	_, err = c.wac.SendMessage(context.Background(), jid, msg)
 	return err
 }
 
@@ -103,9 +107,9 @@ func (c *Client) Disconnect() {
 	c.wac.Disconnect()
 }
 
-func parseJID(s string) (whatsmeow.JID, error) {
+func parseJID(s string) (types.JID, error) {
 	// Simple parser — extend if needed for group JIDs
-	return whatsmeow.ParseJID(s)
+	return types.ParseJID(s)
 }
 
 // GetOwnerEnv reads the owner phone number from environment or config.
