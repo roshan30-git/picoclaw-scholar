@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func runSetup() {
+func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Println("🦞 StudyClaw Setup Wizard")
