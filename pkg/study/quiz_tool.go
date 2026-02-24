@@ -1,17 +1,17 @@
-package tools
+package study
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 )
 
 type QuizTool struct {
-	engine *study.QuizEngine
+	engine *QuizEngine
 }
 
-func NewQuizTool(engine *study.QuizEngine) *QuizTool {
+func NewQuizTool(engine *QuizEngine) *QuizTool {
 	return &QuizTool{engine: engine}
 }
 
@@ -35,10 +35,10 @@ func (t *QuizTool) Parameters() map[string]any {
 	}
 }
 
-func (t *QuizTool) Execute(ctx context.Context, params map[string]any) *ToolResult {
+func (t *QuizTool) Execute(ctx context.Context, params map[string]any) *tools.ToolResult {
 	topic, ok := params["topic"].(string)
 	if !ok || topic == "" {
-		return ErrorResult("topic parameter is required")
+		return tools.ErrorResult("topic parameter is required")
 	}
 
 	numQ := 5
@@ -48,8 +48,8 @@ func (t *QuizTool) Execute(ctx context.Context, params map[string]any) *ToolResu
 
 	quiz, err := t.engine.GenerateQuiz(ctx, topic, numQ)
 	if err != nil {
-		return ErrorResult(fmt.Sprintf("Quiz generation failed: %v", err))
+		return tools.ErrorResult(fmt.Sprintf("Quiz generation failed: %v", err))
 	}
 
-	return SuccessResult(quiz, fmt.Sprintf("🎯 Quiz on '%s' generated!", topic))
+	return tools.SuccessResult(quiz, fmt.Sprintf("🎯 Quiz on '%s' generated!", topic))
 }

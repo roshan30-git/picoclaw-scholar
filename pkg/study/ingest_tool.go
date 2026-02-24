@@ -1,17 +1,17 @@
-package tools
+package study
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 )
 
 type IngestTool struct {
-	engine *study.IngestionEngine
+	engine *IngestionEngine
 }
 
-func NewIngestTool(engine *study.IngestionEngine) *IngestTool {
+func NewIngestTool(engine *IngestionEngine) *IngestTool {
 	return &IngestTool{engine: engine}
 }
 
@@ -31,15 +31,15 @@ func (t *IngestTool) Parameters() map[string]any {
 	}
 }
 
-func (t *IngestTool) Execute(ctx context.Context, params map[string]any) *ToolResult {
+func (t *IngestTool) Execute(ctx context.Context, params map[string]any) *tools.ToolResult {
 	filePath, ok := params["file_path"].(string)
 	if !ok || filePath == "" {
-		return ErrorResult("file_path parameter is required")
+		return tools.ErrorResult("file_path parameter is required")
 	}
 
 	extracted, err := t.engine.ProcessPDF(filePath)
 	if err != nil {
-		return ErrorResult(fmt.Sprintf("Failed to process PDF: %v", err))
+		return tools.ErrorResult(fmt.Sprintf("Failed to process PDF: %v", err))
 	}
 
 	preview := extracted
@@ -47,7 +47,7 @@ func (t *IngestTool) Execute(ctx context.Context, params map[string]any) *ToolRe
 		preview = preview[:500] + "..."
 	}
 
-	return SuccessResult(
+	return tools.SuccessResult(
 		fmt.Sprintf("PDF ingested successfully. Extracted %d characters. Preview:\n%s", len(extracted), preview),
 		fmt.Sprintf("📥 PDF ingested: %s (%d chars extracted)", filePath, len(extracted)),
 	)

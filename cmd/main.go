@@ -55,8 +55,8 @@ func main() {
 	// Initialize Agent loop
 	if provider != nil {
 		agentLoop := agent.NewAgentLoop(config.DefaultConfig(), msgBus, provider)
-		agentLoop.RegisterTool(tools.NewQuizTool(study.NewQuizEngine(provider, db)))
-		agentLoop.RegisterTool(tools.NewIngestTool(study.NewIngestionEngine(db)))
+		agentLoop.RegisterTool(study.NewQuizTool(study.NewQuizEngine(provider, db)))
+		agentLoop.RegisterTool(study.NewIngestTool(study.NewIngestionEngine(db)))
 		agentLoop.SetChannelManager(chMgr)
 		go agentLoop.Run(ctx)
 		fmt.Println("🤖 Agent Loop initialized.")
