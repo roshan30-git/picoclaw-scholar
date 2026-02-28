@@ -567,6 +567,108 @@
         </div>
     </section>
 
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+    <section class="py-24 relative overflow-hidden" id="troubleshooting">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <span
+                    class="font-mono text-amber-500 text-xs font-bold uppercase tracking-widest border border-amber-500/20 bg-amber-500/5 px-3 py-1 rounded-full">Troubleshooting</span>
+                <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Common Errors & Solutions</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">Encountering issues? Here are the
+                    most common hurdles when setting up StudyClaw on Termux.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <!-- Error 1 -->
+                <div class="glass-card p-6 rounded-xl border border-slate-700">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                            <span class="material-symbols-outlined text-red-500">error</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-lg">Command Not Found: go</h3>
+                            <p class="text-xs text-slate-500 font-mono mt-1">Error: bash: go: command not found</p>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            You haven't installed the Go compiler yet. Run: <br />
+                            <code class="text-primary font-mono text-xs select-all">$ pkg install golang -y</code>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Error 2 -->
+                <div class="glass-card p-6 rounded-xl border border-slate-700">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                            <span class="material-symbols-outlined text-red-500">key</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-lg">Invalid API Key (401)</h3>
+                            <p class="text-xs text-slate-500 font-mono mt-1">Error: 401 Unauthorized / Invalid API Key
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Ensure you've exported your key correctly in the same session: <br />
+                            <code
+                                class="text-primary font-mono text-xs select-all">$ export GEMINI_API_KEY="YOUR_ACTUAL_KEY"</code>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Error 3 -->
+                <div class="glass-card p-6 rounded-xl border border-slate-700">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                            <span class="material-symbols-outlined text-red-500">qr_code_2</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-lg">QR Code Not Printing</h3>
+                            <p class="text-xs text-slate-500 font-mono mt-1">Issue: Terminal dimensions or missing fonts
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Pinch-to-zoom out in Termux to increase terminal width. If it still fails, try running via
+                            SSH on a PC to scan the code.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Error 4 -->
+                <div class="glass-card p-6 rounded-xl border border-slate-700">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                            <span class="material-symbols-outlined text-red-500">sync_problem</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-lg">Go Mod Tidy Errors</h3>
+                            <p class="text-xs text-slate-500 font-mono mt-1">Error: connection refused or checksum
+                                mismatch</p>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            This usually happens due to a slow internet connection. Try disabling your VPN or switching
+                            from mobile data to Wi-Fi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <p class="text-slate-500 text-sm">Still having issues? <a
+                        href="https://github.com/roshan30-git/picoclaw-scholar/issues" target="_blank"
+                        class="text-primary hover:underline">Open an issue on GitHub</a></p>
+            </div>
+        </div>
+    </section>
+
     <footer class="border-t border-slate-800/50 pt-16 pb-12 text-slate-300 bg-[#0B1120]/60 backdrop-blur-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col items-center text-center">
