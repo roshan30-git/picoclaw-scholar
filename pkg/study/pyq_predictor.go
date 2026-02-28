@@ -17,9 +17,9 @@ func NewPYQPredictor(provider tools.LLMProvider) *PYQPredictor {
 
 // PredictQuestions uses a reasoning model (gemini-2.5-pro) to analyze past questions and predict likely exam topics.
 func (p *PYQPredictor) PredictQuestions(ctx context.Context, subject string) (string, error) {
-	prompt := fmt.Sprintf(`As an Exam Strategy AI, analyze the structural frequency of past 10 years papers for the subject: '%s'.
-Predict the top 5 most likely exam conceptual topics that will appear in the upcoming test. 
-Provide a percentage probability for each topic and a brief justification based on cyclical appearance.`, subject)
+	prompt := fmt.Sprintf(`As an Exam Strategy AI, analyze the structural frequency of past 5 years papers for the subject: '%s'.
+Focus heavily on the current/new syllabus format. Predict the top 5 most likely exam conceptual topics that will appear in the upcoming test. 
+Provide a percentage probability for each topic and a brief justification based on recent patterns. Keep it concise to save context window tokens.`, subject)
 
 	msg := []tools.Message{{Role: "user", Content: prompt}}
 	

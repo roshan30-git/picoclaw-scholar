@@ -1,93 +1,172 @@
 <div align="center">
-  <h1>🦞 PicoClaw: Scholar Edition</h1>
-  <h3>A lightweight, WhatsApp/Telegram-native AI study agent that passively indexes your notes and proactively drills you based on real academic context.</h3>
-
+  <h1>🦞 StudyClaw</h1>
+  <h3>Your autonomous AI study companion — lives in WhatsApp, runs on your Android phone.</h3>
+  <br/>
   <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white">
-  <img src="https://img.shields.io/badge/RAM-50MB--target-brightgreen">
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Termux-orange">
+  <img src="https://img.shields.io/badge/AI-Gemini%202.0%20Flash%20Lite-blue?logo=google">
+  <img src="https://img.shields.io/badge/DB-SQLite-003B57?logo=sqlite">
+  <img src="https://img.shields.io/badge/RAM-~30MB-brightgreen">
   <img src="https://img.shields.io/badge/license-MIT-green">
-  <img src="https://img.shields.io/badge/Powered_by-Gemini_Flash-blue?logo=google">
 </div>
 
 ---
 
-> **StudyClaw** is a fork of [PicoClaw](https://github.com/sipeed/picoclaw) — purpose-built for students. It runs on your $30 Android phone via Termux and turns your WhatsApp/Telegram study group into an autonomous AI mentor.
+> **StudyClaw** is a Go-based agentic AI bot that runs directly on your Android phone via [Termux](https://termux.dev). It connects to WhatsApp, listens for PDFs and study messages, indexes them into a local SQLite database, and proactively sends you quizzes, diagrams, and summaries — powered entirely by the **Gemini free tier**.
 
-## ✨ Features (MVP — Phase 1)
+---
+
+## ✨ Features
 
 | Feature | Description |
-|---------|-------------|
-| 📥 **Passive Note Indexing** | Listens to your WhatsApp study group. Auto-detects PDFs & images. Uses Gemini OCR to store notes locally in SQLite. |
-| 🎯 **Proactive Daily Quizzes** | Sends 3–5 MCQs at 8 PM every day, weighted by your university PYQs. |
-| 📅 **Calendar-Aware Mode** | Switches to Exam Mode 14 days before finals. Relaxes to Festival Mode on holidays. |
-| 📊 **Telegram Diagram Viewer** | Opens interactive diagrams (circuits, flowcharts, graphs) via Telegram Mini App. |
-| ☁️ **Google Drive Library** | Syncs your textbooks and lecture slides from a shared Drive folder auto-matically. |
-| 🤖 **Single-Call Intelligence** | All personas (Peer, Drill Sergeant, Librarian) are handled in **one Gemini call** via dynamic prompt overlays — no multi-agent overhead. |
+|:--------|:------------|
+| 📥 **PDF Indexing** | Send any PDF to the bot. It extracts text and stores it in a local knowledge base. |
+| 🎯 **AI Quizzes** | Ask for a quiz and get 3–5 MCQs drawn from your own notes via Gemini. |
+| 📊 **Diagram Viewer** | If the AI generates a Mermaid diagram, a local `http://127.0.0.1:8080` link is sent so you can view it in your browser with full pan/zoom. |
+| 💬 **Persistent Memory** | The agent remembers your last 20 messages per session — no more repeating yourself. |
+| ☁️ **Google Drive** | Optionally links your Drive folder to auto-sync lecture notes. |
+| 🤖 **Native Tool Calling** | Uses Gemini's native function calling to autonomously decide when to generate quizzes or index new documents. |
+
+---
 
 ## 🏗️ Architecture
 
 ```
-PicoClaw Gateway (Go, <15MB RAM)
-├── channels/
-│   ├── whatsapp/   ← whatsmeow (message events, group indexing)
-│   └── telegram/   ← go-telegram-bot-api (Mini App diagrams)
+studyclaw/
+├── cmd/
+│   ├── main.go          ← Entry point (start here)
+│   └── setup.go         ← Interactive setup wizard
 ├── integrations/
-│   └── gdrive/     ← Google Drive (books, lecture slides)
-├── media/
-│   ├── pdf/        ← pdfcpu (text extraction)
-│   ├── ocr/        ← Tesseract via Termux exec
-│   └── diagram/    ← Mermaid → Telegram Mini App
-├── ai/
-│   └── gemini.go   ← Gemini 1.5 Flash (BYOK, <300K tokens/day)
-├── database/
-│   ├── sqlite.go
-│   └── vector.go   ← sqlite-vec for local RAG
-├── scheduler/
-│   └── cron.go     ← robfig/cron (daily quiz, exam countdown)
+│   ├── whatsapp/        ← whatsmeow-based channel (Channel interface)
+│   └── gdrive/          ← Google Drive OAuth2 sync
+├── pkg/
+│   ├── agent/           ← Agent loop (session memory + tool routing)
+│   ├── bus/             ← In-process message bus (pub/sub)
+│   ├── channels/        ← Channel interface + Manager + Telegram stub
+│   ├── config/          ← Config struct and defaults
+│   ├── database/        ← SQLite: notes, embeddings, quiz history
+│   ├── providers/       ← Gemini 2.0 provider (rate-limited, retry on 429)
+│   ├── study/           ← Quiz engine, Ingest engine, tools
+│   ├── tools/           ← Tool interface, types, ToolResult
+│   └── viewer/          ← Local HTTP server + viewer.html for diagrams
 └── workspace/
-    ├── PROMPTS/    ← base_soul.md + mode overlays
-    └── MEMORY/     ← syllabus, calendar, notes
+    └── PROMPTS/         ← Persona files (base_soul, drill_sergeant, etc.)
 ```
+
+---
 
 ## 🚀 Quick Start (Termux on Android)
 
+### Prerequisites
 ```bash
-# 1. Install Termux from F-Droid, then:
-pkg install golang git
+# In Termux:
+pkg update && pkg upgrade -y
+pkg install golang git clang -y
+```
 
-# 2. Clone this repo
+### Install & Run
+```bash
+# 1. Clone the repo
 git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar
 
-# 3. Setup Dependencies
+# 2. Fetch all Go dependencies
 go mod tidy
 
-# 4. Interactive Setup Wizard
-go run cmd/setup.go
-# (This will ask for your Gemini API key and WhatsApp number to create config.json)
+# 3. Set your Gemini API key (get one free at aistudio.google.com)
+export GEMINI_API_KEY="your_api_key_here"
 
-# 5. Run & Link WhatsApp
+# 4. Run the bot
 go run cmd/main.go
 ```
 
-Get a free Gemini API key at [aistudio.google.com](https://aistudio.google.com/app/apikey) (1M tokens/day free).
+> On first run, a **QR code** will appear in your terminal. Open WhatsApp → Linked Devices → Scan QR code.
 
-## 📊 Resource Usage
+---
+
+## 🔑 Getting Your Free Gemini API Key
+
+1. Visit [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click **"Create API Key"**
+4. Copy the key and set it: `export GEMINI_API_KEY="your_key"`
+
+**No credit card required for the free tier.**
+
+---
+
+## 📊 Free Tier Model Limits (Feb 2026)
+
+StudyClaw uses **`gemini-2.0-flash-lite`** by default — the most generous free model.
+
+| Model | RPM | RPD | Used For |
+|:------|:---:|:---:|:---------|
+| `gemini-2.0-flash-lite` ✅ | 15 | **1,000** | Default chat & replies |
+| `gemini-2.5-flash` ✅ | 10 | 250 | Quiz generation |
+| `gemini-3-pro` / `gemini-3.1-pro` ❌ | — | — | **Not available via free API key** |
+| Thinking models ❌ | — | — | **Not available via free API key** |
+
+A built-in **token-bucket rate limiter** (12 RPM headroom) prevents 429 errors, with automatic retry.
+
+---
+
+## 💬 Example Usage
+
+After linking WhatsApp, send these messages to the bot:
+
+| Message | Response |
+|:--------|:---------|
+| `Hi` | Introduces itself and its capabilities |
+| `Summarize my thermodynamics notes` | Retrieves and summarizes relevant notes from the DB |
+| `Quiz me on Circuit Theory` | Sends 3–5 MCQ questions |
+| `Show a diagram of the OSI model` | Replies with a Mermaid diagram + viewer link |
+| (Send a PDF) | Bot indexes the PDF into the local knowledge base |
+
+---
+
+## ⚙️ Configuration
+
+The optional `config.json` is auto-generated by the setup wizard (`go run cmd/setup.go`), or you can create it manually:
+
+```json
+{
+  "gemini_api_key": "your_key_here",
+  "owner_jid": "919876543210@s.whatsapp.net",
+  "model_name": "gemini-2.0-flash-lite",
+  "db_path": "studyclaw.db",
+  "session_path": "whatsapp_session.db"
+}
+```
+
+Alternatively, just set environment variables and skip the config file:
+```bash
+export GEMINI_API_KEY="your_key"
+export STUDYCLAW_OWNER_NUMBER="91XXXXXXXXXX"
+```
+
+---
+
+## 📦 Resource Usage
 
 | Component | RAM |
-|-----------|-----|
-| Go binary (StudyClaw) | ~15–30 MB |
-| SQLite + sqlite-vec | ~5–20 MB |
-| Tesseract (on-demand) | ~50 MB peak |
-| **Total resident** | **~50 MB** |
+|:----------|:----|
+| Go binary | ~15–30 MB |
+| SQLite database | ~5–20 MB |
+| **Total** | **~30–50 MB** |
 
-Runs comfortably on **4 GB RAM** phones. Recommended: **6–8 GB** for smooth concurrent indexing.
+Runs comfortably on any phone with **4 GB+ RAM**.
+
+---
 
 ## 🗺️ Roadmap
 
-- [x] Phase 1: WhatsApp bridge, note indexing, daily quizzes
-- [ ] Phase 2: GTU PYQ scraper, Telegram Mini App diagrams, Google Drive sync
-- [ ] Phase 3: Handwriting OCR, multi-persona prompt routing, launch
+- [x] Phase 1: WhatsApp bridge, PDF indexing, daily quizzes, agent loop
+- [x] Phase 2: Gemini native tool calling, diagram viewer, Google Drive sync
+- [x] Phase 3: Rate-limit protection, free-tier model optimization, clean architecture
+- [ ] Phase 4: GTU PYQ predictor, Telegram Mini App, Handwriting OCR
+- [ ] Phase 5: Exam countdown alerts, multi-user group support
+
+---
 
 ## 📄 License
 
