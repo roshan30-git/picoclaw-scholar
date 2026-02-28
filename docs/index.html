@@ -1,422 +1,414 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>StudyClaw - Technical Infrastructure Edition</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-<script>
+<html lang="en" class="dark scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyClaw — The AI That Actually Studies</title>
+    <meta name="description"
+        content="StudyClaw is an open-source AI study engine for engineering students. Connect your university syllabus, extract PDFs, generate quizzes, and predict exams.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <script>
         tailwind.config = {
-            darkMode: "class",
+            darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        primary: "#10B981", // Muted Emerald
-                        "primary-hover": "#059669",
-                        "background-light": "#F3F4F6", // Light grey for light mode (fallback)
-                        "background-dark": "#111111", // Deep Charcoal
-                        "surface-dark": "#1A1A1A", // Solid card background
-                        "border-dark": "#333333", // Dark gray borders
-                        "text-muted": "#9CA3AF",
-                    },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                        heading: ['Geist', 'sans-serif'],
                         mono: ['JetBrains Mono', 'monospace'],
                     },
-                    borderRadius: {
-                        DEFAULT: "4px",
-                        'sm': '2px',
-                        'md': '6px',
-                        'lg': '8px',
-                    },
-                    boxShadow: {
-                        'technical': '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
+                    colors: {
+                        background: '#0a0a0a', /* Deep jet black */
+                        surface: '#121212', /* Slightly raised card color */
+                        border: '#27272a', /* zinc-800 */
+                        primary: '#ef4444', /* Crimson lobster red */
+                        muted: '#a1a1aa', /* zinc-400 */
                     }
-                },
-            },
-        };
+                }
+            }
+        }
     </script>
-<style>::-webkit-scrollbar {
-            width: 8px;
+    <style>
+        body {
+            background-color: theme('colors.background');
+            color: #f4f4f5;
         }
-        ::-webkit-scrollbar-track {
-            background: #111; 
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: theme('fontFamily.heading');
+            letter-spacing: -0.02em;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #333; 
-            border-radius: 4px;
+
+        /* Deep space red ambient glow from Option 1 */
+        .ambient-glow {
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, rgba(0, 0, 0, 0) 65%);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #444; 
+
+        /* Bento grid structural styles from Option 2 */
+        .bento-card {
+            background: linear-gradient(145deg, #151515 0%, #0a0a0a 100%);
+            border: 1px solid theme('colors.border');
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .code-block {
-            counter-reset: line;
+
+        .bento-card:hover {
+            border-color: #ef444460;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.1);
         }
-        .code-line::before {
-            counter-increment: line;
-            content: counter(line);
-            display: inline-block;
-            width: 2em;
-            margin-right: 1em;
-            color: #4B5563;
-            text-align: right;
-            font-size: 0.8em;
+
+        /* Glassmorphism overlays from Option 3 */
+        .glass-nav {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        /* Outline Icons mapping */
+        .icon-stroke {
+            stroke: theme('colors.primary');
+            stroke-width: 1.5;
+            fill: none;
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 font-sans antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white">
-<nav class="border-b border-gray-200 dark:border-border-dark bg-white dark:bg-background-dark sticky top-0 z-50">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex justify-between h-16 items-center">
-<div class="flex items-center gap-3">
-<span class="material-icons-outlined text-primary text-2xl">terminal</span>
-<span class="font-bold text-xl tracking-tight">StudyClaw</span>
-<span class="hidden sm:inline-block px-2 py-0.5 rounded text-xs font-mono bg-gray-100 dark:bg-surface-dark border border-gray-300 dark:border-border-dark text-gray-500 dark:text-gray-400">v2.0.4-stable</span>
-</div>
-<div class="hidden md:flex space-x-8">
-<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Documentation</a>
-<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Resources</a>
-<a class="text-sm font-medium hover:text-primary transition-colors" href="#">API</a>
-<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Blog</a>
-</div>
-<div class="flex items-center space-x-4">
-<a class="hidden sm:block text-sm font-medium hover:text-primary transition-colors font-mono" href="#">Star on GitHub</a>
-<a class="bg-surface-dark dark:bg-surface-dark border border-border-dark hover:border-primary text-white px-4 py-2 rounded text-sm font-medium transition-all flex items-center gap-2 group" href="#">
-<span>Console</span>
-<span class="material-icons-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
-</a>
-</div>
-</div>
-</div>
-</nav>
-<section class="relative pt-20 pb-24 overflow-hidden">
-<div class="absolute inset-0 z-0 opacity-[0.03]" style="background-image: radial-gradient(#9CA3AF 1px, transparent 1px); background-size: 24px 24px;"></div>
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-<div class="grid lg:grid-cols-2 gap-12 items-center">
-<div class="space-y-8">
-<div class="inline-flex items-center space-x-2 border border-gray-300 dark:border-border-dark rounded bg-white dark:bg-surface-dark px-3 py-1">
-<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-<span class="text-xs font-mono text-gray-600 dark:text-gray-400">GEMINI_1.5_PRO_INTEGRATION_ACTIVE</span>
-</div>
-<h1 class="text-5xl sm:text-6xl font-bold tracking-tight leading-tight">
-                        AI-Native Study <br/>
-<span class="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Infrastructure</span> <br/>
-                        for Engineering.
-                    </h1>
-<p class="text-lg text-gray-600 dark:text-gray-400 max-w-xl leading-relaxed">
-                        Study smarter with direct Gemini AI integration. No new GUI to learn. Just a powerful command-line interface for your syllabus, directly in your chat workflow.
-                    </p>
-<div class="flex flex-col sm:flex-row gap-4 pt-2">
-<a class="flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded text-white bg-primary hover:bg-primary-hover transition-all shadow-technical" href="#">
-<span class="material-icons-outlined mr-2 text-lg">bolt</span>
-                            Initialize Instance
-                        </a>
-<a class="flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-border-dark text-base font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-opacity-80 transition-all font-mono" href="#">
-                            $ npm install studyclaw
-                        </a>
-</div>
-<div class="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-500 font-mono pt-4">
-<span class="flex items-center"><span class="material-icons-outlined text-sm mr-1">check</span> Open Source</span>
-<span class="flex items-center"><span class="material-icons-outlined text-sm mr-1">check</span> End-to-End Encrypted</span>
-<span class="flex items-center"><span class="material-icons-outlined text-sm mr-1">check</span> Low Latency</span>
-</div>
-</div>
-<div class="relative w-full">
-<div class="absolute -inset-1 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg blur opacity-20 dark:opacity-40"></div>
-<div class="relative bg-gray-900 dark:bg-[#0d0d0d] rounded-lg border border-gray-300 dark:border-border-dark shadow-2xl overflow-hidden font-mono text-sm">
-<div class="bg-gray-100 dark:bg-[#1a1a1a] px-4 py-2 flex items-center justify-between border-b border-gray-300 dark:border-border-dark">
-<div class="flex items-center space-x-2">
-<div class="w-3 h-3 rounded-full bg-red-500"></div>
-<div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-<div class="w-3 h-3 rounded-full bg-green-500"></div>
-</div>
-<div class="text-gray-500 text-xs">user@studyclaw: ~/syllabus/cs101</div>
-<div class="text-gray-500 text-xs opacity-0">...</div>
-</div>
-<div class="p-6 text-gray-300 space-y-4 font-mono h-[400px] overflow-y-auto code-block">
-<div class="code-line"><span class="text-primary">➜</span> <span class="text-blue-400">~</span> studyclaw init --syllabus ./algorithms.pdf</div>
-<div class="code-line text-gray-500">Indexing content... [====================] 100%</div>
-<div class="code-line text-green-400">✓ Syllabus indexed successfully. Context window ready.</div>
-<div class="code-line"><br/></div>
-<div class="code-line"><span class="text-primary">➜</span> <span class="text-blue-400">~</span> studyclaw query "Explain Binary Search Trees O(n)"</div>
-<div class="code-line"><span class="text-purple-400">@Gemini:</span> Analyzing context...</div>
-<div class="code-line border-l-2 border-gray-700 pl-4 py-2 my-2 bg-white/5">
-<span class="text-gray-400"># Binary Search Tree (BST) Complexity</span><br/>
-<br/>
-                                In a balanced BST, the height is <code>log(n)</code>.<br/>
-<span class="text-yellow-200">- Search:</span> O(log n) average, O(n) worst case<br/>
-<span class="text-yellow-200">- Insertion:</span> O(log n) average<br/>
-<span class="text-yellow-200">- Deletion:</span> O(log n) average
-                            </div>
-<div class="code-line"><span class="text-primary">➜</span> <span class="text-blue-400">~</span> <span class="animate-pulse">_</span></div>
-</div>
-<div class="bg-gray-100 dark:bg-[#1a1a1a] px-4 py-1 flex justify-between border-t border-gray-300 dark:border-border-dark text-[10px] text-gray-500 uppercase tracking-wider">
-<span>Ready</span>
-<span>UTF-8</span>
-<span>Ln 12, Col 4</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section class="border-y border-gray-200 dark:border-border-dark bg-white dark:bg-surface-dark py-12">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex flex-col md:flex-row justify-between items-center gap-8">
-<div class="text-left">
-<p class="text-sm font-mono text-gray-500 dark:text-gray-400 mb-2">POWERED BY</p>
-<div class="flex items-center gap-3">
-<span class="material-icons-outlined text-3xl text-gray-800 dark:text-gray-200">psychology</span>
-<span class="text-2xl font-bold text-gray-900 dark:text-white">Gemini 1.5 Pro</span>
-</div>
-</div>
-<div class="h-12 w-px bg-gray-200 dark:border-border-dark hidden md:block"></div>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16">
-<div>
-<div class="text-2xl font-bold font-mono text-gray-900 dark:text-white">99.9%</div>
-<div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Uptime</div>
-</div>
-<div>
-<div class="text-2xl font-bold font-mono text-gray-900 dark:text-white">&lt;50ms</div>
-<div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Latency</div>
-</div>
-<div>
-<div class="text-2xl font-bold font-mono text-gray-900 dark:text-white">1M+</div>
-<div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Queries</div>
-</div>
-<div>
-<div class="text-2xl font-bold font-mono text-gray-900 dark:text-white">AES-256</div>
-<div class="text-xs text-gray-500 uppercase tracking-wide mt-1">Security</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section class="py-24 bg-gray-50 dark:bg-background-dark">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="mb-16">
-<h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Core Modules</h2>
-<p class="text-gray-600 dark:text-gray-400 max-w-2xl">Essential components for your academic stack. Built for performance and reliability.</p>
-</div>
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-<div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark p-6 rounded hover:border-primary dark:hover:border-primary transition-colors group">
-<div class="flex justify-between items-start mb-4">
-<span class="material-icons-outlined text-gray-400 group-hover:text-primary transition-colors text-3xl">picture_as_pdf</span>
-<span class="font-mono text-[10px] bg-gray-100 dark:bg-black px-2 py-1 rounded text-gray-500">v1.2</span>
-</div>
-<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">PDF Indexing Engine</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Vector-based ingestion of syllabus documents. Converts unstructured PDF data into queryable embeddings instantly.
-                    </p>
-</div>
-<div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark p-6 rounded hover:border-primary dark:hover:border-primary transition-colors group">
-<div class="flex justify-between items-start mb-4">
-<span class="material-icons-outlined text-gray-400 group-hover:text-primary transition-colors text-3xl">quiz</span>
-<span class="font-mono text-[10px] bg-gray-100 dark:bg-black px-2 py-1 rounded text-gray-500">BETA</span>
-</div>
-<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Daily Quiz Generator</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Automated spaced repetition system (SRS). Generates questions based on recent weak points in your chat history.
-                    </p>
-</div>
-<div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark p-6 rounded hover:border-primary dark:hover:border-primary transition-colors group">
-<div class="flex justify-between items-start mb-4">
-<span class="material-icons-outlined text-gray-400 group-hover:text-primary transition-colors text-3xl">memory</span>
-</div>
-<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Context Memory</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Long-term persistence layer. The model "remembers" your self-reflections and adapts its difficulty curve.
-                    </p>
-</div>
-<div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark p-6 rounded hover:border-primary dark:hover:border-primary transition-colors group">
-<div class="flex justify-between items-start mb-4">
-<span class="material-icons-outlined text-gray-400 group-hover:text-primary transition-colors text-3xl">calendar_today</span>
-</div>
-<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Exam Scheduler</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Cron-like scheduling for your exam preparation. Integrates with standard calendar formats (.ics).
-                    </p>
-</div>
-<div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark p-6 rounded hover:border-primary dark:hover:border-primary transition-colors group">
-<div class="flex justify-between items-start mb-4">
-<span class="material-icons-outlined text-gray-400 group-hover:text-primary transition-colors text-3xl">account_tree</span>
-</div>
-<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Mermaid Diagrams</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Text-to-Diagram rendering. Request complex flowcharts or architecture diagrams directly in the terminal output.
-                    </p>
-</div>
-<div class="bg-white dark:bg-surface-dark border border-gray-200 dark:border-border-dark p-6 rounded hover:border-primary dark:hover:border-primary transition-colors group">
-<div class="flex justify-between items-start mb-4">
-<span class="material-icons-outlined text-gray-400 group-hover:text-primary transition-colors text-3xl">timeline</span>
-</div>
-<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">PYQ Predictor</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Statistical analysis of Previous Year Questions to predict high-probability topics for upcoming exams.
-                    </p>
-</div>
-</div>
-</div>
-</section>
-<section class="py-24 bg-white dark:bg-background-dark border-t border-gray-200 dark:border-border-dark relative overflow-hidden">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-<div class="text-center mb-16">
-<span class="font-mono text-primary text-sm uppercase tracking-wider">Initialization Sequence</span>
-<h2 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">Get Started in 3 Minutes</h2>
-</div>
-<div class="relative">
-<div class="absolute top-1/2 left-0 w-full h-px bg-gray-200 dark:bg-border-dark -translate-y-1/2 hidden md:block z-0"></div>
-<div class="grid md:grid-cols-3 gap-12">
-<div class="relative z-10 bg-white dark:bg-background-dark p-4 text-center group">
-<div class="w-16 h-16 mx-auto bg-gray-50 dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center mb-6 group-hover:border-primary transition-colors shadow-sm">
-<span class="font-mono text-xl font-bold text-gray-900 dark:text-white">01</span>
-</div>
-<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Deploy Environment</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 font-mono text-xs bg-gray-100 dark:bg-surface-dark inline-block px-2 py-1 rounded border border-gray-200 dark:border-border-dark">
-                            $ pkg install studyclaw
-                        </p>
-<p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Install dependencies on Termux or Local Machine.</p>
-</div>
-<div class="relative z-10 bg-white dark:bg-background-dark p-4 text-center group">
-<div class="w-16 h-16 mx-auto bg-gray-50 dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center mb-6 group-hover:border-primary transition-colors shadow-sm">
-<span class="font-mono text-xl font-bold text-gray-900 dark:text-white">02</span>
-</div>
-<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Authenticate</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 font-mono text-xs bg-gray-100 dark:bg-surface-dark inline-block px-2 py-1 rounded border border-gray-200 dark:border-border-dark">
-                            $ studyclaw auth --qr
-                        </p>
-<p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Scan the QR code to link your student profile.</p>
-</div>
-<div class="relative z-10 bg-white dark:bg-background-dark p-4 text-center group">
-<div class="w-16 h-16 mx-auto bg-gray-50 dark:bg-surface-dark border border-gray-200 dark:border-border-dark rounded-full flex items-center justify-center mb-6 group-hover:border-primary transition-colors shadow-sm">
-<span class="font-mono text-xl font-bold text-gray-900 dark:text-white">03</span>
-</div>
-<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Execute Runtime</h3>
-<p class="text-sm text-gray-600 dark:text-gray-400 font-mono text-xs bg-gray-100 dark:bg-surface-dark inline-block px-2 py-1 rounded border border-gray-200 dark:border-border-dark">
-                            $ studyclaw run
-                        </p>
-<p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Start the linear studying process.</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section class="py-24 bg-surface-dark border-t border-border-dark">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex justify-between items-end mb-12">
-<div>
-<h2 class="text-3xl font-bold text-white mb-2">Latest from the Lab</h2>
-<p class="text-gray-400">Engineering updates and patch notes.</p>
-</div>
-<a class="text-primary hover:text-primary-hover font-mono text-sm flex items-center" href="#">
-                    View Archive <span class="material-icons-outlined text-sm ml-1">arrow_forward</span>
-</a>
-</div>
-<div class="grid md:grid-cols-3 gap-8">
-<article class="flex flex-col h-full bg-[#111] border border-border-dark rounded overflow-hidden hover:border-gray-500 transition-colors">
-<div class="p-6 flex-1">
-<div class="flex gap-2 mb-4">
-<span class="px-2 py-1 bg-indigo-900/30 border border-indigo-900 text-indigo-300 text-[10px] font-mono uppercase rounded">Algorithm</span>
-<span class="px-2 py-1 bg-green-900/30 border border-green-900 text-green-300 text-[10px] font-mono uppercase rounded">Patch</span>
-</div>
-<h3 class="text-xl font-bold text-white mb-3">Optimizing Binary Search Tree indexing</h3>
-<p class="text-gray-400 text-sm leading-relaxed mb-4">
-                            We reduced the O(n) worst-case scenarios in our PDF parser by implementing self-balancing AVL trees for text extraction.
-                        </p>
-</div>
-<div class="px-6 py-4 border-t border-border-dark bg-[#151515]">
-<span class="text-xs font-mono text-gray-500">Oct 12, 2023 • 4 min read</span>
-</div>
-</article>
-<article class="flex flex-col h-full bg-[#111] border border-border-dark rounded overflow-hidden hover:border-gray-500 transition-colors">
-<div class="p-6 flex-1">
-<div class="flex gap-2 mb-4">
-<span class="px-2 py-1 bg-purple-900/30 border border-purple-900 text-purple-300 text-[10px] font-mono uppercase rounded">AI Model</span>
-</div>
-<h3 class="text-xl font-bold text-white mb-3">Gemini 1.5 Integration: A Technical Deep Dive</h3>
-<p class="text-gray-400 text-sm leading-relaxed mb-4">
-                            Transitioning from static embeddings to dynamic context windows. How we managed token limits while maintaining high fidelity.
-                        </p>
-</div>
-<div class="px-6 py-4 border-t border-border-dark bg-[#151515]">
-<span class="text-xs font-mono text-gray-500">Oct 08, 2023 • 8 min read</span>
-</div>
-</article>
-<article class="flex flex-col h-full bg-[#111] border border-border-dark rounded overflow-hidden hover:border-gray-500 transition-colors">
-<div class="p-6 flex-1">
-<div class="flex gap-2 mb-4">
-<span class="px-2 py-1 bg-blue-900/30 border border-blue-900 text-blue-300 text-[10px] font-mono uppercase rounded">Infrastructure</span>
-</div>
-<h3 class="text-xl font-bold text-white mb-3">Scaling Vector Databases for Engineering Students</h3>
-<p class="text-gray-400 text-sm leading-relaxed mb-4">
-                            Benchmarks and stress tests on our distributed Postgres implementation. Handling concurrent queries during exam season.
-                        </p>
-</div>
-<div class="px-6 py-4 border-t border-border-dark bg-[#151515]">
-<span class="text-xs font-mono text-gray-500">Oct 01, 2023 • 6 min read</span>
-</div>
-</article>
-</div>
-</div>
-</section>
-<footer class="bg-background-dark border-t border-border-dark pt-16 pb-8">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-<div class="col-span-2 md:col-span-1">
-<div class="flex items-center gap-2 mb-4">
-<span class="material-icons-outlined text-primary">terminal</span>
-<span class="font-bold text-white text-lg">StudyClaw</span>
-</div>
-<p class="text-gray-500 text-sm mb-6">
-                        Technical study infrastructure powered by Gemini AI. Built for the next generation of engineers.
-                    </p>
-<div class="flex space-x-4">
-<a class="text-gray-400 hover:text-white transition-colors" href="#">
-<svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
-</a>
-<a class="text-gray-400 hover:text-white transition-colors" href="#">
-<span class="material-icons-outlined text-2xl">discord</span>
-</a>
-</div>
-</div>
-<div>
-<h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Product</h3>
-<ul class="space-y-3">
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Changelog</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Documentation</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Integrations</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">CLI Tool</a></li>
-</ul>
-</div>
-<div>
-<h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Company</h3>
-<ul class="space-y-3">
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">About</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Manifesto</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Careers</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Contact</a></li>
-</ul>
-</div>
-<div>
-<h3 class="text-sm font-semibold text-white tracking-wider uppercase mb-4">Legal</h3>
-<ul class="space-y-3">
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Privacy Policy</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Terms of Service</a></li>
-<li><a class="text-gray-500 hover:text-primary transition-colors text-sm" href="#">Security</a></li>
-</ul>
-</div>
-</div>
-<div class="border-t border-border-dark pt-8 flex flex-col md:flex-row justify-between items-center">
-<p class="text-gray-600 text-xs font-mono">
-                    © 2023 StudyClaw Inc. All systems operational.
-                </p>
-<div class="flex items-center space-x-2 mt-4 md:mt-0">
-<div class="w-2 h-2 rounded-full bg-primary"></div>
-<span class="text-gray-500 text-xs font-mono">System Status: Normal</span>
-</div>
-</div>
-</div>
-</footer>
 
-</body></html>
+<body class="antialiased font-sans relative overflow-x-hidden selection:bg-primary selection:text-white">
+
+    <!-- Ambient Background Glows -->
+    <div class="ambient-glow top-[-200px] left-[50%] translate-x-[-50%]"></div>
+    <div class="ambient-glow top-[40%] right-[-200px] opacity-40"></div>
+    <div class="ambient-glow bottom-[-100px] left-[-200px] opacity-60"></div>
+
+    <!-- Glass Navbar -->
+    <nav class="fixed top-0 w-full z-50 border-b border-border glass-nav">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl font-bold tracking-tight text-white flex items-center gap-2 font-heading">
+                    <span class="text-2xl drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">🦞</span> StudyClaw
+                </span>
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
+                <a href="#features" class="hover:text-white transition-colors">Infrastructure</a>
+                <a href="#workflow" class="hover:text-white transition-colors">Deployment</a>
+                <a href="https://github.com/roshan30-git/picoclaw-scholar"
+                    class="hover:text-white transition-colors">Documentation</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank"
+                    class="text-sm font-semibold text-white hover:text-primary transition-colors flex items-center gap-2 border border-border px-4 py-1.5 rounded-full bg-[#111] hover:border-primary/50">
+                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span class="hidden sm:inline">Source</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-36 pb-16 z-10 flex flex-col items-center text-center px-4 min-h-[90vh] justify-center">
+        <!-- Badge -->
+        <div
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-xs font-mono text-primary mb-8 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+            <span class="w-1.5 h-1.5 rounded-full animate-pulse bg-primary"></span>
+            v2.0 Beta Live
+        </div>
+
+        <h1
+            class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-zinc-200 to-zinc-500 mb-6 max-w-4xl leading-[1.1] font-heading drop-shadow-lg">
+            THE AI THAT <br class="hidden md:block" /> <span class="text-primary">ACTUALLY STUDIES.</span>
+        </h1>
+        <p class="text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed mb-12 font-medium">
+            The only open-source technical study infrastructure. Index your university syllabus, manage PDFs, and run
+            active recall drills entirely via WhatsApp.
+        </p>
+
+        <!-- Quick Start Terminal (Structured Execution Mockup) -->
+        <div class="w-full max-w-3xl text-left mb-16 relative group">
+            <div
+                class="absolute -inset-1 bg-gradient-to-r from-primary/30 to-rose-500/30 rounded-lg blur opacity-40 group-hover:opacity-60 transition duration-1000">
+            </div>
+
+            <div class="relative rounded-lg border border-zinc-800 bg-[#0c0c0c] shadow-2xl overflow-hidden">
+                <!-- Mac style header -->
+                <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#121212]">
+                    <div class="flex gap-2">
+                        <div class="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/50"></div>
+                    </div>
+                    <div class="font-mono text-xs text-zinc-500 tracking-wider">bash — studyclaw init</div>
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-700 text-zinc-400">Copy</span>
+                    </div>
+                </div>
+                <!-- Code content -->
+                <div class="p-6 md:p-8 font-mono text-sm md:text-[15px] leading-relaxed overflow-x-auto text-zinc-300">
+                    <div
+                        class="text-zinc-500 mb-4 select-all hover:text-zinc-300 transition-colors cursor-pointer block">
+                        curl -fsSL https://studyclaw.io/install.sh | bash</div>
+
+                    <div class="mb-1"><span class="text-primary font-bold">></span> studyclaw init --syllabus
+                        ./algorithms.pdf</div>
+                    <div class="text-zinc-400 mb-1">> Indexing document pipeline... <span
+                            class="text-emerald-500 tracking-widest">[===============>]</span> 100%</div>
+                    <div class="text-emerald-400 font-bold mb-6">> Syllabus indexed successfully. Context window
+                        initialized.</div>
+
+                    <div class="mb-1"><span class="text-primary font-bold">></span> studyclaw query "Explain Binary
+                        Search Trees O(n)"</div>
+                    <div class="text-blue-400 font-bold">@Gemini_Pro: <span class="text-zinc-400 font-normal">Analyzing
+                            context architecture...</span></div>
+                    <div class="mt-4 text-primary animate-pulse text-lg font-bold">_</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Point Banner -->
+        <div class="flex flex-wrap justify-center gap-4 w-full max-w-4xl mx-auto border-t border-zinc-800/50 pt-10">
+            <div class="px-6 py-2 text-center">
+                <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">99.9%</div>
+                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Uptime</div>
+            </div>
+            <div class="px-6 py-2 text-center border-l border-zinc-800/50">
+                <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">&lt;50ms</div>
+                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Latency</div>
+            </div>
+            <div class="px-6 py-2 text-center border-l border-zinc-800/50">
+                <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">1M+</div>
+                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Vector Queries</div>
+            </div>
+            <div class="px-6 py-2 text-center border-l border-zinc-800/50 hidden sm:block">
+                <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">SQLite</div>
+                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Local DB Edge</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- What It Does (Bento Grid) -->
+    <section id="features" class="py-24 z-10 relative px-4 bg-black/40 border-y border-zinc-900">
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-16">
+                <h2 class="text-primary font-mono text-xs tracking-[0.2em] mb-4 uppercase font-bold">Core Infrastructure
+                </h2>
+                <h3 class="text-3xl md:text-5xl font-black text-white tracking-tight font-heading">What It Does.</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Card 1 -->
+                <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">PDF Indexing Engine</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
+                        Vector-based ingestion of syllabus documents. Converts unstructured PDF data and handwritten OCR
+                        into open-scale embeddings instantly.
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Daily Quiz Generator</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
+                        Automated spaced repetition system (SRS). Generates dynamic quiz questions pushed to WhatsApp
+                        based on recent weak points in your chat history.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                            </path>
+                            <path d="M2 12h20"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Context Memory</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
+                        Long-term persistence layer via SQLite. The model chronologically "remembers" your
+                        self-reflections and adapts its reasoning difficulty curve.
+                    </p>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Exam Scheduler</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
+                        Cron-like scheduling pipeline for your exam preparation. Integrates natively with Google
+                        Classroom to scrape and track upcoming deadlines.
+                    </p>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Mermaid Diagrams</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
+                        Text-to-Diagram rendering. Request complex flowcharts or electrical engineering architecture
+                        diagrams directly via Telegram WebApp overlays.
+                    </p>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">PYQ Predictor</h3>
+                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
+                        Statistical frequency analysis of Previous Year Questions to mathematically predict and rank
+                        high-probability conceptual topics for upcoming finals.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline / Setup -->
+    <section id="workflow" class="py-32 relative z-10 px-4">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight font-heading">Get Started in 3
+                    Minutes.</h2>
+                <p class="text-zinc-400 mt-4">Local execution on Termux. Zero cloud dependencies required.</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center justify-between relative">
+                <!-- Connecting line (desktop) -->
+                <div class="hidden md:block absolute top-[28px] left-[15%] right-[15%] h-[2px] bg-zinc-800 z-[-1]">
+                </div>
+
+                <!-- Step 1 -->
+                <div class="flex flex-col items-center mb-16 md:mb-0 relative px-4 w-full md:w-1/3">
+                    <div
+                        class="w-14 h-14 rounded border border-zinc-700 bg-[#121212] flex items-center justify-center mb-6 shadow-xl text-xl font-black text-white font-heading z-10">
+                        01
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-3">Deploy Binary</h3>
+                    <div
+                        class="w-full bg-[#111] border border-zinc-800 p-3 rounded font-mono text-[11px] text-zinc-400 text-center shadow-inner">
+                        <span class="text-primary">$</span> pkg install studyclaw
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex flex-col items-center mb-16 md:mb-0 relative px-4 w-full md:w-1/3">
+                    <div
+                        class="w-14 h-14 rounded border border-zinc-700 bg-[#121212] flex items-center justify-center mb-6 shadow-xl text-xl font-black text-white font-heading z-10">
+                        02
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-3">Authenticate App</h3>
+                    <div
+                        class="w-full bg-[#111] border border-zinc-800 p-3 rounded font-mono text-[11px] text-zinc-400 text-center shadow-inner">
+                        <span class="text-primary">$</span> studyclaw auth --qr
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex flex-col items-center relative px-4 w-full md:w-1/3">
+                    <!-- Glow effect on active step -->
+                    <div class="absolute top-0 w-14 h-14 rounded bg-primary/20 blur-xl z-0"></div>
+                    <div
+                        class="w-14 h-14 rounded border border-primary bg-primary/10 flex items-center justify-center mb-6 shadow-lg text-xl font-black text-primary font-heading z-10">
+                        03
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-3">Execute Runtime</h3>
+                    <div
+                        class="w-full bg-[#111] border border-primary/30 p-3 rounded font-mono text-[11px] text-zinc-300 text-center shadow-inner">
+                        <span class="text-primary">$</span> studyclaw run
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-zinc-900 bg-background relative z-10 px-4">
+        <div class="max-w-6xl mx-auto flex flex-col items-center text-center">
+
+            <div class="flex items-center gap-2 mb-8 opacity-50 hover:opacity-100 transition-opacity">
+                <span class="text-xl">🦞</span>
+                <span class="font-bold tracking-tight text-white font-heading">StudyClaw.</span>
+            </div>
+
+            <div
+                class="flex flex-wrap justify-center gap-6 text-[10px] font-mono text-zinc-500 mb-8 uppercase tracking-[0.2em]">
+                <a href="#" class="hover:text-primary transition-colors">Documentation</a>
+                <a href="#" class="hover:text-primary transition-colors">Architecture</a>
+                <a href="#" class="hover:text-primary transition-colors">Integrations</a>
+                <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank"
+                    class="hover:text-primary transition-colors text-white">Source Code</a>
+            </div>
+
+            <p class="text-[11px] text-zinc-600 font-mono">
+                Built by StudyClaw <span class="text-primary">🦞</span> community.<br />
+                Powered by Gemini Flash 2.0. Native execution on Android & Linux.
+            </p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
