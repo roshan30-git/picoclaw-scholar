@@ -7,6 +7,9 @@
     <title>StudyClaw — The AI That Actually Studies</title>
     <meta name="description"
         content="StudyClaw is an open-source AI study engine for engineering students. Connect your university syllabus, extract PDFs, generate quizzes, and predict exams.">
+    <!-- MUST INCLUDE EXACT FAVICON AS PER SPEC -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,11 +28,11 @@
                         mono: ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
-                        background: '#0a0a0a', /* Deep jet black */
-                        surface: '#121212', /* Slightly raised card color */
-                        border: '#27272a', /* zinc-800 */
+                        background: '#042218', /* Deep Emerald/Chalkboard Green for contrast */
+                        surface: '#093627', /* Slightly raised card color */
+                        border: '#155d49', /* Structured borders */
                         primary: '#ef4444', /* Crimson lobster red */
-                        muted: '#a1a1aa', /* zinc-400 */
+                        muted: '#94a3b8', /* slate-400 */
                     }
                 }
             }
@@ -38,7 +41,7 @@
     <style>
         body {
             background-color: theme('colors.background');
-            color: #f4f4f5;
+            color: #ffffff;
         }
 
         h1,
@@ -63,7 +66,7 @@
 
         /* Bento grid structural styles from Option 2 */
         .bento-card {
-            background: linear-gradient(145deg, #151515 0%, #0a0a0a 100%);
+            background: linear-gradient(145deg, theme('colors.surface') 0%, theme('colors.background') 100%);
             border: 1px solid theme('colors.border');
             transition: all 0.3s ease;
             position: relative;
@@ -71,14 +74,14 @@
         }
 
         .bento-card:hover {
-            border-color: #ef444460;
+            border-color: #ef444480;
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.1);
+            box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.15);
         }
 
         /* Glassmorphism overlays from Option 3 */
         .glass-nav {
-            background: rgba(10, 10, 10, 0.7);
+            background: rgba(4, 34, 24, 0.7);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
         }
@@ -104,10 +107,12 @@
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <span class="text-xl font-bold tracking-tight text-white flex items-center gap-2 font-heading">
-                    <span class="text-2xl drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">🦞</span> StudyClaw
+                    <!-- Favicon used as inline logo as well -->
+                    <img src="/favicon.png" alt="StudyClaw Logo"
+                        class="w-8 h-8 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]"> StudyClaw
                 </span>
             </div>
-            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-muted">
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
                 <a href="#features" class="hover:text-white transition-colors">Infrastructure</a>
                 <a href="#workflow" class="hover:text-white transition-colors">Deployment</a>
                 <a href="https://github.com/roshan30-git/picoclaw-scholar"
@@ -115,7 +120,7 @@
             </div>
             <div class="flex items-center gap-4">
                 <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank"
-                    class="text-sm font-semibold text-white hover:text-primary transition-colors flex items-center gap-2 border border-border px-4 py-1.5 rounded-full bg-[#111] hover:border-primary/50">
+                    class="text-sm font-semibold text-white hover:text-primary transition-colors flex items-center gap-2 border border-border px-4 py-1.5 rounded-full bg-[#063627] hover:border-primary/50">
                     <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd"
                             d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
@@ -137,10 +142,11 @@
         </div>
 
         <h1
-            class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-zinc-200 to-zinc-500 mb-6 max-w-4xl leading-[1.1] font-heading drop-shadow-lg">
+            class="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-200 to-slate-400 mb-6 max-w-4xl leading-[1.1] font-heading drop-shadow-lg">
             THE AI THAT <br class="hidden md:block" /> <span class="text-primary">ACTUALLY STUDIES.</span>
         </h1>
-        <p class="text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed mb-12 font-medium">
+        <p class="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed mb-12 font-medium">
+            <!-- Increased Contrast: text-slate-300 -->
             The only open-source technical study infrastructure. Index your university syllabus, manage PDFs, and run
             active recall drills entirely via WhatsApp.
         </p>
@@ -151,36 +157,36 @@
                 class="absolute -inset-1 bg-gradient-to-r from-primary/30 to-rose-500/30 rounded-lg blur opacity-40 group-hover:opacity-60 transition duration-1000">
             </div>
 
-            <div class="relative rounded-lg border border-zinc-800 bg-[#0c0c0c] shadow-2xl overflow-hidden">
+            <div class="relative rounded-lg border border-border bg-[#021812] shadow-2xl overflow-hidden">
                 <!-- Mac style header -->
-                <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#121212]">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-border bg-[#032219]">
                     <div class="flex gap-2">
                         <div class="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/50"></div>
                         <div class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/50"></div>
                         <div class="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/50"></div>
                     </div>
-                    <div class="font-mono text-xs text-zinc-500 tracking-wider">bash — studyclaw init</div>
+                    <div class="font-mono text-xs text-slate-500 tracking-wider">bash — studyclaw init</div>
                     <div class="flex items-center gap-2">
                         <span
-                            class="px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-700 text-zinc-400">Copy</span>
+                            class="px-2 py-0.5 rounded text-[10px] font-mono border border-border text-slate-400">Copy</span>
                     </div>
                 </div>
                 <!-- Code content -->
-                <div class="p-6 md:p-8 font-mono text-sm md:text-[15px] leading-relaxed overflow-x-auto text-zinc-300">
+                <div class="p-6 md:p-8 font-mono text-sm md:text-[15px] leading-relaxed overflow-x-auto text-slate-200">
                     <div
-                        class="text-zinc-500 mb-4 select-all hover:text-zinc-300 transition-colors cursor-pointer block">
+                        class="text-slate-500 mb-4 select-all hover:text-slate-300 transition-colors cursor-pointer block">
                         curl -fsSL https://studyclaw.io/install.sh | bash</div>
 
                     <div class="mb-1"><span class="text-primary font-bold">></span> studyclaw init --syllabus
                         ./algorithms.pdf</div>
-                    <div class="text-zinc-400 mb-1">> Indexing document pipeline... <span
+                    <div class="text-slate-400 mb-1">> Indexing document pipeline... <span
                             class="text-emerald-500 tracking-widest">[===============>]</span> 100%</div>
                     <div class="text-emerald-400 font-bold mb-6">> Syllabus indexed successfully. Context window
                         initialized.</div>
 
                     <div class="mb-1"><span class="text-primary font-bold">></span> studyclaw query "Explain Binary
                         Search Trees O(n)"</div>
-                    <div class="text-blue-400 font-bold">@Gemini_Pro: <span class="text-zinc-400 font-normal">Analyzing
+                    <div class="text-blue-400 font-bold">@Gemini_Pro: <span class="text-slate-400 font-normal">Analyzing
                             context architecture...</span></div>
                     <div class="mt-4 text-primary animate-pulse text-lg font-bold">_</div>
                 </div>
@@ -188,28 +194,28 @@
         </div>
 
         <!-- Data Point Banner -->
-        <div class="flex flex-wrap justify-center gap-4 w-full max-w-4xl mx-auto border-t border-zinc-800/50 pt-10">
+        <div class="flex flex-wrap justify-center gap-4 w-full max-w-4xl mx-auto border-t border-border/50 pt-10">
             <div class="px-6 py-2 text-center">
                 <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">99.9%</div>
-                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Uptime</div>
+                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">Uptime</div>
             </div>
-            <div class="px-6 py-2 text-center border-l border-zinc-800/50">
+            <div class="px-6 py-2 text-center border-l border-border/50">
                 <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">&lt;50ms</div>
-                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Latency</div>
+                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">Latency</div>
             </div>
-            <div class="px-6 py-2 text-center border-l border-zinc-800/50">
+            <div class="px-6 py-2 text-center border-l border-border/50">
                 <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">1M+</div>
-                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Vector Queries</div>
+                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">Vector Queries</div>
             </div>
-            <div class="px-6 py-2 text-center border-l border-zinc-800/50 hidden sm:block">
+            <div class="px-6 py-2 text-center border-l border-border/50 hidden sm:block">
                 <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">SQLite</div>
-                <div class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Local DB Edge</div>
+                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">Local DB Edge</div>
             </div>
         </div>
     </header>
 
-    <!-- What It Does (Bento Grid) -->
-    <section id="features" class="py-24 z-10 relative px-4 bg-black/40 border-y border-zinc-900">
+    <!-- What It Does (Bento Grid) - STRICTLY VERIFIED FROM README.MD -->
+    <section id="features" class="py-24 z-10 relative px-4 bg-[#031d14] border-y border-[#073626]">
         <div class="max-w-6xl mx-auto">
             <div class="mb-16">
                 <h2 class="text-primary font-mono text-xs tracking-[0.2em] mb-4 uppercase font-bold">Core Infrastructure
@@ -219,7 +225,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                <!-- Card 1 -->
+                <!-- Card 1: PDF Indexing -->
                 <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
                     <div
                         class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -231,14 +237,14 @@
                             <polyline points="10 9 9 9 8 9"></polyline>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-3 font-heading">PDF Indexing Engine</h3>
-                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
-                        Vector-based ingestion of syllabus documents. Converts unstructured PDF data and handwritten OCR
-                        into open-scale embeddings instantly.
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">PDF Indexing</h3>
+                    <!-- Contrast Increased: text-zinc-200 -->
+                    <p class="text-[15px] text-zinc-200 leading-relaxed font-medium">
+                        Send any PDF to the bot. It extracts text and stores it in a local knowledge base.
                     </p>
                 </div>
 
-                <!-- Card 2 -->
+                <!-- Card 2: AI Quizzes -->
                 <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
                     <div
                         class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -246,14 +252,14 @@
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Daily Quiz Generator</h3>
-                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
-                        Automated spaced repetition system (SRS). Generates dynamic quiz questions pushed to WhatsApp
-                        based on recent weak points in your chat history.
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">AI Quizzes</h3>
+                    <!-- Contrast Increased: text-zinc-200 -->
+                    <p class="text-[15px] text-zinc-200 leading-relaxed font-medium">
+                        Ask for a quiz and get 3–5 MCQs drawn from your own notes via Gemini.
                     </p>
                 </div>
 
-                <!-- Card 3 -->
+                <!-- Card 3: Diagram Viewer -->
                 <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
                     <div
                         class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -265,14 +271,15 @@
                             <path d="M2 12h20"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Context Memory</h3>
-                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
-                        Long-term persistence layer via SQLite. The model chronologically "remembers" your
-                        self-reflections and adapts its reasoning difficulty curve.
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Diagram Viewer</h3>
+                    <!-- Contrast Increased: text-zinc-200 -->
+                    <p class="text-[15px] text-zinc-200 leading-relaxed font-medium">
+                        If the AI generates a Mermaid diagram, a local HTTP link is sent so you can view it directly
+                        with full pan/zoom.
                     </p>
                 </div>
 
-                <!-- Card 4 -->
+                <!-- Card 4: Self-Reflection -->
                 <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
                     <div
                         class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -283,14 +290,15 @@
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Exam Scheduler</h3>
-                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
-                        Cron-like scheduling pipeline for your exam preparation. Integrates natively with Google
-                        Classroom to scrape and track upcoming deadlines.
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Self-Reflection</h3>
+                    <!-- Contrast Increased: text-zinc-200 -->
+                    <p class="text-[15px] text-zinc-200 leading-relaxed font-medium">
+                        The bot periodically reflects on past sessions to improve its summaries and study
+                        recommendations.
                     </p>
                 </div>
 
-                <!-- Card 5 -->
+                <!-- Card 5: Calendar Engine -->
                 <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
                     <div
                         class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -300,14 +308,15 @@
                             <line x1="9" y1="21" x2="9" y2="9"></line>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Mermaid Diagrams</h3>
-                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
-                        Text-to-Diagram rendering. Request complex flowcharts or electrical engineering architecture
-                        diagrams directly via Telegram WebApp overlays.
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Calendar Engine</h3>
+                    <!-- Contrast Increased: text-zinc-200 -->
+                    <p class="text-[15px] text-zinc-200 leading-relaxed font-medium">
+                        Keeps track of your semester dates and exams to intuitively adjust its "soul" (Drill Sergeant
+                        vs. Peer).
                     </p>
                 </div>
 
-                <!-- Card 6 -->
+                <!-- Card 6: Report Generation -->
                 <div class="bento-card rounded-xl p-8 flex flex-col items-start group">
                     <div
                         class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
@@ -315,11 +324,31 @@
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-3 font-heading">PYQ Predictor</h3>
-                    <p class="text-sm text-zinc-400 leading-relaxed font-medium">
-                        Statistical frequency analysis of Previous Year Questions to mathematically predict and rank
-                        high-probability conceptual topics for upcoming finals.
+                    <h3 class="text-xl font-bold text-white mb-3 font-heading">Report Generation</h3>
+                    <!-- Contrast Increased: text-zinc-200 -->
+                    <p class="text-[15px] text-zinc-200 leading-relaxed font-medium">
+                        Generates extremely detailed progress reports of your study sessions instantly upon request.
                     </p>
+                </div>
+
+                <!-- Card 7: Native Tool Calling (Spans 3 cols on Large screens) -->
+                <div
+                    class="bento-card rounded-xl p-8 flex flex-col items-start group lg:col-span-3 lg:flex-row lg:items-center lg:gap-8">
+                    <div
+                        class="w-12 h-12 rounded bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 lg:mb-0 group-hover:bg-primary/20 transition-colors shrink-0">
+                        <svg class="w-6 h-6 icon-stroke" viewBox="0 0 24 24">
+                            <path
+                                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-3 font-heading">Native Tool Calling</h3>
+                        <p class="text-[15px] text-zinc-200 leading-relaxed font-medium max-w-4xl">
+                            Uses Gemini's native function calling layer to autonomously decide when to generate quizzes
+                            or index new documents. Purely agentic behavior.
+                        </p>
+                    </div>
                 </div>
 
             </div>
@@ -332,23 +361,22 @@
             <div class="text-center mb-20">
                 <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight font-heading">Get Started in 3
                     Minutes.</h2>
-                <p class="text-zinc-400 mt-4">Local execution on Termux. Zero cloud dependencies required.</p>
+                <p class="text-zinc-300 mt-4 text-lg">Local execution on Termux. Zero cloud dependencies required.</p>
             </div>
 
             <div class="flex flex-col md:flex-row items-center justify-between relative">
                 <!-- Connecting line (desktop) -->
-                <div class="hidden md:block absolute top-[28px] left-[15%] right-[15%] h-[2px] bg-zinc-800 z-[-1]">
-                </div>
+                <div class="hidden md:block absolute top-[28px] left-[15%] right-[15%] h-[2px] bg-border z-[-1]"></div>
 
                 <!-- Step 1 -->
                 <div class="flex flex-col items-center mb-16 md:mb-0 relative px-4 w-full md:w-1/3">
                     <div
-                        class="w-14 h-14 rounded border border-zinc-700 bg-[#121212] flex items-center justify-center mb-6 shadow-xl text-xl font-black text-white font-heading z-10">
+                        class="w-14 h-14 rounded border border-border bg-[#032219] flex items-center justify-center mb-6 shadow-xl text-xl font-black text-white font-heading z-10">
                         01
                     </div>
                     <h3 class="text-lg font-bold text-white mb-3">Deploy Binary</h3>
                     <div
-                        class="w-full bg-[#111] border border-zinc-800 p-3 rounded font-mono text-[11px] text-zinc-400 text-center shadow-inner">
+                        class="w-full bg-[#021812] border border-border p-3 rounded font-mono text-[11px] text-slate-300 text-center shadow-inner">
                         <span class="text-primary">$</span> pkg install studyclaw
                     </div>
                 </div>
@@ -356,12 +384,12 @@
                 <!-- Step 2 -->
                 <div class="flex flex-col items-center mb-16 md:mb-0 relative px-4 w-full md:w-1/3">
                     <div
-                        class="w-14 h-14 rounded border border-zinc-700 bg-[#121212] flex items-center justify-center mb-6 shadow-xl text-xl font-black text-white font-heading z-10">
+                        class="w-14 h-14 rounded border border-border bg-[#032219] flex items-center justify-center mb-6 shadow-xl text-xl font-black text-white font-heading z-10">
                         02
                     </div>
                     <h3 class="text-lg font-bold text-white mb-3">Authenticate App</h3>
                     <div
-                        class="w-full bg-[#111] border border-zinc-800 p-3 rounded font-mono text-[11px] text-zinc-400 text-center shadow-inner">
+                        class="w-full bg-[#021812] border border-border p-3 rounded font-mono text-[11px] text-slate-300 text-center shadow-inner">
                         <span class="text-primary">$</span> studyclaw auth --qr
                     </div>
                 </div>
@@ -376,7 +404,7 @@
                     </div>
                     <h3 class="text-lg font-bold text-white mb-3">Execute Runtime</h3>
                     <div
-                        class="w-full bg-[#111] border border-primary/30 p-3 rounded font-mono text-[11px] text-zinc-300 text-center shadow-inner">
+                        class="w-full bg-[#021812] border border-primary/40 p-3 rounded font-mono text-[11px] text-slate-200 text-center shadow-inner">
                         <span class="text-primary">$</span> studyclaw run
                     </div>
                 </div>
@@ -385,24 +413,24 @@
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 border-t border-zinc-900 bg-background relative z-10 px-4">
+    <footer class="py-12 border-t border-border bg-background relative z-10 px-4">
         <div class="max-w-6xl mx-auto flex flex-col items-center text-center">
 
             <div class="flex items-center gap-2 mb-8 opacity-50 hover:opacity-100 transition-opacity">
-                <span class="text-xl">🦞</span>
+                <img src="/favicon.png" alt="StudyClaw Footer" class="w-6 h-6">
                 <span class="font-bold tracking-tight text-white font-heading">StudyClaw.</span>
             </div>
 
             <div
-                class="flex flex-wrap justify-center gap-6 text-[10px] font-mono text-zinc-500 mb-8 uppercase tracking-[0.2em]">
+                class="flex flex-wrap justify-center gap-6 text-[10px] font-mono text-slate-400 mb-8 uppercase tracking-[0.2em]">
                 <a href="#" class="hover:text-primary transition-colors">Documentation</a>
                 <a href="#" class="hover:text-primary transition-colors">Architecture</a>
                 <a href="#" class="hover:text-primary transition-colors">Integrations</a>
                 <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank"
-                    class="hover:text-primary transition-colors text-white">Source Code</a>
+                    class="hover:text-white transition-colors text-slate-300">Source Code</a>
             </div>
 
-            <p class="text-[11px] text-zinc-600 font-mono">
+            <p class="text-[11px] text-slate-500 font-mono">
                 Built by StudyClaw <span class="text-primary">🦞</span> community.<br />
                 Powered by Gemini Flash 2.0. Native execution on Android & Linux.
             </p>
