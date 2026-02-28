@@ -12,20 +12,24 @@ import (
 type QuizEngine struct {
 	provider tools.LLMProvider
 	db       *database.DB
+	persona  []byte
 }
 
 func NewQuizEngine(provider tools.LLMProvider, db *database.DB) *QuizEngine {
-	return &QuizEngine{provider: provider, db: db}
+	persona, _ := os.ReadFile("workspace/PROMPTS/drill_sergeant.txt")
+	if persona == nil {
+		persona = []byte("You are a strict quiz master.")
+	}
+	return &QuizEngine{
+		provider: provider,
+		db:       db,
+		persona:  persona,
+	}
 }
 
 // GenerateQuiz creates a quiz for the given topic using DB context and the Drill Sergeant persona.
 func (q *QuizEngine) GenerateQuiz(ctx context.Context, topic string, numQuestions int) (string, error) {
 	dbContext, _ := q.db.QueryContext(topic)
-
-	persona, _ := os.ReadFile("workspace/PROMPTS/drill_sergeant.txt")
-	if persona == nil {
-		persona = []byte("You are a strict quiz master.")
-	}
 
 	prompt := fmt.Sprintf(`%s
 
@@ -36,7 +40,7 @@ Context from student's notes:
 
 Generate %d multiple-choice questions on the topic "%s".
 Format as JSON array: [{"q":"...","options":["A)...","B)...","C)...","D)..."],"answer":"A"}]
-Only output the JSON, nothing else.`, string(persona), dbContext, numQuestions, topic)
+Only output the JSON, nothing else.`, string(q.persona), dbContext, numQuestions, topic)
 
 	messages := []tools.Message{
 		{Role: "user", Content: prompt},
