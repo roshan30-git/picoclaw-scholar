@@ -1,1082 +1,468 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>StudyClaw — AI Study Companion for Engineering Students | Free, WhatsApp-Based</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyClaw — Open-Source AI Study Engine</title>
     <meta name="description"
-        content="StudyClaw is a free AI study bot that lives in WhatsApp. It reads your PDFs, quizzes you daily, tracks your GTU exam calendar, and predicts exam questions — powered by Gemini AI, runs on Android via Termux." />
-    <meta name="keywords"
-        content="StudyClaw, AI study bot, GTU exam, WhatsApp AI, engineering student AI, Gemini AI study, Termux AI bot, free AI tutor, PDF quiz bot, exam predictor" />
-    <meta name="author" content="StudyClaw Project" />
-    <link rel="canonical" href="https://roshan30-git.github.io/picoclaw-scholar/" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://roshan30-git.github.io/picoclaw-scholar/" />
-    <meta property="og:title" content="StudyClaw — AI Study Companion for Engineering Students" />
-    <meta property="og:description"
-        content="Free AI study bot in WhatsApp. Reads PDFs, AI quizzes, GTU exam calendar, and past-paper predictions. Runs on Android." />
-    <meta property="og:image" content="assets/hero.png" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="StudyClaw — AI Study Companion" />
-    <meta name="twitter:description"
-        content="Free AI study bot in WhatsApp powered by Gemini AI. For Indian engineering students." />
-
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "StudyClaw",
-    "description": "An AI-powered study companion for engineering students that runs via WhatsApp on Android using Gemini AI.",
-    "applicationCategory": "EducationalApplication",
-    "operatingSystem": "Android",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "url": "https://github.com/roshan30-git/picoclaw-scholar"
-  }
-  </script>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        content="StudyClaw is an open-source AI study engine for engineering students. Connect your university syllabus, extract PDFs, generate quizzes, and predict exams.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap"
-        rel="stylesheet" />
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
 
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Geist', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        background: '#111111',
+                        surface: '#1A1A1A',
+                        border: '#2C2C2C',
+                        primary: '#2563EB', /* Muted academic blue */
+                        muted: '#737373', /* Neutral gray */
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --bg: #0D1117;
-            --bg2: #161B22;
-            --teal: #00BFA5;
-            --cyan: #00E5FF;
-            --text: #E6EDF3;
-            --muted: #8B949E;
-            --border: rgba(255, 255, 255, 0.08);
-            --glass: rgba(255, 255, 255, 0.04);
-            --radius: 12px;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
         body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            overflow-x: hidden;
+            background-color: theme('colors.background');
+            color: theme('colors.zinc.300');
         }
 
         h1,
         h2,
-        h3 {
-            font-family: 'Outfit', sans-serif;
-            line-height: 1.2;
+        h3,
+        h4 {
+            color: theme('colors.zinc.100');
+            font-family: theme('fontFamily.heading');
+            letter-spacing: -0.02em;
         }
 
-        /* ---------- NAVBAR ---------- */
-        nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .nav-wrapper {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(13, 17, 23, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .logo span {
-            color: var(--teal);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--text);
-        }
-
-        .btn-ghost {
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.45rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.875rem;
-            transition: border-color 0.2s, background 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-ghost:hover {
-            border-color: var(--teal);
-            background: rgba(0, 191, 165, 0.08);
-        }
-
-        /* ---------- HERO ---------- */
-        .hero {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 6rem 2rem 4rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(0, 191, 165, 0.1);
-            border: 1px solid rgba(0, 191, 165, 0.3);
-            color: var(--teal);
-            padding: 0.3rem 0.8rem;
-            border-radius: 100px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero h1 {
-            font-size: clamp(2rem, 4vw, 3.2rem);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: 1.2rem;
-        }
-
-        .hero h1 em {
-            font-style: normal;
-            background: linear-gradient(135deg, var(--teal), var(--cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            color: var(--muted);
-            font-size: 1.05rem;
-            margin-bottom: 2rem;
-            max-width: 480px;
-        }
-
-        .cta-group {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-primary {
-            background: var(--teal);
-            color: #000;
-            padding: 0.7rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: opacity 0.2s, transform 0.15s;
-        }
-
-        .btn-primary:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .btn-outline {
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 0.7rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-outline:hover {
-            border-color: var(--teal);
-        }
-
-        /* WhatsApp Chat Mockup */
-        .chat-mockup {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.2rem;
-            font-size: 0.82rem;
-        }
-
-        .chat-header {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .chat-avatar {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, var(--teal), var(--cyan));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-
-        .chat-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .chat-status {
-            color: var(--teal);
-            font-size: 0.75rem;
-        }
-
-        .msg {
-            max-width: 80%;
-            padding: 0.55rem 0.9rem;
-            border-radius: 12px;
-            margin-bottom: 0.6rem;
-            line-height: 1.5;
-        }
-
-        .msg.user {
-            background: rgba(0, 191, 165, 0.15);
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
-        }
-
-        .msg.bot {
-            background: rgba(255, 255, 255, 0.05);
-            border-bottom-left-radius: 4px;
-        }
-
-        .msg-time {
-            font-size: 0.7rem;
-            color: var(--muted);
-            text-align: right;
-            margin-top: 0.2rem;
-        }
-
-        .typing {
-            display: flex;
-            gap: 4px;
-            margin-top: 0.5rem;
-        }
-
-        .typing span {
-            width: 6px;
-            height: 6px;
-            background: var(--muted);
-            border-radius: 50%;
-            animation: bounce 1.2s infinite;
-        }
-
-        .typing span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes bounce {
-
-            0%,
-            60%,
-            100% {
-                transform: translateY(0)
-            }
-
-            30% {
-                transform: translateY(-6px)
-            }
-        }
-
-        /* ---------- STATS BAR ---------- */
-        .stats-bar {
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
-        }
-
-        .stats-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-around;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-num {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--teal), var(--cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-label {
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-
-        /* ---------- SECTIONS WRAPPER ---------- */
-        section {
-            padding: 5rem 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .section-tag {
-            color: var(--teal);
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 0.75rem;
-        }
-
-        .section-title {
-            font-size: clamp(1.7rem, 3vw, 2.5rem);
-            font-weight: 800;
-            margin-bottom: 1rem;
-        }
-
-        .section-sub {
-            color: var(--muted);
-            font-size: 1rem;
-            max-width: 560px;
-        }
-
-        .section-header {
-            margin-bottom: 3.5rem;
-        }
-
-        /* ---------- FEATURES GRID ---------- */
-        #features {
-            background: var(--bg2);
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-        }
-
-        .feature-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            transition: border-color 0.2s, transform 0.15s;
-            cursor: default;
-        }
-
-        .feature-card:hover {
-            border-color: var(--teal);
-            transform: translateY(-4px);
-        }
-
-        .feature-icon {
-            width: 44px;
-            height: 44px;
-            background: rgba(0, 191, 165, 0.12);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        .feature-icon svg {
-            width: 22px;
-            height: 22px;
-            stroke: var(--teal);
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        .feature-card h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .feature-card p {
-            color: var(--muted);
-            font-size: 0.875rem;
-        }
-
-        /* ---------- HOW IT WORKS ---------- */
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            position: relative;
-        }
-
-        .steps::before {
-            content: '';
+        /* Subtle alignment grid instead of glowing orb */
+        .academic-grid {
+            background-image: linear-gradient(to right, #ffffff08 1px, transparent 1px),
+                linear-gradient(to bottom, #ffffff08 1px, transparent 1px);
+            background-size: 3rem 3rem;
             position: absolute;
-            top: 28px;
-            left: calc(100%/6);
-            right: calc(100%/6);
-            height: 2px;
-            background: linear-gradient(90deg, var(--teal), var(--cyan));
+            inset: 0;
             z-index: 0;
-        }
-
-        .step {
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .step-num {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--teal), var(--cyan));
-            color: #000;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.2rem;
-            box-shadow: 0 0 24px rgba(0, 191, 165, 0.35);
-        }
-
-        .step h3 {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .step p {
-            color: var(--muted);
-            font-size: 0.875rem;
-        }
-
-        .step-code {
-            background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.6rem 0.85rem;
-            margin-top: 0.75rem;
-            text-align: left;
-            font-family: 'Courier New', monospace;
-            font-size: 0.78rem;
-            color: var(--teal);
-            overflow-x: auto;
-        }
-
-        /* ---------- FREE TIER BLOCK ---------- */
-        .freetier {
-            background: linear-gradient(135deg, rgba(0, 191, 165, 0.08), rgba(0, 229, 255, 0.04));
-            border: 1px solid rgba(0, 191, 165, 0.25);
-            border-radius: 16px;
-            padding: 3rem;
-            text-align: center;
-        }
-
-        .freetier h2 {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 0.75rem;
-        }
-
-        .freetier p {
-            color: var(--muted);
-            margin-bottom: 2rem;
-        }
-
-        .tier-table {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 2rem;
-        }
-
-        .tier-row {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            min-width: 180px;
-        }
-
-        .tier-model {
-            font-family: 'Courier New', monospace;
-            font-size: 0.8rem;
-            color: var(--teal);
-        }
-
-        .tier-stat {
-            font-size: 1.4rem;
-            font-weight: 800;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .tier-desc {
-            color: var(--muted);
-            font-size: 0.78rem;
-        }
-
-        /* ---------- BLOG SECTION ---------- */
-        #blog {
-            background: var(--bg2);
-        }
-
-        .blog-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-        }
-
-        .blog-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-            text-decoration: none;
-            color: inherit;
-            transition: border-color 0.2s, transform 0.15s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .blog-card:hover {
-            border-color: var(--teal);
-            transform: translateY(-3px);
-        }
-
-        .blog-tag {
-            display: inline-block;
-            background: rgba(0, 191, 165, 0.12);
-            color: var(--teal);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.2rem 0.6rem;
-            border-radius: 100px;
-            margin-bottom: 0.875rem;
-            width: fit-content;
-        }
-
-        .blog-card h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0.6rem;
-            line-height: 1.4;
-        }
-
-        .blog-card p {
-            color: var(--muted);
-            font-size: 0.85rem;
-            flex: 1;
-        }
-
-        .blog-meta {
-            margin-top: 1.25rem;
-            font-size: 0.8rem;
-            color: var(--muted);
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .blog-meta-dot {
-            width: 3px;
-            height: 3px;
-            background: var(--muted);
-            border-radius: 50%;
-        }
-
-        .read-more {
-            color: var(--teal);
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-top: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-
-        /* ---------- FOOTER ---------- */
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 2rem;
-            text-align: center;
-            color: var(--muted);
-            font-size: 0.85rem;
-        }
-
-        footer a {
-            color: var(--teal);
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        /* ---------- RESPONSIVE ---------- */
-        @media (max-width: 900px) {
-            .hero {
-                grid-template-columns: 1fr;
-                gap: 2.5rem;
-            }
-
-            .features-grid,
-            .steps,
-            .blog-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .steps::before {
-                display: none;
-            }
-        }
-
-        @media (max-width: 600px) {
-            nav {
-                padding: 0.85rem 1.25rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .hero {
-                padding: 3rem 1.25rem 2rem;
-            }
-
-            .features-grid,
-            .steps,
-            .blog-grid {
-                grid-template-columns: 1fr;
-            }
-
-            section {
-                padding: 3rem 1.25rem;
-            }
-        }
-
-        /* ---------- GLOW EFFECT ---------- */
-        .hero::before {
-            content: '';
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(0, 191, 165, 0.12) 0%, transparent 70%);
-            top: -200px;
-            right: -100px;
             pointer-events: none;
-            z-index: 0;
-        }
-
-        .hero {
-            position: relative;
-        }
-
-        .hero>* {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* scroll-reveal utility */
-        .reveal {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: opacity 0.5s cubic-bezier(.4, 0, .2, 1), transform 0.5s cubic-bezier(.4, 0, .2, 1);
-        }
-
-        .reveal.visible {
-            opacity: 1;
-            transform: none;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 80%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 80%);
         }
     </style>
 </head>
 
-<body>
+<body class="antialiased selection:bg-primary selection:text-white">
 
-    <!-- NAVBAR -->
-    <div class="nav-wrapper">
-        <nav>
-            <a href="#" class="logo">🦞 <span>Study</span>Claw</a>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#blog">Blog</a></li>
-            </ul>
-            <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank" rel="noopener" class="btn-ghost">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-                </svg>
-                GitHub
-            </a>
-        </nav>
-    </div>
-
-    <!-- HERO -->
-    <div class="hero"
-        style="max-width:1200px;margin:0 auto;padding:6rem 2rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;position:relative;">
-        <div class="hero::before"
-            style="content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle, rgba(0,191,165,0.1) 0%, transparent 70%);top:-200px;right:-100px;pointer-events:none;">
-        </div>
-        <div class="reveal">
-            <div class="hero-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon
-                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                Powered by Gemini AI · Free Forever
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl font-bold tracking-tight text-white font-heading">StudyClaw<span
+                        class="text-primary text-2xl leading-none">.</span></span>
             </div>
-            <h1>Your AI Study Companion <em>Lives in WhatsApp</em></h1>
-            <p>StudyClaw is a free AI bot that runs on your Android phone via Termux. Send your PDFs, get daily MCQ
-                quizzes, view diagrams, and receive exam predictions — all in WhatsApp. No subscriptions, no new apps.
-            </p>
-            <div class="cta-group">
-                <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank" rel="noopener"
-                    class="btn-primary">Get Started Free →</a>
-                <a href="blog/how-studyclaw-works.html" class="btn-outline">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
+                <a href="#features" class="hover:text-white transition-colors">Features</a>
+                <a href="#architecture" class="hover:text-white transition-colors">Architecture</a>
+                <a href="#blog" class="hover:text-white transition-colors">Blog</a>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank"
+                    class="text-sm font-medium text-zinc-300 hover:text-white transition-colors inline-flex items-center gap-2 px-3 py-1.5 rounded border border-border bg-surface hover:bg-[#222]">
+                    <svg width="18" height="18" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd"
+                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844a9.59 9.59 0 012.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                            clip-rule="evenodd" />
                     </svg>
-                    Read the Docs
+                    <span>Source Code</span>
                 </a>
             </div>
         </div>
+    </nav>
 
-        <!-- Chat Mockup -->
-        <div class="chat-mockup reveal" style="animation-delay:0.15s">
-            <div class="chat-header">
-                <div class="chat-avatar">🦞</div>
-                <div>
-                    <div class="chat-name">StudyClaw Bot</div>
-                    <div class="chat-status">● online</div>
+    <!-- Hero -->
+    <header class="relative pt-28 pb-20 overflow-hidden border-b border-border">
+        <div class="academic-grid"></div>
+        <div class="max-w-6xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center gap-12">
+
+            <div class="md:w-1/2 flex flex-col items-start text-left">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-sm border border-border bg-surface text-xs font-mono text-zinc-400 mb-8">
+                    <span class="w-2 h-2 rounded-none bg-green-500"></span>
+                    v2.0 Beta — Open Source Study Engine
+                </div>
+
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
+                    The AI Study Engine for <span class="text-white">Engineering</span> <br /> Students.
+                </h1>
+
+                <p class="text-lg text-zinc-400 mb-10 max-w-lg leading-relaxed">
+                    Connect your university syllabus. Let StudyClaw extract your PDFs, generate daily quizzes, and
+                    predict your next exam paper directly in WhatsApp.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center gap-4 w-full justify-start">
+                    <a href="https://github.com/roshan30-git/picoclaw-scholar"
+                        class="w-full sm:w-auto px-6 py-3 bg-white text-black font-semibold rounded hover:bg-zinc-200 transition-colors flex justify-center items-center gap-2">
+                        Deploy on Termux
+                    </a>
+                    <a href="#architecture"
+                        class="w-full sm:w-auto px-6 py-3 bg-transparent border border-border text-white font-medium rounded hover:bg-surface transition-colors flex justify-center items-center gap-2">
+                        View Architecture
+                    </a>
                 </div>
             </div>
-            <div class="msg user">Quiz me on Circuit Theory 📖<div class="msg-time">9:41 AM</div>
+
+            <!-- Terminal Mockup (Grounded, Academic, Minimal) -->
+            <div class="md:w-1/2 w-full max-w-lg mt-12 md:mt-0">
+                <div class="rounded border border-border bg-[#000] shadow-2xl overflow-hidden text-left relative">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-border bg-[#151515]">
+                        <div class="flex gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
+                            <div class="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]"></div>
+                            <div class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
+                            <div class="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]"></div>
+                        </div>
+                        <div class="text-xs text-zinc-500 font-mono ml-4">root@studyclaw:~/workspace</div>
+                    </div>
+                    <div class="p-6 font-mono text-xs text-zinc-400 overflow-x-auto leading-relaxed h-[320px]">
+                        <div class="text-zinc-600 mb-2">$ ./studyclaw --start</div>
+                        <div><span class="text-green-500">[INFO]</span> Initializing Database... <span
+                                class="text-zinc-500">done</span></div>
+                        <div><span class="text-green-500">[INFO]</span> Loading Gemini API... <span
+                                class="text-zinc-500">models/gemini-2.0-flash-lite</span></div>
+                        <div><span class="text-green-500">[INFO]</span> Starting Virtual Loop... <span
+                                class="text-zinc-500">port 8080</span></div>
+                        <div class="my-4 border-l-2 border-primary pl-3">
+                            <div class="text-white">EVENT: Incoming payload (PDF: 'Signals_Systems_Ch3.pdf')</div>
+                            <div class="text-zinc-500">→ Persona classified: Indexer Agent</div>
+                            <div class="text-zinc-500">→ Extracting text via OCR Pipeline...</div>
+                            <div class="text-primary mt-1">✓ 2,143 tokens saved to local DB.</div>
+                        </div>
+                        <div class="my-4 border-l-2 border-primary pl-3">
+                            <div class="text-white">EVENT: Incoming query ("Predict PYQ topics")</div>
+                            <div class="text-zinc-500">→ Persona classified: Exam Strategist</div>
+                            <div class="text-zinc-500">→ Handing off to gemini-2.5-pro for complex reasoning...</div>
+                        </div>
+                        <div><span class="text-green-500 mt-2 block animate-pulse">Waiting for WhatsApp
+                                payload..._</span></div>
+                    </div>
+                </div>
             </div>
-            <div class="msg bot">
-                🎯 <strong>Quiz: Circuit Theory</strong><br><br>
-                Q1. The unit of electrical resistance is:<br>
-                A) Ampere &nbsp; B) <u>Ohm</u> &nbsp; C) Volt &nbsp; D) Watt
-                <div class="msg-time">9:41 AM ✓✓</div>
-            </div>
-            <div class="msg user">B — Ohm<div class="msg-time">9:42 AM</div>
-            </div>
-            <div class="msg bot">
-                ✅ Correct! +10 XP<br>
-                <span style="color:var(--teal)">Tip:</span> Ohm's law: V = IR. This comes up in ~70% of GTU end-sem
-                papers.
-                <div class="msg-time">9:42 AM ✓✓</div>
-            </div>
-            <div class="msg user">Predict Circuit Theory exam questions<div class="msg-time">9:43 AM</div>
-            </div>
-            <div class="typing"><span></span><span></span><span></span></div>
+
         </div>
-    </div>
+    </header>
 
-    <!-- STATS BAR -->
-    <div class="stats-bar">
-        <div class="stats-inner">
-            <div class="stat reveal">
-                <div class="stat-num">1,000</div>
-                <div class="stat-label">Free API calls per day</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-num">~30MB</div>
-                <div class="stat-label">RAM usage on Android</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-num">6</div>
-                <div class="stat-label">AI Agent Personas</div>
-            </div>
-            <div class="stat reveal">
-                <div class="stat-num">100%</div>
-                <div class="stat-label">Open Source, MIT License</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FEATURES -->
-    <section id="features">
-        <div class="container">
-            <div class="section-header reveal">
-                <div class="section-tag">Features</div>
-                <h2 class="section-title">Everything you need to ace your exams</h2>
-                <p class="section-sub">Built for GTU, Mumbai University, and other Indian engineering students who want
-                    a smarter way to study.</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card reveal">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                            <line x1="16" y1="13" x2="8" y2="13" />
-                            <line x1="16" y1="17" x2="8" y2="17" />
-                        </svg>
-                    </div>
-                    <h3>PDF Auto-Indexing</h3>
-                    <p>Send any PDF or lecture note. StudyClaw extracts and stores the content in a local SQLite
-                        knowledge base, ready to be searched and quizzed from.</p>
+    <!-- Trust Banner -->
+    <section class="border-b border-border bg-black">
+        <div class="max-w-6xl mx-auto px-6 py-6 border-x border-border">
+            <div class="flex flex-wrap justify-between items-center gap-6 opacity-60">
+                <p class="text-xs font-mono font-semibold text-zinc-500 uppercase tracking-widest">Stack</p>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold font-mono tracking-tight text-white">Go 1.22</span>
                 </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                            <line x1="12" y1="17" x2="12.01" y2="17" />
-                        </svg>
-                    </div>
-                    <h3>Daily AI Quizzes</h3>
-                    <p>Receive 3–5 MCQ questions drawn from your own uploaded notes every day — automatically. The bot
-                        tracks your weak spots and quizzes you on them more.</p>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold font-mono tracking-tight text-white">Google Gemini API</span>
                 </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                    </div>
-                    <h3>Self-Reflection Memory</h3>
-                    <p>When you correct the AI ("That's wrong"), it logs the mistake to a memory file and never repeats
-                        it. The AI improves every day as you use it.</p>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold font-mono tracking-tight text-white">SQLite3</span>
                 </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                    </div>
-                    <h3>GTU Exam Calendar</h3>
-                    <p>StudyClaw knows your GTU semester dates, mid-sems, and major Indian holidays. It automatically
-                        shifts into "Exam Mode" as key dates approach.</p>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold font-mono tracking-tight text-white">Termux</span>
                 </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                        </svg>
-                    </div>
-                    <h3>PYQ Pattern Predictor</h3>
-                    <p>Analyzes 5 years of past papers for your subject. Predicts the 5 most likely topics with
-                        probability scores — so you study what actually matters.</p>
-                </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="18" height="18" rx="2" />
-                            <path d="M3 9h18M9 21V9" />
-                        </svg>
-                    </div>
-                    <h3>Live Diagram Viewer</h3>
-                    <p>Ask for any diagram (OSI Model, ER Diagrams, Circuit schematics). The AI generates a Mermaid
-                        chart and sends you a live viewer link to your browser.</p>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-bold font-mono tracking-tight text-white">WhatsApp</span>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- HOW IT WORKS -->
-    <section id="how-it-works">
-        <div class="container">
-            <div class="section-header reveal" style="text-align:center">
-                <div class="section-tag">Setup</div>
-                <h2 class="section-title">Get running in 3 steps</h2>
-                <p class="section-sub" style="margin:0 auto">No cloud accounts, no servers, no subscriptions. Just your
-                    Android phone.</p>
+    <!-- Features Bento Structure -->
+    <section id="features" class="py-24 bg-background">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="mb-16 md:flex justify-between items-end">
+                <div class="max-w-2xl">
+                    <h2 class="text-primary font-mono text-sm tracking-wide mb-4 uppercase">Core Capabilities</h2>
+                    <h3 class="text-3xl md:text-5xl font-bold mb-4 font-heading">Designed for retention.<br />Built for
+                        exams.</h3>
+                    <p class="text-zinc-400 text-lg">
+                        StudyClaw replaces passive reading with active recall, spaced repetition, and 5-year pattern
+                        prediction.
+                    </p>
+                </div>
             </div>
-            <div class="steps">
-                <div class="step reveal">
-                    <div class="step-num">1</div>
-                    <h3>Install Termux</h3>
-                    <p>Download Termux from F-Droid. Install Go and Git in your phone's terminal environment.</p>
-                    <div class="step-code">pkg install golang git</div>
+
+            <!-- Solid borders, no glass blur -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Document Ingestion -->
+                <div
+                    class="bg-surface border border-border rounded p-8 flex flex-col justify-between group hover:border-zinc-600 transition-colors">
+                    <div>
+                        <h4 class="text-xl font-bold mb-3 font-heading">Contextual Ingestion</h4>
+                        <p class="text-sm text-zinc-400 leading-relaxed mb-6">
+                            Forward PDFs directly inside WhatsApp. The Indexer Agent parses text, OCRs handwritten
+                            notes, and extracts formulas using Flash Vision to silently build your personal knowledge
+                            base.
+                        </p>
+                    </div>
                 </div>
-                <div class="step reveal">
-                    <div class="step-num">2</div>
-                    <h3>Clone & Configure</h3>
-                    <p>Clone the repo, set your free Gemini API key, and run the bot in a single command.</p>
-                    <div class="step-code">export GEMINI_API_KEY="AIzaSy..."<br>go run cmd/main.go</div>
+
+                <!-- PYQ Analysis -->
+                <div
+                    class="bg-surface border border-border rounded p-8 flex flex-col justify-between group hover:border-zinc-600 transition-colors">
+                    <div>
+                        <h4 class="text-xl font-bold mb-3 font-heading">5-Year PYQ Predictor</h4>
+                        <p class="text-sm text-zinc-400 leading-relaxed mb-6">
+                            The Strategist Agent analyzes Structural Pattern Frequency of past papers. It predicts the
+                            most likely conceptual topics for your upcoming exams and ranks them by probability
+                            percentage.
+                        </p>
+                    </div>
                 </div>
-                <div class="step reveal">
-                    <div class="step-num">3</div>
-                    <h3>Scan & Study</h3>
-                    <p>A QR code appears. Scan it with WhatsApp → Linked Devices. Send "Hi" to yourself and start
-                        studying.</p>
-                    <div class="step-code">Send: "Quiz me on Thermodynamics"</div>
+
+                <!-- Active Recall -->
+                <div
+                    class="bg-surface border border-border rounded p-8 flex flex-col justify-between group hover:border-zinc-600 transition-colors">
+                    <div>
+                        <h4 class="text-xl font-bold mb-3 font-heading">Adaptive Quizzing</h4>
+                        <p class="text-sm text-zinc-400 leading-relaxed mb-6">
+                            StudyClaw pushes daily quizzes mapped exclusively to your syllabus. It profiles your
+                            learning pace and automatically generates Sunday flashcards capturing your weakest topics.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Wide Visual Panel -->
+                <div
+                    class="bg-surface border border-border rounded p-0 flex flex-col md:flex-row overflow-hidden group hover:border-zinc-600 transition-colors lg:col-span-3">
+                    <div
+                        class="p-8 md:w-1/3 flex flex-col justify-center border-b md:border-b-0 md:border-r border-border">
+                        <h4 class="text-xl font-bold mb-3 font-heading">On-Demand Visuals</h4>
+                        <p class="text-sm text-zinc-400 leading-relaxed">
+                            Sometimes text isn't enough. When you ask about complex systems, StudyClaw natively
+                            generates Mermaid flowcharts, SVG electrical circuits, and KaTeX mathematical formulas
+                            rendered inside a lightweight local viewer.
+                        </p>
+                    </div>
+                    <div
+                        class="bg-black md:w-2/3 p-6 flex flex-col items-center justify-center min-h-[250px] font-mono text-xs overflow-hidden relative">
+                        <!-- Mermaid mockup -->
+                        <div class="border border-border p-4 bg-surface rounded w-full max-w-sm">
+                            <div class="text-zinc-500 mb-2 border-b border-border pb-2">mermaid.js render</div>
+                            <div class="flex flex-col items-center gap-3 mt-4">
+                                <div class="px-4 py-2 border border-zinc-600 bg-zinc-800 rounded">Document Input</div>
+                                <div class="h-4 border-l border-zinc-600"></div>
+                                <div class="flex gap-4">
+                                    <div class="px-4 py-2 border border-blue-600 bg-blue-900/30 text-blue-400 rounded">
+                                        OCR Engine</div>
+                                    <div class="px-4 py-2 border border-blue-600 bg-blue-900/30 text-blue-400 rounded">
+                                        Embeddings</div>
+                                </div>
+                                <div class="h-4 border-l border-zinc-600"></div>
+                                <div class="px-4 py-2 border border-green-600 bg-green-900/30 text-green-400 rounded">
+                                    SQLite Index</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FREE TIER -->
-    <section>
-        <div class="container">
-            <div class="freetier reveal">
-                <div class="section-tag" style="text-align:center">100% Free</div>
-                <h2>Powered by Gemini's Free API — No Billing Required</h2>
-                <p>StudyClaw uses the most generous free AI models available. 1,000 requests a day is enough for 50+
-                    quiz sessions.</p>
-                <div class="tier-table">
-                    <div class="tier-row">
-                        <div class="tier-model">gemini-2.0-flash-lite</div>
-                        <div class="tier-stat" style="color:var(--teal)">1,000/day</div>
-                        <div class="tier-desc">Default chat & replies</div>
-                    </div>
-                    <div class="tier-row">
-                        <div class="tier-model">gemini-2.5-flash</div>
-                        <div class="tier-stat" style="color:var(--cyan)">250/day</div>
-                        <div class="tier-desc">Quiz generation</div>
-                    </div>
-                    <div class="tier-row">
-                        <div class="tier-model">gemini-2.5-pro</div>
-                        <div class="tier-stat" style="color:var(--teal)">100/day</div>
-                        <div class="tier-desc">PYQ predictions</div>
+    <!-- Architecture Breakdown -->
+    <section id="architecture" class="py-24 border-t border-border bg-surface/30">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row gap-16 item-start">
+                <div class="md:w-1/2">
+                    <h2 class="text-primary font-mono text-sm tracking-wide mb-4 uppercase">Architecture Documentation
+                    </h2>
+                    <h3 class="text-3xl font-bold mb-6 font-heading">Local orchestration.<br />Cloud reasoning.</h3>
+                    <p class="text-zinc-400 mb-6 leading-relaxed">
+                        StudyClaw is a highly structured Go application running a multi-agent loop locally on your
+                        device (natively supported on Android via Termux). It is not a thin wrapper.
+                    </p>
+                    <p class="text-zinc-400 mb-8 leading-relaxed">
+                        Message ingestion, OCR bounding, and context retrieval occur inside a local SQLite database. It
+                        calls the Google Gemini API strictly for reasoning tasks, maintaining extreme token efficiency
+                        by routing simple NLP via `gemini-2.0-flash-lite` and complex execution to `gemini-2.5-pro`.
+                    </p>
+
+                    <ul class="space-y-4 font-mono text-xs text-zinc-300">
+                        <li class="flex items-center gap-3 pb-4 border-b border-border">
+                            <span class="text-zinc-600 font-bold">01</span>
+                            <span>Pub/Sub Event Bus for decoupled system agents</span>
+                        </li>
+                        <li class="flex items-center gap-3 pb-4 border-b border-border">
+                            <span class="text-zinc-600 font-bold">02</span>
+                            <span>Zero-API Persona Router (8 localized agent overlays)</span>
+                        </li>
+                        <li class="flex items-center gap-3 pb-4 border-b border-border">
+                            <span class="text-zinc-600 font-bold">03</span>
+                            <span>SQLite Schema specifically tuned for vector embeddings</span>
+                        </li>
+                        <li class="flex items-center gap-3 pb-4 border-b border-border">
+                            <span class="text-zinc-600 font-bold">04</span>
+                            <span>WhatsApp integration via Baileys API/Go bridge</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="md:w-1/2">
+                    <div class="rounded border border-border bg-black p-6 font-mono text-xs shadow-xl">
+                        <div class="text-zinc-500 mb-4 pb-2 border-b border-zinc-800">pkg/agent/loop.go</div>
+                        <pre><code class="text-zinc-300"><span class="text-purple-400">func</span> <span class="text-blue-400">(l *AgentLoop) handleMessage</span>(ctx context.Context, msg Message) {
+    <span class="text-zinc-500">// 1. Determine Intent Locally (No API calls)</span>
+    persona <span class="text-orange-400">:=</span> l.router.Classify(msg.Content)
+    
+    <span class="text-zinc-500">// 2. Build Context</span>
+    history <span class="text-orange-400">:=</span> l.db.GetHistory(msg.Sender, 5)
+    refs <span class="text-orange-400">:=</span> l.reflectionMgr.GetRecentReflections(3)
+    
+    <span class="text-zinc-500">// 3. Tool Calling Execution Loop</span>
+    tools <span class="text-orange-400">:=</span> l.getToolDefinitions(persona)
+    resp, err <span class="text-orange-400">:=</span> l.provider.Chat(ctx, history, tools)
+    
+    <span class="text-zinc-500">// 4. Render Visual Tags (<circuit>, <diagram>)</span>
+    renderedMsg <span class="text-orange-400">:=</span> l.visParser.ApplyVisuals(resp)
+    
+    l.bus.Publish(renderedMsg)
+}</code></pre>
                     </div>
                 </div>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="btn-primary"
-                    style="display:inline-block">Get Free Gemini API Key →</a>
             </div>
         </div>
     </section>
 
-    <!-- BLOG -->
-    <section id="blog">
-        <div class="container">
-            <div class="section-header reveal">
-                <div class="section-tag">Blog</div>
-                <h2 class="section-title">Learn how it works</h2>
-                <p class="section-sub">Plain-English guides for students and tinkerers. No CS degree required.</p>
+    <!-- Blog Section -->
+    <section id="blog" class="py-24 border-t border-border bg-background">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="mb-16 md:flex justify-between items-end">
+                <div class="max-w-2xl">
+                    <h2 class="text-primary font-mono text-sm tracking-wide mb-4 uppercase">Latest Research</h2>
+                    <h3 class="text-3xl md:text-5xl font-bold mb-4 font-heading">Engineering &amp; AI.</h3>
+                    <p class="text-zinc-400 text-lg">
+                        Read our latest findings on cognitive retention, LLM prompt engineering, and the future of
+                        open-source studying.
+                    </p>
+                </div>
             </div>
-            <div class="blog-grid">
-                <a href="blog/how-ai-predicts-exam-questions.html" class="blog-card reveal">
-                    <span class="blog-tag">AI & Exams</span>
-                    <h3>How AI Predicts Exam Questions with 85% Accuracy</h3>
-                    <p>We analyze 5 years of GTU past papers and run them through Gemini to find repeating patterns —
-                        here's the method.</p>
-                    <div class="blog-meta">Feb 28, 2026 <span class="blog-meta-dot"></span> 5 min read</div>
-                    <div class="read-more">Read article →</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Blog 1 -->
+                <a href="#"
+                    class="bg-surface border border-border rounded p-6 flex flex-col group hover:border-zinc-600 transition-colors">
+                    <span
+                        class="text-xs font-mono text-primary mb-4 bg-primary/10 w-fit px-2 py-1 rounded">Research</span>
+                    <h4 class="text-lg font-bold mb-3 font-heading group-hover:text-primary transition-colors">Why Flash
+                        Vision outperforms Tesseract for Handwriting OCR</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-6 flex-1">
+                        A technical deep-dive into how we built StudyClaw's zero-cost PDF ingestion engine using OpenCV
+                        and Gemini 2.0.
+                    </p>
+                    <div
+                        class="flex items-center gap-3 text-xs text-zinc-500 font-mono mt-auto pt-4 border-t border-border">
+                        <span>Read Case Study</span>
+                        <span>&rarr;</span>
+                    </div>
                 </a>
-                <a href="blog/running-ai-bot-on-android.html" class="blog-card reveal">
-                    <span class="blog-tag">Android & Termux</span>
-                    <h3>Running a 24/7 AI Bot on Your Android Phone with Termux</h3>
-                    <p>A complete walkthrough: setting up Termux, installing Go, linking WhatsApp, and keeping the bot
-                        alive using nohup.</p>
-                    <div class="blog-meta">Feb 28, 2026 <span class="blog-meta-dot"></span> 8 min read</div>
-                    <div class="read-more">Read article →</div>
+
+                <!-- Blog 2 -->
+                <a href="#"
+                    class="bg-surface border border-border rounded p-6 flex flex-col group hover:border-zinc-600 transition-colors">
+                    <span
+                        class="text-xs font-mono text-primary mb-4 bg-primary/10 w-fit px-2 py-1 rounded">Engineering</span>
+                    <h4 class="text-lg font-bold mb-3 font-heading group-hover:text-primary transition-colors">Mapping
+                        the GTU Syllabus to a Vector Database</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-6 flex-1">
+                        How we process 500-page engineering PDFs and slice them into semantic chunks natively on an
+                        Android device.
+                    </p>
+                    <div
+                        class="flex items-center gap-3 text-xs text-zinc-500 font-mono mt-auto pt-4 border-t border-border">
+                        <span>Read Tech Breakdown</span>
+                        <span>&rarr;</span>
+                    </div>
                 </a>
-                <a href="blog/whatsapp-best-study-interface.html" class="blog-card reveal">
-                    <span class="blog-tag">Product Thinking</span>
-                    <h3>Why WhatsApp Is the Best Study Interface for Indian Students</h3>
-                    <p>No new app to learn, works offline, uses 30MB of RAM. Here's why we chose the chat interface over
-                        a native app.</p>
-                    <div class="blog-meta">Feb 28, 2026 <span class="blog-meta-dot"></span> 4 min read</div>
-                    <div class="read-more">Read article →</div>
+
+                <!-- Blog 3 -->
+                <a href="#"
+                    class="bg-surface border border-border rounded p-6 flex flex-col group hover:border-zinc-600 transition-colors">
+                    <span class="text-xs font-mono text-primary mb-4 bg-primary/10 w-fit px-2 py-1 rounded">Guide</span>
+                    <h4 class="text-lg font-bold mb-3 font-heading group-hover:text-primary transition-colors">Deploying
+                        StudyClaw locally on Termux in 5 Minutes</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-6 flex-1">
+                        No cloud necessary. A step-by-step guide to installing the Go runtime and Baileys WhatsApp
+                        bridge on your phone.
+                    </p>
+                    <div
+                        class="flex items-center gap-3 text-xs text-zinc-500 font-mono mt-auto pt-4 border-t border-border">
+                        <span>Read Tutorial</span>
+                        <span>&rarr;</span>
+                    </div>
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer>
-        <p>🦞 <strong>StudyClaw</strong> — Built for Indian engineering students.<br>
-            Open source under <a href="https://github.com/roshan30-git/picoclaw-scholar/blob/main/LICENSE">MIT
-                License</a> ·
-            <a href="https://github.com/roshan30-git/picoclaw-scholar">GitHub</a> ·
-            <a href="blog/how-ai-predicts-exam-questions.html">Blog</a>
-        </p>
-        <p style="margin-top:0.5rem;font-size:0.78rem">© 2026 StudyClaw Project. Powered by <a
-                href="https://aistudio.google.com">Gemini AI</a>.</p>
+    <!-- Pre-Footer / CTA -->
+
+    <section class="py-24">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-6 font-heading">Stop memorizing. Start systematizing.</h2>
+            <p class="text-zinc-400 mb-10 max-w-xl mx-auto">
+                StudyClaw is 100% open-source, runs efficiently on older Android devices, and prevents API token burnout
+                via intelligent routing. Setup takes less than 5 minutes.
+            </p>
+            <a href="https://github.com/roshan30-git/picoclaw-scholar"
+                class="inline-flex justify-center items-center gap-2 px-8 py-4 bg-white text-black font-semibold rounded hover:bg-zinc-200 transition-colors">
+                Read the Documentation
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-border bg-black text-center md:text-left">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="font-bold tracking-tight text-zinc-300 font-heading">StudyClaw<span
+                    class="text-primary">.</span></div>
+            <p class="text-zinc-600 text-xs font-mono uppercase tracking-widest">
+                Academic &middot; System Focused &middot; Open Source
+            </p>
+            <div class="flex items-center gap-6 text-sm font-medium text-zinc-500">
+                <a href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank"
+                    class="hover:text-white transition-colors">GitHub Repository</a>
+            </div>
+        </div>
     </footer>
 
+    <!-- Reveal Interactivity -->
     <script>
-        // Scroll reveal
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
         }, { threshold: 0.1 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    </script>
 
+        document.querySelectorAll('section, header').forEach((el) => {
+            el.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-4');
+            observer.observe(el);
+        });
+    </script>
 </body>
 
 </html>
