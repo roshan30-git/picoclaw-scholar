@@ -4,33 +4,40 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
 )
 
 type AgentLoop struct {
 	cfg     *config.Config
 	bus     *bus.MessageBus
 	provider tools.LLMProvider
-	tools   map[string]tools.Tool
-	mgr      *channels.Manager
-	inbox    chan bus.InboundMessage
-	quit     chan struct{}
-	sessions map[string][]tools.Message
+	tools      map[string]tools.Tool
+	mgr        *channels.Manager
+	visManager *visual.Manager
+	calendar   *study.CalendarEngine
+	inbox      chan bus.InboundMessage
+	quit       chan struct{}
+	sessions   map[string][]tools.Message
 }
 
-func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider) *AgentLoop {
+func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, cal *study.CalendarEngine) *AgentLoop {
 	return &AgentLoop{
-		cfg:      cfg,
-		bus:      b,
-		provider: provider,
-		tools:    make(map[string]tools.Tool),
-		inbox:    b.Subscribe(),
-		quit:     make(chan struct{}),
-		sessions: make(map[string][]tools.Message),
+		cfg:        cfg,
+		bus:        b,
+		provider:   provider,
+		tools:      make(map[string]tools.Tool),
+		visManager: vm,
+		calendar:   cal,
+		inbox:      b.Subscribe(),
+		quit:       make(chan struct{}),
+		sessions:   make(map[string][]tools.Message),
 	}
 }
 
@@ -67,7 +74,12 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	sessionID := msg.Channel + ":" + msg.ChatID
 	history := l.sessions[sessionID]
 
-	history = append(history, tools.Message{Role: "user", Content: msg.Content})
+	enrichedContent := msg.Content
+	if l.calendar != nil {
+		enrichedContent = l.calendar.GetContext() + "\n\nUser Message:\n" + msg.Content
+	}
+
+	history = append(history, tools.Message{Role: "user", Content: enrichedContent})
 
 	var toolDefs []tools.ToolDefinition
 	for _, t := range l.tools {
@@ -113,12 +125,35 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	}
 	l.sessions[sessionID] = history
 
-	if l.mgr != nil && resp.Content != "" {
-		out := bus.OutboundMessage{
-			ChatID:  msg.ChatID,
-			Content: resp.Content,
-			Channel: msg.Channel,
+	// Parse visual tags securely before sending
+	out := bus.OutboundMessage{
+		ChatID:  msg.ChatID,
+		Content: resp.Content,
+		Channel: msg.Channel,
+	}
+
+	if l.visManager != nil {
+		diagramRe := regexp.MustCompile(`(?s)<diagram>(.*?)</diagram>`)
+		formulaRe := regexp.MustCompile(`(?s)<formula>(.*?)</formula>`)
+		circuitRe := regexp.MustCompile(`(?s)<circuit>(.*?)</circuit>`)
+
+		if matches := diagramRe.FindStringSubmatch(out.Content); len(matches) > 1 {
+			out.Content = diagramRe.ReplaceAllString(out.Content, "*(Diagram generated ✨)*")
+			out.VisualID = l.visManager.RegisterVisual("AI Diagram", "mermaid", matches[1])
+			out.VisualType = "mermaid"
+		} else if matches := formulaRe.FindStringSubmatch(out.Content); len(matches) > 1 {
+			out.Content = formulaRe.ReplaceAllString(out.Content, "*(Formula generated ✨)*")
+			out.VisualID = l.visManager.RegisterVisual("AI Formula", "formula", matches[1])
+			out.VisualType = "formula"
+		} else if matches := circuitRe.FindStringSubmatch(out.Content); len(matches) > 1 {
+			out.Content = circuitRe.ReplaceAllString(out.Content, "*(Circuit generated ✨)*")
+			// The circuit tag content is just the component name (e.g., "resistor")
+			out.VisualID = l.visManager.GenerateCircuit("AI Circuit", matches[1])
+			out.VisualType = "circuit"
 		}
+	}
+
+	if l.mgr != nil && resp.Content != "" {
 		if err := l.mgr.Send(ctx, out); err != nil {
 			log.Printf("Failed to route response: %v", err)
 		}

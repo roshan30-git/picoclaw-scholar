@@ -12,9 +12,11 @@ type InboundMessage struct {
 }
 
 type OutboundMessage struct {
-	ChatID  string
-	Content string
-	Channel string
+	ChatID     string
+	Content    string
+	Channel    string
+	VisualID   string
+	VisualType string
 }
 
 type MessageBus struct {

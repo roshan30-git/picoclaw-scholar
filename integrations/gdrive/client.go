@@ -40,7 +40,7 @@ func New(ctx context.Context) (*Client, error) {
 		return nil, fmt.Errorf("read credentials: %w (see README for setup)", err)
 	}
 
-	config, err := google.ConfigFromJSON(credBytes, drive.DriveReadonlyScope)
+	config, err := google.ConfigFromJSON(credBytes, drive.DriveFileScope)
 	if err != nil {
 		return nil, fmt.Errorf("parse credentials: %w", err)
 	}
@@ -111,6 +111,26 @@ func (c *Client) DownloadBook(ctx context.Context, fileID, destDir string) (stri
 	}
 
 	return destPath, nil
+}
+
+// UploadFile uploads a local file to the StudyClaw Books folder.
+func (c *Client) UploadFile(ctx context.Context, localPath string) (string, error) {
+	f, err := os.Open(localPath)
+	if err != nil {
+		return "", fmt.Errorf("open file to upload: %w", err)
+	}
+	defer f.Close()
+
+	driveFile := &drive.File{
+		Name:    filepath.Base(localPath),
+		Parents: []string{c.rootID},
+	}
+
+	res, err := c.svc.Files.Create(driveFile).Media(f).Context(ctx).Do()
+	if err != nil {
+		return "", fmt.Errorf("upload to drive: %w", err)
+	}
+	return res.Id, nil
 }
 
 // SearchBooks searches for a book by name keyword in the StudyClaw folder.

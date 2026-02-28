@@ -42,6 +42,21 @@ func New(path string) (*DB, error) {
 			vector_json TEXT,
 			FOREIGN KEY(note_id) REFERENCES notes(id)
 		)`,
+		`CREATE TABLE IF NOT EXISTS deadlines (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT NOT NULL,
+			due_date DATETIME NOT NULL,
+			status TEXT DEFAULT 'pending',
+			source TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS learning_profile (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			topic TEXT NOT NULL,
+			avg_score REAL DEFAULT 0,
+			attempts INTEGER DEFAULT 0,
+			pace_label TEXT DEFAULT 'medium'
+		)`,
 	}
 
 	for _, t := range tables {

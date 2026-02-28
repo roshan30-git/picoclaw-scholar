@@ -9,6 +9,10 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"time"
+
+	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -22,13 +26,16 @@ import (
 
 // Client wraps a whatsmeow.Client and routes events to StudyClaw via MassageBus.
 type Client struct {
-	wac *whatsmeow.Client
-	bus *bus.MessageBus
+	wac           *whatsmeow.Client
+	bus           *bus.MessageBus
+	allowedGroups []string
+	ocr           *study.OCRPipeline
 }
+
 
 // New creates and connects a new WhatsApp client.
 // sessionPath: where to persist the login session (so QR scan is only needed once).
-func New(sessionPath string, msgBus *bus.MessageBus) (*Client, error) {
+func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	// Open the SQLite session store
@@ -43,7 +50,7 @@ func New(sessionPath string, msgBus *bus.MessageBus) (*Client, error) {
 	}
 
 	wac := whatsmeow.NewClient(deviceStore, logger)
-	c := &Client{wac: wac, bus: msgBus}
+	c := &Client{wac: wac, bus: msgBus, allowedGroups: allowedGroups, ocr: ocrPipeline}
 	wac.AddEventHandler(c.handleEvent)
 
 	// If not logged in, show QR code in terminal (user scans once)
@@ -72,6 +79,22 @@ func New(sessionPath string, msgBus *bus.MessageBus) (*Client, error) {
 func (c *Client) handleEvent(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
+		chatID := v.Info.Chat.String()
+		
+		// Group filtering logic
+		if v.Info.IsGroup && len(c.allowedGroups) > 0 {
+			allowed := false
+			for _, allowedJID := range c.allowedGroups {
+				if chatID == allowedJID || chatID == allowedJID+"@g.us" {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				return // Ignore non-allowed group message
+			}
+		}
+
 		// Extract text
 		text := ""
 		if v.Message.GetConversation() != "" {
@@ -81,8 +104,40 @@ func (c *Client) handleEvent(evt interface{}) {
 		}
 
 		sender := v.Info.Sender.String()
-		chatID := v.Info.Chat.String()
-		mediaPath := "" // TODO: media download in Phase 1 Week 2
+		mediaPath := ""
+		
+		// Auto-save media
+		var mediaData []byte
+		var err error
+		ext := ".bin"
+		
+		if v.Message.GetDocumentMessage() != nil {
+			mediaData, err = c.wac.Download(v.Message.GetDocumentMessage())
+			ext = ".pdf"
+		} else if v.Message.GetImageMessage() != nil {
+			mediaData, err = c.wac.Download(v.Message.GetImageMessage())
+			ext = ".jpg"
+		}
+		
+		if err == nil && len(mediaData) > 0 {
+			home, _ := os.UserHomeDir()
+			dir := home + "/.studyclaw/media"
+			os.MkdirAll(dir, 0755)
+			
+			// Quick unique filename
+			filename := fmt.Sprintf("%s_%s%s", sender, v.Info.ID, ext)
+			mediaPath = dir + "/" + filename
+			os.WriteFile(mediaPath, mediaData, 0644)
+			text = fmt.Sprintf("[Media Saved: %s] %s", mediaPath, text)
+			
+			// Process OCR if image and pipeline exists
+			if ext == ".jpg" && c.ocr != nil {
+				extracted, err := c.ocr.ExtractAndSave(context.Background(), mediaPath)
+				if err == nil && extracted != "" {
+					text += "\n[Extracted OCR Text]:\n" + extracted
+				}
+			}
+		}
 
 		if text != "" || mediaPath != "" {
 			c.bus.Publish(bus.InboundMessage{
@@ -116,13 +171,19 @@ func (c *Client) IsRunning() bool {
 var diagramRegex = regexp.MustCompile("(?s)```mermaid(.*?)```")
 
 // Send delivers a text message to a WhatsApp JID (contact or group).
-func (c *Client) Send(ctx context.Context, msg bus.OutboundMessage) error {
-	jid, err := parseJID(msg.ChatID)
+func (c *Client) Send(ctx context.Context, outMsg bus.OutboundMessage) error {
+	jid, err := parseJID(outMsg.ChatID)
 	if err != nil {
 		return err
 	}
-	msg := &waE2E.Message{Conversation: proto.String(message)}
-	_, err = c.wac.SendMessage(context.Background(), jid, msg)
+	
+	content := outMsg.Content
+	if outMsg.VisualID != "" {
+		content += fmt.Sprintf("\n\n🔍 View Diagram/Formula here: https://studyclaw.app/viewer?id=%s&type=%s", outMsg.VisualID, outMsg.VisualType)
+	}
+
+	waMsg := &waE2E.Message{Conversation: proto.String(content)}
+	_, err = c.wac.SendMessage(context.Background(), jid, waMsg)
 	return err
 }
 

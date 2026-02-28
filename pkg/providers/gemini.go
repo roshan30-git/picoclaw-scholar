@@ -4,11 +4,19 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
+	"google.golang.org/genai"
+)
 
-	"github.com/google/generative-ai-go/genai"
-	"google.golang.org/api/option"
+// Free tier model selection:
+// - gemini-2.0-flash-lite: 15 RPM, 1000 RPD, 250K TPM — best value for a personal bot
+// - gemini-2.0-flash:       10 RPM,  200 RPD, 250K TPM — fallback for reasoning tasks
+// - gemini-2.5-flash:       10 RPM,  250 RPD, 250K TPM — latest stable, better reasoning
+const (
+	ModelDefault   = "gemini-2.0-flash-lite" // always use this for chat (most generous limits)
+	ModelReasoning = "gemini-2.0-flash"       // use for quiz/complex tasks
 )
 
 type GeminiProvider struct {
@@ -18,13 +26,16 @@ type GeminiProvider struct {
 
 func NewGeminiProvider(apiKey string) (*GeminiProvider, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("gemini API key is required")
+		return nil, fmt.Errorf("GEMINI_API_KEY environment variable is not set")
 	}
-	client, err := genai.NewClient(context.Background(), option.WithAPIKey(apiKey))
+	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
+		APIKey:  apiKey,
+		Backend: genai.BackendGeminiAPI,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("create gemini client: %w", err)
 	}
-	return &GeminiProvider{client: client, model: "gemini-2.0-flash"}, nil
+	return &GeminiProvider{client: client, model: ModelDefault}, nil
 }
 
 func (g *GeminiProvider) GetDefaultModel() string {
@@ -42,8 +53,10 @@ func (g *GeminiProvider) Chat(
 		model = g.model
 	}
 
-	m := g.client.GenerativeModel(model)
+	// Build the config
+	cfg := &genai.GenerateContentConfig{}
 
+	// Attach tools if provided
 	if len(toolDefs) > 0 {
 		var decls []*genai.FunctionDeclaration
 		for _, td := range toolDefs {
@@ -53,45 +66,61 @@ func (g *GeminiProvider) Chat(
 				Parameters:  parseSchema(td.Function.Parameters),
 			})
 		}
-		m.Tools = []*genai.Tool{{FunctionDeclarations: decls}}
+		cfg.Tools = []*genai.Tool{{FunctionDeclarations: decls}}
 	}
 
-	var parts []genai.Part
+	// Build the message history as genai.Content slice
+	var contents []*genai.Content
 	for _, msg := range messages {
-		if msg.Role == "model" {
-			parts = append(parts, genai.Text(msg.Content)) // For tool results/model history
-		} else if msg.Role == "user" {
-			parts = append(parts, genai.Text(msg.Content))
+		role := msg.Role
+		if role == "model" {
+			role = "model"
+		} else {
+			role = "user"
 		}
+		contents = append(contents, &genai.Content{
+			Role:  role,
+			Parts: []*genai.Part{genai.NewPartFromText(msg.Content)},
+		})
 	}
 
-	resp, err := m.GenerateContent(ctx, parts...)
-	if err != nil {
-		return nil, fmt.Errorf("gemini generate: %w", err)
-	}
+	// Retry once on rate-limit errors (429)
+	var lastErr error
+	for attempt := 0; attempt < 2; attempt++ {
+		if attempt > 0 {
+			time.Sleep(5 * time.Second)
+		}
 
-	var contentBuilder strings.Builder
-	var toolCalls []tools.ToolCall
-	for _, cand := range resp.Candidates {
-		if cand.Content != nil {
-			for _, part := range cand.Content.Parts {
-				if funcCall, ok := part.(genai.FunctionCall); ok {
-					toolCalls = append(toolCalls, tools.ToolCall{
-						ID:   funcCall.Name, // Using name as ID for simple implementations
-						Name: funcCall.Name,
-						Args: funcCall.Args,
-					})
-				} else if text, ok := part.(genai.Text); ok {
-					contentBuilder.WriteString(string(text))
-				}
+		resp, err := g.client.Models.GenerateContent(ctx, model, contents, cfg)
+		if err != nil {
+			lastErr = err
+			if strings.Contains(err.Error(), "429") {
+				continue
+			}
+			return nil, fmt.Errorf("gemini generate: %w", err)
+		}
+
+		var contentBuilder strings.Builder
+		var toolCalls []tools.ToolCall
+		for _, part := range resp.Candidates[0].Content.Parts {
+			if part.FunctionCall != nil {
+				toolCalls = append(toolCalls, tools.ToolCall{
+					ID:   part.FunctionCall.Name,
+					Name: part.FunctionCall.Name,
+					Args: part.FunctionCall.Args,
+				})
+			} else if part.Text != "" {
+				contentBuilder.WriteString(part.Text)
 			}
 		}
+
+		return &tools.LLMResponse{
+			Content:   contentBuilder.String(),
+			ToolCalls: toolCalls,
+		}, nil
 	}
 
-	return &tools.LLMResponse{
-		Content:   contentBuilder.String(),
-		ToolCalls: toolCalls,
-	}, nil
+	return nil, fmt.Errorf("gemini rate limit exceeded after retry: %w", lastErr)
 }
 
 func parseSchema(m map[string]any) *genai.Schema {
@@ -122,7 +151,7 @@ func parseSchema(m map[string]any) *genai.Schema {
 		}
 	}
 	if req, ok := m["required"].([]string); ok {
-		s.Required = req // Note: In newer genai, Required is []string
+		s.Required = req
 	}
 	if desc, ok := m["description"].(string); ok {
 		s.Description = desc
