@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>StudyClaw - Glass &amp; Oxide Edition</title>
-<link rel="icon" type="image/png" href="/favicon.png">
-<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>StudyClaw - Glass &amp; Oxide Edition</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
@@ -46,17 +52,19 @@
             },
         };
     </script>
-<style>
+    <style>
         body {
             background-color: #0B1120;
             color: #F8FAFC;
         }
+
         .blob {
             position: absolute;
             filter: blur(80px);
             z-index: -1;
             opacity: 0.4;
         }
+
         .glass-container {
             background: rgba(17, 25, 40, 0.7);
             backdrop-filter: blur(16px);
@@ -64,32 +72,40 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s ease;
         }
+
         .glass-card:hover {
             background: rgba(255, 255, 255, 0.06);
             border-color: rgba(255, 75, 62, 0.3);
             box-shadow: 0 0 20px rgba(255, 75, 62, 0.1);
         }
+
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
-            background: #0f172a; 
+            background: #0f172a;
         }
+
         ::-webkit-scrollbar-thumb {
-            background: #334155; 
+            background: #334155;
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569; 
+            background: #475569;
         }
+
         .code-block {
             counter-reset: line;
         }
+
         .code-line::before {
             counter-increment: line;
             content: counter(line);
@@ -102,554 +118,542 @@
             font-family: 'JetBrains Mono', monospace;
             opacity: 0.6;
         }
-        .token-cmd { color: #818cf8; }.token-arg { color: #f97316; }.token-str { color: #a5b4fc; }.token-comment { color: #64748b; font-style: italic; }
+
+        .token-cmd {
+            color: #818cf8;
+        }
+
+        .token-arg {
+            color: #f97316;
+        }
+
+        .token-str {
+            color: #a5b4fc;
+        }
+
+        .token-comment {
+            color: #64748b;
+            font-style: italic;
+        }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white overflow-x-hidden relative">
-<div class="blob bg-accent-teal w-[600px] h-[600px] rounded-full top-[-100px] left-[-200px]"></div>
-<div class="blob bg-accent-amber w-[500px] h-[500px] rounded-full bottom-[10%] right-[-100px] opacity-20"></div>
-<div class="blob bg-indigo-900 w-[800px] h-[800px] rounded-full top-[30%] left-[20%] opacity-20"></div>
-<div class="max-w-[1400px] mx-auto my-0 lg:my-8 glass-container rounded-none lg:rounded-3xl overflow-hidden min-h-screen relative z-10">
-<nav class="border-b border-glass-border sticky top-0 z-50 backdrop-blur-xl bg-[#0B1120]/60">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex justify-between h-20 items-center">
-<div class="flex items-center gap-3">
-<span class="material-symbols-outlined text-primary text-3xl font-light">terminal</span>
-<div class="flex flex-col">
-<span class="font-bold text-lg tracking-tight leading-none text-white">StudyClaw</span>
-<span class="text-[10px] font-mono text-slate-400 tracking-wide uppercase">Oxide Build v2.0</span>
-</div>
-</div>
-<div class="hidden md:flex items-center space-x-10">
-<a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide" href="#">Documentation</a>
-<a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide" href="#">Resources</a>
-<a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide" href="#">API Reference</a>
-<a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide" href="#">Changelog</a>
-</div>
-<div class="flex items-center space-x-5">
-<a class="hidden lg:block text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors font-mono" href="#">
-<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">star</span> 12.4k</span>
-</a>
-<a class="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:border-slate-600 transition-all focus:outline-none shadow-lg shadow-black/20" href="#">
-<span>Console</span>
-<span class="material-symbols-outlined text-sm ml-2 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all">chevron_right</span>
-</a>
-</div>
-</div>
-</div>
-</nav>
-<section class="relative pt-24 pb-32 overflow-hidden">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-<div class="grid lg:grid-cols-2 gap-16 items-center">
-<div class="space-y-8">
-<div class="inline-flex items-center space-x-2 border border-primary/30 rounded-full bg-primary/10 px-4 py-1.5 shadow-sm backdrop-blur-sm">
-<span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-</span>
-<span class="text-xs font-mono font-medium text-primary tracking-wide">GEMINI_1.5_PRO OXIDE INTEGRATION</span>
-</div>
-<h1 class="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1] text-white">
-                        AI-Native Study <br/>
-<span class="text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-500">Infrastructure</span> <br/>
-                        for Engineering.
-                    </h1>
-<p class="text-lg text-slate-400 max-w-lg leading-relaxed font-light">
-                        Direct Gemini AI integration for your syllabus. No new GUI to learn—just a powerful CLI for academic mastery directly in your workflow.
-                    </p>
-<div class="flex flex-col sm:flex-row gap-4 pt-4">
-<a class="flex items-center justify-center px-8 py-3.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 transform hover:-translate-y-0.5" href="#">
-<span class="material-symbols-outlined mr-2 text-lg">bolt</span>
-                            Initialize Instance
+
+<body
+    class="antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white overflow-x-hidden relative">
+    <div class="blob bg-accent-teal w-[600px] h-[600px] rounded-full top-[-100px] left-[-200px]"></div>
+    <div class="blob bg-accent-amber w-[500px] h-[500px] rounded-full bottom-[10%] right-[-100px] opacity-20"></div>
+    <div class="blob bg-indigo-900 w-[800px] h-[800px] rounded-full top-[30%] left-[20%] opacity-20"></div>
+    <div
+        class="w-full max-w-[1400px] mx-auto my-0 lg:my-8 glass-container rounded-none lg:rounded-3xl overflow-hidden min-h-screen relative z-10 w-full overflow-x-hidden">
+        <nav class="border-b border-glass-border sticky top-0 z-50 backdrop-blur-xl bg-[#0B1120]/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-20 items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-3xl font-light">terminal</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-lg tracking-tight leading-none text-white">StudyClaw</span>
+                            <span class="text-[10px] font-mono text-slate-400 tracking-wide uppercase">Oxide Build
+                                v2.0</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-10">
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#">Documentation</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#">Resources</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#">API Reference</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#">Changelog</a>
+                    </div>
+                    <div class="flex items-center space-x-5">
+                        <a class="hidden lg:block text-xs font-medium text-slate-500 hover:text-slate-300 transition-colors font-mono"
+                            href="#">
+                            <span class="flex items-center gap-1"><span
+                                    class="material-symbols-outlined text-sm">star</span> 12.4k</span>
                         </a>
-<div class="flex items-center justify-between px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-sm min-w-[240px] shadow-sm cursor-text hover:border-slate-500 transition-colors group">
-<span class="mr-4 text-primary select-none">$</span>
-<span class="flex-grow">git clone https://github.com/roshan30-git/picoclaw-scholar.git</span>
-<span class="material-symbols-outlined text-slate-600 text-sm ml-4 group-hover:text-slate-400 cursor-pointer">content_copy</span>
-</div>
-</div>
-<div class="flex items-center space-x-8 text-xs font-medium text-slate-500 font-mono pt-6 border-t border-slate-800 mt-4">
-<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-primary">check_circle</span> Open Source</span>
-<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-primary">lock</span> E2E Encrypted</span>
-<span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-base text-primary">speed</span> &lt;50ms Latency</span>
-</div>
-</div>
-<div class="relative w-full">
-<div class="absolute -inset-1 bg-gradient-to-tr from-primary/20 to-indigo-500/20 rounded-xl blur-xl opacity-50"></div>
-<div class="relative bg-[#0f172a]/90 backdrop-blur-md rounded-xl border border-slate-700/50 shadow-2xl overflow-hidden font-mono text-sm leading-6 ring-1 ring-white/10">
-<div class="bg-[#1e293b]/50 px-4 py-3 flex items-center justify-between border-b border-slate-700/50">
-<div class="flex items-center space-x-2">
-<div class="w-3 h-3 rounded-full bg-[#ef4444] border border-red-900/50"></div>
-<div class="w-3 h-3 rounded-full bg-[#f59e0b] border border-yellow-900/50"></div>
-<div class="w-3 h-3 rounded-full bg-[#10b981] border border-green-900/50"></div>
-</div>
-<div class="text-slate-500 text-xs font-medium tracking-wide">user@studyclaw: ~/picoclaw-scholar</div>
-<div class="flex text-slate-600 gap-2">
-<span class="material-symbols-outlined text-xs">settings</span>
-</div>
-</div>
-<div class="p-6 text-slate-300 space-y-2 h-[420px] overflow-y-auto code-block bg-[#0f172a]/80">
-<div class="code-line">
-<span class="token-cmd">git clone</span> <span class="text-slate-400">https://github.com/roshan30-git/picoclaw-scholar.git</span>
-</div>
-<div class="code-line">
-<span class="token-cmd">cd</span> <span class="text-slate-400">picoclaw-scholar</span>
-</div>
-<div class="code-line">
-<span class="token-cmd">go mod</span> <span class="text-slate-400">tidy</span>
-</div>
-<div class="code-line text-slate-500 italic">Downloading dependencies... [====================] 100%</div>
-<div class="code-line text-primary">✓ Dependencies resolved.</div>
-<div class="code-line"><br/></div>
-<div class="code-line">
-<span class="token-cmd">go run</span> <span class="text-slate-400">cmd/main.go</span>
-</div>
-<div class="code-line">
-<span class="text-indigo-400">@Gemini_Pro:</span> System initialized. WhatsApp bridge active.
-</div>
-<div class="code-line">
-<span class="text-slate-400">➜</span> <span class="animate-pulse text-primary">_</span>
-</div>
-</div>
-<div class="bg-[#1e293b]/50 px-4 py-1.5 flex justify-between border-t border-slate-700/50 text-[10px] text-slate-500 uppercase tracking-wider font-medium">
-<div class="flex gap-3">
-<span>Ready</span>
-<span>UTF-8</span>
-</div>
-<span>Ln 24, Col 2</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
-<section class="py-16 relative">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex flex-col md:flex-row justify-between items-center gap-12">
-<div class="text-left md:w-1/3">
-<p class="text-xs font-bold font-mono text-primary tracking-wider uppercase mb-3">Powered By</p>
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-4xl text-slate-400">psychology</span>
-<div class="flex flex-col">
-<span class="text-xl font-bold text-white">Gemini 1.5 Pro</span>
-<span class="text-sm text-slate-500">Enterprise API Grade</span>
-</div>
-</div>
-</div>
-<div class="h-16 w-px bg-slate-700 hidden md:block"></div>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-8 md:w-2/3">
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">99.9%</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Uptime</div>
-</div>
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">&lt;50ms</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Latency</div>
-</div>
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">~30MB</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">RAM</div>
-</div>
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">AES-256</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Security</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
-<section class="py-24 relative">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-<div class="mb-16 md:flex md:justify-between md:items-end">
-<div>
-<h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Core Modules</h2>
-<p class="text-slate-400 max-w-2xl text-lg font-light">Essential components for your academic stack. Built for performance, reliability, and developer experience.</p>
-</div>
-<a class="hidden md:flex items-center text-primary font-medium hover:text-primary-hover mt-4 md:mt-0" href="#">
+                        <a class="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:border-slate-600 transition-all focus:outline-none shadow-lg shadow-black/20"
+                            href="#">
+                            <span>Console</span>
+                            <span
+                                class="material-symbols-outlined text-sm ml-2 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all">chevron_right</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <section class="relative pt-24 pb-32 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid lg:grid-cols-2 gap-16 items-center">
+                    <div class="space-y-8">
+                        <div
+                            class="inline-flex items-center space-x-2 border border-primary/30 rounded-full bg-primary/10 px-4 py-1.5 shadow-sm backdrop-blur-sm">
+                            <span class="relative flex h-2 w-2">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                            </span>
+                            <span class="text-xs font-mono font-medium text-primary tracking-wide">GEMINI_2.0_FLASH_LITE
+                                INTEGRATION</span>
+                        </div>
+                        <h1
+                            class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] text-white break-words">
+                            AI-Native Study <br />
+                            <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-500">Infrastructure</span>
+                            <br />
+                            for Engineering.
+                        </h1>
+                        <p class="text-lg text-slate-400 max-w-lg leading-relaxed font-light">
+                            Direct Gemini AI integration for your syllabus. No new GUI to learn—just a powerful WhatsApp
+                            bot for academic mastery directly in your workflow.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                            <a class="flex items-center justify-center px-8 py-3.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 transform hover:-translate-y-0.5"
+                                href="#">
+                                <span class="material-symbols-outlined mr-2 text-lg">bolt</span>
+                                Initialize Instance
+                            </a>
+                            <div
+                                class="flex items-center justify-between px-4 sm:px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-xs sm:text-sm w-full max-w-full shadow-sm cursor-text hover:border-slate-500 transition-colors group overflow-hidden">
+                                <span class="mr-4 text-primary select-none">$</span>
+                                <span class="flex-grow truncate mr-2">git clone
+                                    https://github.com/roshan30-git/picoclaw-scholar.git</span>
+                                <span
+                                    class="material-symbols-outlined text-slate-600 text-sm ml-2 group-hover:text-slate-400 cursor-pointer shrink-0">content_copy</span>
+                            </div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-8 text-xs font-medium text-slate-500 font-mono pt-6 border-t border-slate-800 mt-4">
+                            <span class="flex items-center gap-1.5"><span
+                                    class="material-symbols-outlined text-base text-primary">check_circle</span> Open
+                                Source</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="material-symbols-outlined text-base text-primary">lock</span> E2E
+                                Encrypted</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="material-symbols-outlined text-base text-primary">speed</span> &lt;50ms
+                                Latency</span>
+                        </div>
+                    </div>
+                    <div class="relative w-full">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-tr from-primary/20 to-indigo-500/20 rounded-xl blur-xl opacity-50">
+                        </div>
+                        <div
+                            class="relative bg-[#0f172a]/90 backdrop-blur-md rounded-xl border border-slate-700/50 shadow-2xl overflow-hidden font-mono text-sm leading-6 ring-1 ring-white/10">
+                            <div
+                                class="bg-[#1e293b]/50 px-4 py-3 flex items-center justify-between border-b border-slate-700/50">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-[#ef4444] border border-red-900/50"></div>
+                                    <div class="w-3 h-3 rounded-full bg-[#f59e0b] border border-yellow-900/50"></div>
+                                    <div class="w-3 h-3 rounded-full bg-[#10b981] border border-green-900/50"></div>
+                                </div>
+                                <div class="text-slate-500 text-xs font-medium tracking-wide">user@studyclaw:
+                                    ~/picoclaw-scholar</div>
+                            </div>
+                            <div class="flex text-slate-600 gap-2">
+                                <span class="material-symbols-outlined text-xs shrink-0">settings</span>
+                            </div>
+                        </div>
+                        <div
+                            class="p-4 md:p-6 text-slate-300 space-y-2 h-[420px] overflow-auto overflow-x-auto code-block bg-[#0f172a]/80">
+                            <div class="code-line">
+                                <span class="token-cmd">git clone</span> <span
+                                    class="text-slate-400">https://github.com/roshan30-git/picoclaw-scholar.git</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="token-cmd">cd</span> <span class="text-slate-400">picoclaw-scholar</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="token-cmd">go mod</span> <span class="text-slate-400">tidy</span>
+                            </div>
+                            <div class="code-line text-slate-500 italic">Downloading dependencies...
+                                [====================] 100%</div>
+                            <div class="code-line text-primary">✓ Dependencies resolved.</div>
+                            <div class="code-line"><br /></div>
+                            <div class="code-line">
+                                <span class="token-cmd">go run</span> <span class="text-slate-400">cmd/main.go</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="text-indigo-400">@Gemini_Pro:</span> System initialized. WhatsApp bridge
+                                active.
+                            </div>
+                            <div class="code-line">
+                                <span class="text-slate-400">➜</span> <span class="animate-pulse text-primary">_</span>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-[#1e293b]/50 px-4 py-1.5 flex justify-between border-t border-slate-700/50 text-[10px] text-slate-500 uppercase tracking-wider font-medium">
+                            <div class="flex gap-3">
+                                <span>Ready</span>
+                                <span>UTF-8</span>
+                            </div>
+                            <span>Ln 24, Col 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-16 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-12">
+                <div class="text-left md:w-1/3">
+                    <p class="text-xs font-bold font-mono text-primary tracking-wider uppercase mb-3">Powered By</p>
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined text-4xl text-slate-400">psychology</span>
+                        <div class="flex flex-col">
+                            <span class="text-xl font-bold text-white">Gemini 2.0 Flash Lite</span>
+                            <span class="text-sm text-slate-500">Free & Open Source</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-16 w-px bg-slate-700 hidden md:block"></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 sm:gap-x-8 md:gap-x-12 gap-y-8 md:w-2/3">
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">99.9%</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Uptime</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">&lt;50ms</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Latency</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">~30MB</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">RAM</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">AES-256</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Security</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="mb-16 md:flex md:justify-between md:items-end">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Core Modules</h2>
+                    <p class="text-slate-400 max-w-2xl text-lg font-light">Essential components for your academic stack.
+                        Built for performance, reliability, and developer experience.</p>
+                </div>
+                <a class="hidden md:flex items-center text-primary font-medium hover:text-primary-hover mt-4 md:mt-0"
+                    href="#">
                     View All Modules <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
-</a>
-</div>
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">picture_as_pdf</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">PDF Indexing</h3>
-<p class="text-sm text-slate-400 leading-relaxed mb-4">
-Send any PDF to the bot. It extracts text and stores it in a local knowledge base.
-</p>
-</div>
-
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">quiz</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">AI Quizzes</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-Ask for a quiz and get 3–5 MCQs drawn from your own notes via Gemini.
-</p>
-</div>
-
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">account_tree</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Diagram Viewer</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-If the AI generates a Mermaid diagram, a local HTTP link is sent so you can view it directly with full pan/zoom.
-</p>
-</div>
-
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">memory</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Self-Reflection</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-The bot periodically reflects on past sessions to improve its summaries and study recommendations.
-</p>
-</div>
-
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">calendar_today</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Calendar Engine</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-Keeps track of your semester dates and exams to intuitively adjust its "soul" (Drill Sergeant vs. Peer).
-</p>
-</div>
-
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">timeline</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Report Generation</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-Generates extremely detailed progress reports of your study sessions instantly upon request.
-</p>
-</div>
-
-<div class="glass-card p-8 rounded-xl group lg:col-span-3">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">build</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Native Tool Calling</h3>
-<p class="text-sm text-slate-400 leading-relaxed max-w-2xl">
-Uses Gemini's native function calling to autonomously decide when to generate quizzes or index new documents.
-</p>
-</div>
-
-</div>
-</div>
-</section>
-<div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
-<section class="py-16 relative">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex flex-col md:flex-row justify-between items-center gap-12">
-<div class="text-left md:w-1/3">
-<p class="text-xs font-bold font-mono text-primary tracking-wider uppercase mb-3">Powered By</p>
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-4xl text-slate-400">psychology</span>
-<div class="flex flex-col">
-<span class="text-xl font-bold text-white">Gemini 1.5 Pro</span>
-<span class="text-sm text-slate-500">Enterprise API Grade</span>
-</div>
-</div>
-</div>
-<div class="h-16 w-px bg-slate-700 hidden md:block"></div>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-8 md:w-2/3">
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">99.9%</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Uptime</div>
-</div>
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">&lt;50ms</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Latency</div>
-</div>
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">~30MB</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">RAM</div>
-</div>
-<div>
-<div class="text-3xl font-bold font-mono text-white tracking-tighter">AES-256</div>
-<div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Security</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
-<section class="py-24 relative">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-<div class="mb-16 md:flex md:justify-between md:items-end">
-<div>
-<h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Core Modules</h2>
-<p class="text-slate-400 max-w-2xl text-lg font-light">Essential components for your academic stack. Built for performance, reliability, and developer experience.</p>
-</div>
-<a class="hidden md:flex items-center text-primary font-medium hover:text-primary-hover mt-4 md:mt-0" href="#">
-                    View All Modules <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
-</a>
-</div>
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">picture_as_pdf</span>
-</div>
-<span class="font-mono text-[10px] bg-slate-800/80 px-2 py-1 rounded text-slate-400 border border-slate-700">v1.2</span>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">PDF Indexing Engine</h3>
-<p class="text-sm text-slate-400 leading-relaxed mb-4">
-                        Vector-based ingestion of syllabus documents. Converts unstructured PDF data into queryable embeddings instantly.
+                </a>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">picture_as_pdf</span>
+                        </div>
+                        <span
+                            class="font-mono text-[10px] bg-slate-800/80 px-2 py-1 rounded text-slate-400 border border-slate-700">v1.2</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">PDF Indexing Engine</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                        Vector-based ingestion of syllabus documents. Converts unstructured PDF data into queryable
+                        embeddings instantly.
                     </p>
-<div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-<div class="bg-gradient-to-r from-primary to-orange-500 h-full w-3/4"></div>
-</div>
-</div>
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">quiz</span>
-</div>
-<span class="font-mono text-[10px] bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">BETA</span>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Daily Quiz Generator</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-                        Automated spaced repetition system (SRS). Generates questions based on recent weak points in your chat history.
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r from-primary to-orange-500 h-full w-3/4"></div>
+                    </div>
+                </div>
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">quiz</span>
+                        </div>
+                        <span
+                            class="font-mono text-[10px] bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">BETA</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Daily Quiz Generator</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Automated spaced repetition system (SRS). Generates questions based on recent weak points in
+                        your chat history.
                     </p>
-</div>
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">memory</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Context Memory</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-                        Long-term persistence layer. The model "remembers" your self-reflections and adapts its difficulty curve.
+                </div>
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">memory</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Context Memory</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Long-term persistence layer. The model "remembers" your self-reflections and adapts its
+                        difficulty curve.
                     </p>
-</div>
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">calendar_today</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Exam Scheduler</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-                        Cron-like scheduling for your exam preparation. Integrates with standard calendar formats (.ics).
+                </div>
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">calendar_today</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Exam Scheduler</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Cron-like scheduling for your exam preparation. Integrates with standard calendar formats
+                        (.ics).
                     </p>
-</div>
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">account_tree</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">Mermaid Diagrams</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-                        Text-to-Diagram rendering. Request complex flowcharts or architecture diagrams directly in the terminal output.
+                </div>
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">account_tree</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Mermaid Diagrams</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Text-to-Diagram rendering. Request complex flowcharts or architecture diagrams directly in the
+                        terminal output.
                     </p>
-</div>
-<div class="glass-card p-8 rounded-xl group">
-<div class="flex justify-between items-start mb-6">
-<div class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
-<span class="material-symbols-outlined text-primary font-light">timeline</span>
-</div>
-</div>
-<h3 class="text-lg font-semibold text-white mb-3">PYQ Predictor</h3>
-<p class="text-sm text-slate-400 leading-relaxed">
-                        Statistical analysis of Previous Year Questions to predict high-probability topics for upcoming exams.
+                </div>
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">timeline</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">PYQ Predictor</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Statistical analysis of Previous Year Questions to predict high-probability topics for upcoming
+                        exams.
                     </p>
-</div>
-</div>
-</div>
-</section>
-<div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
-<section class="py-24 relative overflow-hidden">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-<div class="text-center mb-16">
-<span class="font-mono text-primary text-xs font-bold uppercase tracking-widest border border-primary/20 bg-primary/5 px-3 py-1 rounded-full">Initialization Sequence</span>
-<h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Get Started in 3 Minutes</h2>
-</div>
-<div class="relative">
-<div class="absolute top-8 left-0 w-full h-px bg-slate-800 hidden md:block z-0"></div>
-<div class="grid md:grid-cols-3 gap-12">
-<div class="relative z-10 flex flex-col items-center text-center group">
-<div class="w-16 h-16 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center mb-6 group-hover:border-primary group-hover:text-primary transition-all shadow-glass text-slate-400">
-<span class="font-mono text-lg font-bold">01</span>
-</div>
-<h3 class="text-lg font-bold text-white mb-3">Deploy Environment</h3>
-<div class="bg-black/40 border border-slate-800 rounded px-3 py-2 text-left mb-3 w-full max-w-[240px]">
-<p class="text-xs text-primary font-mono">$ git clone https://github.com/roshan30-git/picoclaw-scholar.git</p>
-</div>
-<p class="text-sm text-slate-500">Install dependencies on Termux or Local Machine.</p>
-</div>
-<div class="relative z-10 flex flex-col items-center text-center group">
-<div class="w-16 h-16 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center mb-6 group-hover:border-primary group-hover:text-primary transition-all shadow-glass text-slate-400">
-<span class="font-mono text-lg font-bold">02</span>
-</div>
-<h3 class="text-lg font-bold text-white mb-3">Authenticate</h3>
-<div class="bg-black/40 border border-slate-800 rounded px-3 py-2 text-left mb-3 w-full max-w-[240px]">
-<p class="text-xs text-primary font-mono">$ cd picoclaw-scholar &amp;&amp; go mod tidy</p>
-</div>
-<p class="text-sm text-slate-500">Scan the QR code to link your student profile.</p>
-</div>
-<div class="relative z-10 flex flex-col items-center text-center group">
-<div class="w-16 h-16 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center mb-6 group-hover:border-primary group-hover:text-primary transition-all shadow-glass text-slate-400">
-<span class="font-mono text-lg font-bold">03</span>
-</div>
-<h3 class="text-lg font-bold text-white mb-3">Execute Runtime</h3>
-<div class="bg-black/40 border border-slate-800 rounded px-3 py-2 text-left mb-3 w-full max-w-[240px]">
-<p class="text-xs text-primary font-mono">$ go run cmd/main.go</p>
-</div>
-<p class="text-sm text-slate-500">Start the linear studying process.</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-<div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
-<section class="py-24">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex flex-col sm:flex-row justify-between items-end mb-12 gap-4">
-<div>
-<h2 class="text-3xl font-bold mb-2 tracking-tight text-white">Latest from the Lab</h2>
-<p class="text-slate-400 font-light">Engineering updates and patch notes.</p>
-</div>
-<a class="text-primary hover:text-primary-hover font-mono text-sm flex items-center transition-colors" href="#">
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <span
+                    class="font-mono text-primary text-xs font-bold uppercase tracking-widest border border-primary/20 bg-primary/5 px-3 py-1 rounded-full">Initialization
+                    Sequence</span>
+                <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Get Started in 3 Minutes</h2>
+            </div>
+            <div class="relative">
+                <div class="absolute top-8 left-0 w-full h-px bg-slate-800 hidden md:block z-0"></div>
+                <div class="grid md:grid-cols-3 gap-12">
+                    <div class="relative z-10 flex flex-col items-center text-center group">
+                        <div
+                            class="w-16 h-16 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center mb-6 group-hover:border-primary group-hover:text-primary transition-all shadow-glass text-slate-400">
+                            <span class="font-mono text-lg font-bold">01</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-3">Deploy Environment</h3>
+                        <div
+                            class="bg-black/40 border border-slate-800 rounded px-3 py-2 text-left mb-3 w-full overflow-hidden">
+                            <p class="text-[10px] sm:text-xs text-primary font-mono whitespace-nowrap truncate block">$
+                                git clone
+                                https://github.com/roshan30-git/picoclaw-scholar.git</p>
+                        </div>
+                        <p class="text-sm text-slate-500">Install dependencies on Termux or Local Machine.</p>
+                    </div>
+                    <div class="relative z-10 flex flex-col items-center text-center group">
+                        <div
+                            class="w-16 h-16 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center mb-6 group-hover:border-primary group-hover:text-primary transition-all shadow-glass text-slate-400">
+                            <span class="font-mono text-lg font-bold">02</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-3">Authenticate</h3>
+                        <div
+                            class="bg-black/40 border border-slate-800 rounded px-3 py-2 text-left mb-3 w-full overflow-hidden">
+                            <p class="text-[10px] sm:text-xs text-primary font-mono whitespace-nowrap truncate block">$
+                                cd
+                                picoclaw-scholar &amp;&amp; go mod tidy</p>
+                        </div>
+                        <p class="text-sm text-slate-500">Scan the QR code to link your student profile.</p>
+                    </div>
+                    <div class="relative z-10 flex flex-col items-center text-center group">
+                        <div
+                            class="w-16 h-16 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center mb-6 group-hover:border-primary group-hover:text-primary transition-all shadow-glass text-slate-400">
+                            <span class="font-mono text-lg font-bold">03</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-3">Execute Runtime</h3>
+                        <div
+                            class="bg-black/40 border border-slate-800 rounded px-3 py-2 text-left mb-3 w-full overflow-hidden">
+                            <p class="text-[10px] sm:text-xs text-primary font-mono whitespace-nowrap truncate block">$
+                                go run
+                                cmd/main.go</p>
+                        </div>
+                        <p class="text-sm text-slate-500">Start the linear studying process.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-end mb-12 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2 tracking-tight text-white">Latest from the Lab</h2>
+                    <p class="text-slate-400 font-light">Engineering updates and patch notes.</p>
+                </div>
+                <a class="text-primary hover:text-primary-hover font-mono text-sm flex items-center transition-colors"
+                    href="#">
                     View Archive <span class="material-symbols-outlined text-sm ml-2">arrow_forward</span>
-</a>
-</div>
-<div class="grid md:grid-cols-3 gap-8">
-<article class="flex flex-col h-full bg-slate-800/30 border border-slate-700/50 rounded-lg overflow-hidden hover:border-slate-600 transition-colors group backdrop-blur-sm">
-<div class="p-6 flex-1">
-<div class="flex gap-2 mb-4">
-<span class="px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-[10px] font-mono uppercase rounded font-bold">Algorithm</span>
-<span class="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] font-mono uppercase rounded font-bold">Patch</span>
-</div>
-<h3 class="text-lg font-bold text-white mb-3 group-hover:text-primary transition-colors">Optimizing Binary Search Tree indexing</h3>
-<p class="text-slate-400 text-sm leading-relaxed mb-4">
-                            We reduced the O(n) worst-case scenarios in our PDF parser by implementing self-balancing AVL trees for text extraction.
+                </a>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <article
+                    class="flex flex-col h-full bg-slate-800/30 border border-slate-700/50 rounded-lg overflow-hidden hover:border-slate-600 transition-colors group backdrop-blur-sm">
+                    <div class="p-6 flex-1">
+                        <div class="flex gap-2 mb-4">
+                            <span
+                                class="px-2 py-0.5 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-[10px] font-mono uppercase rounded font-bold">Algorithm</span>
+                            <span
+                                class="px-2 py-0.5 bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] font-mono uppercase rounded font-bold">Patch</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-3 group-hover:text-primary transition-colors">
+                            Optimizing Binary Search Tree indexing</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                            We reduced the O(n) worst-case scenarios in our PDF parser by implementing self-balancing
+                            AVL trees for text extraction.
                         </p>
-</div>
-<div class="px-6 py-4 border-t border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
-<span class="text-xs font-mono text-slate-500">Oct 12, 2023</span>
-<span class="text-xs font-mono text-slate-500">4 min read</span>
-</div>
-</article>
-<article class="flex flex-col h-full bg-slate-800/30 border border-slate-700/50 rounded-lg overflow-hidden hover:border-slate-600 transition-colors group backdrop-blur-sm">
-<div class="p-6 flex-1">
-<div class="flex gap-2 mb-4">
-<span class="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[10px] font-mono uppercase rounded font-bold">AI Model</span>
-</div>
-<h3 class="text-lg font-bold text-white mb-3 group-hover:text-primary transition-colors">Gemini 1.5 Integration: A Technical Deep Dive</h3>
-<p class="text-slate-400 text-sm leading-relaxed mb-4">
-                            Transitioning from static embeddings to dynamic context windows. How we managed token limits while maintaining high fidelity.
+                    </div>
+                    <div
+                        class="px-6 py-4 border-t border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
+                        <span class="text-xs font-mono text-slate-500">Oct 12, 2023</span>
+                        <span class="text-xs font-mono text-slate-500">4 min read</span>
+                    </div>
+                </article>
+                <article
+                    class="flex flex-col h-full bg-slate-800/30 border border-slate-700/50 rounded-lg overflow-hidden hover:border-slate-600 transition-colors group backdrop-blur-sm">
+                    <div class="p-6 flex-1">
+                        <div class="flex gap-2 mb-4">
+                            <span
+                                class="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[10px] font-mono uppercase rounded font-bold">AI
+                                Model</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-3 group-hover:text-primary transition-colors">Gemini
+                            1.5 Integration: A Technical Deep Dive</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                            Transitioning from static embeddings to dynamic context windows. How we managed token limits
+                            while maintaining high fidelity.
                         </p>
-</div>
-<div class="px-6 py-4 border-t border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
-<span class="text-xs font-mono text-slate-500">Oct 08, 2023</span>
-<span class="text-xs font-mono text-slate-500">8 min read</span>
-</div>
-</article>
-<article class="flex flex-col h-full bg-slate-800/30 border border-slate-700/50 rounded-lg overflow-hidden hover:border-slate-600 transition-colors group backdrop-blur-sm">
-<div class="p-6 flex-1">
-<div class="flex gap-2 mb-4">
-<span class="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono uppercase rounded font-bold">Infrastructure</span>
-</div>
-<h3 class="text-lg font-bold text-white mb-3 group-hover:text-primary transition-colors">Scaling Vector Databases for Engineering Students</h3>
-<p class="text-slate-400 text-sm leading-relaxed mb-4">
-                            Benchmarks and stress tests on our distributed Postgres implementation. Handling concurrent queries during exam season.
+                    </div>
+                    <div
+                        class="px-6 py-4 border-t border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
+                        <span class="text-xs font-mono text-slate-500">Oct 08, 2023</span>
+                        <span class="text-xs font-mono text-slate-500">8 min read</span>
+                    </div>
+                </article>
+                <article
+                    class="flex flex-col h-full bg-slate-800/30 border border-slate-700/50 rounded-lg overflow-hidden hover:border-slate-600 transition-colors group backdrop-blur-sm">
+                    <div class="p-6 flex-1">
+                        <div class="flex gap-2 mb-4">
+                            <span
+                                class="px-2 py-0.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono uppercase rounded font-bold">Infrastructure</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-3 group-hover:text-primary transition-colors">Scaling
+                            Vector Databases for Engineering Students</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                            Benchmarks and stress tests on our distributed Postgres implementation. Handling concurrent
+                            queries during exam season.
                         </p>
-</div>
-<div class="px-6 py-4 border-t border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
-<span class="text-xs font-mono text-slate-500">Oct 01, 2023</span>
-<span class="text-xs font-mono text-slate-500">6 min read</span>
-</div>
-</article>
-</div>
-</div>
-</section>
-<footer class="border-t border-slate-800/50 pt-16 pb-12 text-slate-300 bg-[#0B1120]/60 backdrop-blur-lg">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
-<div class="col-span-2 md:col-span-1">
-<div class="flex items-center gap-2 mb-6">
-<span class="material-symbols-outlined text-primary text-3xl">terminal</span>
-<span class="font-bold text-white text-xl">StudyClaw</span>
-</div>
-<p class="text-slate-400 text-sm leading-relaxed mb-6">
-                        Technical study infrastructure powered by Gemini AI. <br/>Built for the next generation of engineers.
+                    </div>
+                    <div
+                        class="px-6 py-4 border-t border-slate-700/50 bg-slate-800/50 flex justify-between items-center">
+                        <span class="text-xs font-mono text-slate-500">Oct 01, 2023</span>
+                        <span class="text-xs font-mono text-slate-500">6 min read</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <footer class="border-t border-slate-800/50 pt-16 pb-12 text-slate-300 bg-[#0B1120]/60 backdrop-blur-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-2 md:col-span-1">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary text-3xl">terminal</span>
+                        <span class="font-bold text-white text-xl">StudyClaw</span>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        Technical study infrastructure powered by Gemini AI. <br />Built for the next generation of
+                        engineers.
                     </p>
-<div class="flex space-x-5">
-<a class="text-slate-500 hover:text-white transition-colors" href="#">
-<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"></path></svg>
-</a>
-<a class="text-slate-500 hover:text-white transition-colors" href="#">
-<span class="material-symbols-outlined text-xl">chat</span>
-</a>
-</div>
-</div>
-<div>
-<h3 class="text-xs font-bold text-white tracking-widest uppercase mb-6">Product</h3>
-<ul class="space-y-4">
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Changelog</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Documentation</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Integrations</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">CLI Tool</a></li>
-</ul>
-</div>
-<div>
-<h3 class="text-xs font-bold text-white tracking-widest uppercase mb-6">Company</h3>
-<ul class="space-y-4">
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">About</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Manifesto</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Careers</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Contact</a></li>
-</ul>
-</div>
-<div>
-<h3 class="text-xs font-bold text-white tracking-widest uppercase mb-6">Legal</h3>
-<ul class="space-y-4">
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Privacy Policy</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Terms of Service</a></li>
-<li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Security</a></li>
-</ul>
-</div>
-</div>
-<div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-<p class="text-slate-500 text-xs font-mono">
+                    <div class="flex space-x-5">
+                        <a class="text-slate-500 hover:text-white transition-colors" href="#">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z">
+                                </path>
+                            </svg>
+                        </a>
+                        <a class="text-slate-500 hover:text-white transition-colors" href="#">
+                            <span class="material-symbols-outlined text-xl">chat</span>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-white tracking-widest uppercase mb-6">Product</h3>
+                    <ul class="space-y-4">
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm"
+                                href="#">Changelog</a></li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm"
+                                href="#">Documentation</a></li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm"
+                                href="#">Integrations</a></li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">CLI Tool</a>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-white tracking-widest uppercase mb-6">Company</h3>
+                    <ul class="space-y-4">
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">About</a>
+                        </li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm"
+                                href="#">Manifesto</a></li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Careers</a>
+                        </li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-white tracking-widest uppercase mb-6">Legal</h3>
+                    <ul class="space-y-4">
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Privacy
+                                Policy</a></li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Terms of
+                                Service</a></li>
+                        <li><a class="text-slate-400 hover:text-primary transition-colors text-sm" href="#">Security</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-slate-500 text-xs font-mono">
                     © 2026 StudyClaw. Powered by Gemini 2.0 Flash Lite. Runs on your Android phone via Termux.
                 </p>
-<div class="flex items-center space-x-2 mt-4 md:mt-0 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700">
-<div class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-</div>
-<span class="text-primary text-xs font-mono font-medium">System Status: Normal</span>
-</div>
-</div>
-</div>
-</footer>
-</div> 
+                <div
+                    class="flex items-center space-x-2 mt-4 md:mt-0 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700">
+                    <div class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </div>
+                    <span class="text-primary text-xs font-mono font-medium">System Status: Normal</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    </div>
 
-</body></html>
+</body>
+
+</html>
