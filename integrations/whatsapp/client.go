@@ -11,13 +11,13 @@ import (
 	"regexp"
 
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"go.mau.fi/whatsmeow/proto/waE2E"
 	"google.golang.org/protobuf/proto"
-	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // Client wraps a whatsmeow.Client and routes events to StudyClaw via MassageBus.
@@ -121,21 +121,8 @@ func (c *Client) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if err != nil {
 		return err
 	}
-
-	content := msg.Content
-	matches := diagramRegex.FindAllStringSubmatch(content, -1)
-	if len(matches) > 0 {
-		for _, match := range matches {
-			mermaidCode := match[1]
-			b64 := base64.StdEncoding.EncodeToString([]byte(mermaidCode))
-			content += fmt.Sprintf("\n\n📊 View Diagram: http://127.0.0.1:8080/?d=%s", b64)
-		}
-	}
-
-	e2eMsg := &waE2E.Message{
-		Conversation: proto.String(content),
-	}
-	_, err = c.wac.SendMessage(ctx, jid, e2eMsg)
+	msg := &waE2E.Message{Conversation: proto.String(message)}
+	_, err = c.wac.SendMessage(context.Background(), jid, msg)
 	return err
 }
 

@@ -8,6 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/user/studyclaw/integrations/whatsapp"
+	"github.com/user/studyclaw/integrations/gdrive"
+	"github.com/user/studyclaw/ai"
+	"github.com/user/studyclaw/config"
+	"github.com/user/studyclaw/database"
 	"github.com/roshan30-git/picoclaw-scholar/integrations/whatsapp"
 	"github.com/roshan30-git/picoclaw-scholar/integrations/gdrive"
 	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
@@ -23,7 +28,12 @@ import (
 func main() {
 	fmt.Println("🦞 PicoClaw: Scholar Edition — Initializing...")
 
-	// 1. Load config (minimal impl for now)
+	// 1. Load config
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
 	ctx := context.Background()
 	
 	// 2. Initialize Database
@@ -33,7 +43,13 @@ func main() {
 	}
 	// Note: db.Close() would go here but we just use the reference.
 
-	// 3. Initialize Google Drive (for books/syllabus)
+	// 3. Initialize AI Agent
+	agent, err := ai.NewAgent(db, cfg.Gemini.APIKey)
+	if err != nil {
+		log.Fatalf("Failed to init AI agent: %v", err)
+	}
+
+	// 4. Initialize Google Drive (for books/syllabus)
 	driveClient, err := gdrive.New(ctx)
 	if err != nil {
 		log.Printf("Warning: Google Drive not linked: %v", err)
