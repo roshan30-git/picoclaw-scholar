@@ -17,12 +17,12 @@ import (
 )
 
 type AgentLoop struct {
-	cfg     *config.Config
-	bus     *bus.MessageBus
-	provider tools.LLMProvider
-	tools      map[string]tools.Tool
-	mgr        *channels.Manager
-	visManager  *visual.Manager
+	cfg         *config.Config
+	bus         *bus.MessageBus
+	provider    tools.LLMProvider
+	tools       map[string]tools.Tool
+	mgr         *channels.Manager
+	visParser   *visual.Parser
 	calendar    *study.CalendarEngine
 	reflections *memory.ReflectionManager
 	inbox       chan bus.InboundMessage
@@ -36,12 +36,12 @@ func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvi
 		bus:         b,
 		provider:    provider,
 		tools:       make(map[string]tools.Tool),
-		visManager:  vm,
+		visParser:   visual.NewParser(vm),
 		calendar:    cal,
 		reflections: mem,
-		inbox:      b.Subscribe(),
-		quit:       make(chan struct{}),
-		sessions:   make(map[string][]tools.Message),
+		inbox:       b.Subscribe(),
+		quit:        make(chan struct{}),
+		sessions:    make(map[string][]tools.Message),
 	}
 }
 
@@ -75,41 +75,98 @@ func (l *AgentLoop) Stop() {
 func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	log.Printf("[%s] Message from %s", msg.Channel, msg.From)
 
-	sessionID := msg.Channel + ":" + msg.ChatID
-	history := l.sessions[sessionID]
+	history := l.getHistory(msg.Channel, msg.ChatID)
+	l.detectCorrections(msg.Content, history)
 
-	// Naive correction detection MVP
-	lowerMsg := strings.ToLower(msg.Content)
-	if (strings.Contains(lowerMsg, "wrong") || strings.Contains(lowerMsg, "incorrect") || strings.Contains(lowerMsg, "actually")) && len(history) > 0 {
-		lastMsg := history[len(history)-1]
-		if lastMsg.Role == "model" && l.reflections != nil {
-			log.Println("[AgentLoop] Correction detected! Logging reflection.")
-			l.reflections.LogMistake(msg.Content, lastMsg.Content)
-		}
-	}
-
-	enrichedContent := msg.Content
-	
-	var contextPreamble string
-	if l.calendar != nil {
-		contextPreamble += l.calendar.GetContext() + "\n\n"
-	}
-	if l.reflections != nil {
-		lessons := l.reflections.GetRecentReflections()
-		if lessons != "" {
-			contextPreamble += lessons + "\n\n"
-		}
-	}
-	
-	if contextPreamble != "" {
-		enrichedContent = contextPreamble + "User Message:\n" + msg.Content
-	}
-
+	enrichedContent := l.enrichContext(msg.Content)
 	history = append(history, tools.Message{Role: "user", Content: enrichedContent})
 
-	var toolDefs []tools.ToolDefinition
+	toolDefs := l.getToolDefinitions()
+	resp, err := l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
+	if err != nil {
+		log.Printf("LLM error: %v", err)
+		return
+	}
+
+	if len(resp.ToolCalls) > 0 {
+		history = l.processToolCalls(ctx, history, resp.ToolCalls, toolDefs)
+		resp, err = l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
+		if err != nil {
+			log.Printf("Post-tool LLM error: %v", err)
+			return
+		}
+	}
+
+	history = append(history, tools.Message{Role: "model", Content: resp.Content})
+	l.saveHistory(msg.Channel, msg.ChatID, history)
+
+	out := bus.OutboundMessage{
+		ChatID:  msg.ChatID,
+		Content: resp.Content,
+		Channel: msg.Channel,
+	}
+
+	if l.visParser != nil {
+		l.visParser.ApplyVisuals(&out)
+	}
+
+	if l.mgr != nil && out.Content != "" {
+		if err := l.mgr.Send(ctx, out); err != nil {
+			log.Printf("Failed to route response: %v", err)
+		}
+	}
+}
+
+func (l *AgentLoop) getHistory(channel, chatID string) []tools.Message {
+	return l.sessions[channel+":"+chatID]
+}
+
+func (l *AgentLoop) saveHistory(channel, chatID string, history []tools.Message) {
+	if len(history) > 20 {
+		history = history[len(history)-20:]
+	}
+	l.sessions[channel+":"+chatID] = history
+}
+
+func (l *AgentLoop) detectCorrections(content string, history []tools.Message) {
+	if l.reflections == nil || len(history) == 0 {
+		return
+	}
+
+	lowerMsg := strings.ToLower(content)
+	keywords := []string{"wrong", "incorrect", "actually"}
+	for _, kw := range keywords {
+		if strings.Contains(lowerMsg, kw) {
+			lastMsg := history[len(history)-1]
+			if lastMsg.Role == "model" {
+				log.Println("[AgentLoop] Correction detected! Logging reflection.")
+				l.reflections.LogMistake(content, lastMsg.Content)
+				return
+			}
+		}
+	}
+}
+
+func (l *AgentLoop) enrichContext(content string) string {
+	var preamble []string
+	if l.calendar != nil {
+		preamble = append(preamble, l.calendar.GetContext())
+	}
+	if l.reflections != nil {
+		if lessons := l.reflections.GetRecentReflections(); lessons != "" {
+			preamble = append(preamble, lessons)
+		}
+	}
+	if len(preamble) == 0 {
+		return content
+	}
+	return strings.Join(preamble, "\n\n") + "\n\nUser Message:\n" + content
+}
+
+func (l *AgentLoop) getToolDefinitions() []tools.ToolDefinition {
+	var defs []tools.ToolDefinition
 	for _, t := range l.tools {
-		toolDefs = append(toolDefs, tools.ToolDefinition{
+		defs = append(defs, tools.ToolDefinition{
 			Type: "function",
 			Function: tools.ToolFunctionDefinition{
 				Name:        t.Name(),
@@ -118,72 +175,19 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 			},
 		})
 	}
-
-	resp, err := l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
-	if err != nil {
-		log.Printf("LLM error: %v", err)
-		return
-	}
-
-	if len(resp.ToolCalls) > 0 {
-		history = append(history, tools.Message{Role: "model", Content: resp.Content})
-		for _, tc := range resp.ToolCalls {
-			log.Printf("Executing tool: %s", tc.Name)
-			if t, ok := l.tools[tc.Name]; ok {
-				res := t.Execute(ctx, tc.Args)
-				resultMsg := fmt.Sprintf("Tool %s completed. Result: %s", tc.Name, res.ForLLM)
-				history = append(history, tools.Message{Role: "user", Content: resultMsg})
-			} else {
-				history = append(history, tools.Message{Role: "user", Content: fmt.Sprintf("Tool %s not found", tc.Name)})
-			}
-		}
-
-		resp, err = l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
-		if err != nil {
-			log.Printf("LLM error after tool call: %v", err)
-			return
-		}
-	}
-
-	history = append(history, tools.Message{Role: "model", Content: resp.Content})
-	if len(history) > 20 {
-		history = history[len(history)-20:]
-	}
-	l.sessions[sessionID] = history
-
-	// Parse visual tags securely before sending
-	out := bus.OutboundMessage{
-		ChatID:  msg.ChatID,
-		Content: resp.Content,
-		Channel: msg.Channel,
-	}
-
-	if l.visManager != nil {
-		diagramRe := regexp.MustCompile(`(?s)<diagram>(.*?)</diagram>`)
-		formulaRe := regexp.MustCompile(`(?s)<formula>(.*?)</formula>`)
-		circuitRe := regexp.MustCompile(`(?s)<circuit>(.*?)</circuit>`)
-
-		if matches := diagramRe.FindStringSubmatch(out.Content); len(matches) > 1 {
-			out.Content = diagramRe.ReplaceAllString(out.Content, "*(Diagram generated ✨)*")
-			out.VisualID = l.visManager.RegisterVisual("AI Diagram", "mermaid", matches[1])
-			out.VisualType = "mermaid"
-		} else if matches := formulaRe.FindStringSubmatch(out.Content); len(matches) > 1 {
-			out.Content = formulaRe.ReplaceAllString(out.Content, "*(Formula generated ✨)*")
-			out.VisualID = l.visManager.RegisterVisual("AI Formula", "formula", matches[1])
-			out.VisualType = "formula"
-		} else if matches := circuitRe.FindStringSubmatch(out.Content); len(matches) > 1 {
-			out.Content = circuitRe.ReplaceAllString(out.Content, "*(Circuit generated ✨)*")
-			// The circuit tag content is just the component name (e.g., "resistor")
-			out.VisualID = l.visManager.GenerateCircuit("AI Circuit", matches[1])
-			out.VisualType = "circuit"
-		}
-	}
-
-	if l.mgr != nil && resp.Content != "" {
-		if err := l.mgr.Send(ctx, out); err != nil {
-			log.Printf("Failed to route response: %v", err)
-		}
-	}
-
-	log.Printf("[%s] Response to %s sent", msg.Channel, msg.ChatID)
+	return defs
 }
+
+func (l *AgentLoop) processToolCalls(ctx context.Context, history []tools.Message, calls []tools.ToolCall, defs []tools.ToolDefinition) []tools.Message {
+	history = append(history, tools.Message{Role: "model", Content: ""})
+	for _, tc := range calls {
+		log.Printf("Executing tool: %s", tc.Name)
+		if t, ok := l.tools[tc.Name]; ok {
+			res := t.Execute(ctx, tc.Args)
+			resultMsg := fmt.Sprintf("Tool %s completed. Result: %s", tc.Name, res.ForLLM)
+			history = append(history, tools.Message{Role: "user", Content: resultMsg})
+		}
+	}
+	return history
+}
+

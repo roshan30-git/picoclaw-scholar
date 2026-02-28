@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/google/genai-go"
+	"google.golang.org/genai"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
 )
 

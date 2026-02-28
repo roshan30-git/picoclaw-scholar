@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"google.golang.org/genai"
-	"github.com/user/studyclaw/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
 )
 
 type Agent struct {

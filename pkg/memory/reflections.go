@@ -48,27 +48,41 @@ func (r *ReflectionManager) LogMistake(userCorrection string, aiOriginalContext 
 
 // GetRecentReflections pulls the contents of the last 3 days of reflections to inject into the system prompt.
 func (r *ReflectionManager) GetRecentReflections() string {
-	var lessons []string
-	
-	// Scan the directory for .md files
 	entries, err := os.ReadDir(r.baseDir)
 	if err != nil || len(entries) == 0 {
 		return ""
 	}
 
-	// In a complete system, we'd sort by date and pick the last 3.
-	// For the MVP, we just read all existing reflections (assuming low volume).
+	// Filter and sort files by date (filename format: 2006-01-02.md)
+	var files []string
 	for _, e := range entries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ".md") {
-			path := filepath.Join(r.baseDir, e.Name())
-			file, err := os.Open(path)
-			if err != nil {
-				continue
-			}
-			content, _ := io.ReadAll(file)
-			lessons = append(lessons, string(content))
-			file.Close()
+			files = append(files, e.Name())
 		}
+	}
+
+	if len(files) == 0 {
+		return ""
+	}
+
+	// Sort files alphabetically to get chronological order
+	// Filenames like 2024-02-28.md sort correctly naturally.
+	sortStrings(files)
+
+	// Take the last 3 files
+	limit := 3
+	if len(files) > limit {
+		files = files[len(files)-limit:]
+	}
+
+	var lessons []string
+	for _, filename := range files {
+		path := filepath.Join(r.baseDir, filename)
+		content, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		lessons = append(lessons, string(content))
 	}
 
 	if len(lessons) == 0 {
@@ -76,4 +90,14 @@ func (r *ReflectionManager) GetRecentReflections() string {
 	}
 
 	return "🧠 CRITICAL SYSTEM MEMORY (Do not repeat these past mistakes):\n" + strings.Join(lessons, "\n")
+}
+
+func sortStrings(s []string) {
+	for i := 0; i < len(s); i++ {
+		for j := i + 1; j < len(s); j++ {
+			if s[i] > s[j] {
+				s[i], s[j] = s[j], s[i]
+			}
+		}
+	}
 }
