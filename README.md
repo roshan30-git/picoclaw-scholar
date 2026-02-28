@@ -23,8 +23,9 @@
 | 📥 **PDF Indexing** | Send any PDF to the bot. It extracts text and stores it in a local knowledge base. |
 | 🎯 **AI Quizzes** | Ask for a quiz and get 3–5 MCQs drawn from your own notes via Gemini. |
 | 📊 **Diagram Viewer** | If the AI generates a Mermaid diagram, a local `http://127.0.0.1:8080` link is sent so you can view it in your browser with full pan/zoom. |
-| 💬 **Persistent Memory** | The agent remembers your last 20 messages per session — no more repeating yourself. |
-| ☁️ **Google Drive** | Optionally links your Drive folder to auto-sync lecture notes. |
+| 🧠 **Self-Reflection** | The bot periodically reflects on past sessions to improve its summaries and study recommendations. |
+| 📅 **Calendar Engine** | Keeps track of your semester dates and exams to adjust its "soul" (Drill Sergeant vs. Peer). |
+| 📑 **Report Generation** | Generates detailed progress reports of your study sessions upon request. |
 | 🤖 **Native Tool Calling** | Uses Gemini's native function calling to autonomously decide when to generate quizzes or index new documents. |
 
 ---
@@ -45,10 +46,12 @@ studyclaw/
 │   ├── channels/        ← Channel interface + Manager + Telegram stub
 │   ├── config/          ← Config struct and defaults
 │   ├── database/        ← SQLite: notes, embeddings, quiz history
+│   ├── memory/          ← Reflection Manager & Session History
 │   ├── providers/       ← Gemini 2.0 provider (rate-limited, retry on 429)
-│   ├── study/           ← Quiz engine, Ingest engine, tools
-│   ├── tools/           ← Tool interface, types, ToolResult
-│   └── viewer/          ← Local HTTP server + viewer.html for diagrams
+│   ├── study/           ← Quiz engine, Ingest engine, Calendar Engine, OCR
+│   ├── tools/           ← Tool interface + Report/PYQ tools
+│   ├── viewer/          ← Local HTTP server + viewer.html
+│   └── visual/          ← Diagram management & Circuit viewer
 └── workspace/
     └── PROMPTS/         ← Persona files (base_soul, drill_sergeant, etc.)
 ```
@@ -57,28 +60,38 @@ studyclaw/
 
 ## 🚀 Quick Start (Termux on Android)
 
-### Prerequisites
+### 1. Install Termux & Environment
+Download **Termux** from F-Droid. Open it and run:
 ```bash
-# In Termux:
 pkg update && pkg upgrade -y
-pkg install golang git clang -y
+pkg install golang git clang make -y
 ```
 
-### Install & Run
+### 2. Clone & Setup
 ```bash
-# 1. Clone the repo
 git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar
-
-# 2. Fetch all Go dependencies
 go mod tidy
+```
 
-# 3. Set your Gemini API key (get one free at aistudio.google.com)
-export GEMINI_API_KEY="your_api_key_here"
+### 3. API Key Configuration
+Get your free key at [aistudio.google.com](https://aistudio.google.com/app/apikey).
+```bash
+export GEMINI_API_KEY="AIzaSy..."
+# Optional: Set your owner number for admin access
+export STUDYCLAW_OWNER_NUMBER="91XXXXXXXXXX"
+```
 
-# 4. Run the bot
+### 4. Launch StudyClaw
+```bash
 go run cmd/main.go
 ```
+
+**Next Steps:**
+- A **QR Code** will print in Termux.
+- Take a screenshot of it or share the Termux link to your PC.
+- Open WhatsApp on your phone → Linked Devices → Link a Device → Scan the code.
+- **Done!** Send `Hi` to the bot (or yourself) on WhatsApp.
 
 > On first run, a **QR code** will appear in your terminal. Open WhatsApp → Linked Devices → Scan QR code.
 
@@ -163,8 +176,9 @@ Runs comfortably on any phone with **4 GB+ RAM**.
 - [x] Phase 1: WhatsApp bridge, PDF indexing, daily quizzes, agent loop
 - [x] Phase 2: Gemini native tool calling, diagram viewer, Google Drive sync
 - [x] Phase 3: Rate-limit protection, free-tier model optimization, clean architecture
-- [ ] Phase 4: GTU PYQ predictor, Telegram Mini App, Handwriting OCR
-- [ ] Phase 5: Exam countdown alerts, multi-user group support
+- [x] Phase 4: Self-Reflection memory, Academic Calendar Engine, Report Tools
+- [ ] Phase 5: GTU PYQ predictor, Telegram Mini App, Handwriting OCR
+- [ ] Phase 6: Exam countdown alerts, multi-user group support
 
 ---
 
