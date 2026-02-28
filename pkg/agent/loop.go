@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
@@ -20,21 +22,23 @@ type AgentLoop struct {
 	provider tools.LLMProvider
 	tools      map[string]tools.Tool
 	mgr        *channels.Manager
-	visManager *visual.Manager
-	calendar   *study.CalendarEngine
-	inbox      chan bus.InboundMessage
-	quit       chan struct{}
-	sessions   map[string][]tools.Message
+	visManager  *visual.Manager
+	calendar    *study.CalendarEngine
+	reflections *memory.ReflectionManager
+	inbox       chan bus.InboundMessage
+	quit        chan struct{}
+	sessions    map[string][]tools.Message
 }
 
-func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, cal *study.CalendarEngine) *AgentLoop {
+func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, cal *study.CalendarEngine, mem *memory.ReflectionManager) *AgentLoop {
 	return &AgentLoop{
-		cfg:        cfg,
-		bus:        b,
-		provider:   provider,
-		tools:      make(map[string]tools.Tool),
-		visManager: vm,
-		calendar:   cal,
+		cfg:         cfg,
+		bus:         b,
+		provider:    provider,
+		tools:       make(map[string]tools.Tool),
+		visManager:  vm,
+		calendar:    cal,
+		reflections: mem,
 		inbox:      b.Subscribe(),
 		quit:       make(chan struct{}),
 		sessions:   make(map[string][]tools.Message),
@@ -74,9 +78,31 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	sessionID := msg.Channel + ":" + msg.ChatID
 	history := l.sessions[sessionID]
 
+	// Naive correction detection MVP
+	lowerMsg := strings.ToLower(msg.Content)
+	if (strings.Contains(lowerMsg, "wrong") || strings.Contains(lowerMsg, "incorrect") || strings.Contains(lowerMsg, "actually")) && len(history) > 0 {
+		lastMsg := history[len(history)-1]
+		if lastMsg.Role == "model" && l.reflections != nil {
+			log.Println("[AgentLoop] Correction detected! Logging reflection.")
+			l.reflections.LogMistake(msg.Content, lastMsg.Content)
+		}
+	}
+
 	enrichedContent := msg.Content
+	
+	var contextPreamble string
 	if l.calendar != nil {
-		enrichedContent = l.calendar.GetContext() + "\n\nUser Message:\n" + msg.Content
+		contextPreamble += l.calendar.GetContext() + "\n\n"
+	}
+	if l.reflections != nil {
+		lessons := l.reflections.GetRecentReflections()
+		if lessons != "" {
+			contextPreamble += lessons + "\n\n"
+		}
+	}
+	
+	if contextPreamble != "" {
+		enrichedContent = contextPreamble + "User Message:\n" + msg.Content
 	}
 
 	history = append(history, tools.Message{Role: "user", Content: enrichedContent})

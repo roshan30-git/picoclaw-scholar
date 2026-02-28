@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://roshan30-git.github.io/picoclaw-scholar/sitemap.xml

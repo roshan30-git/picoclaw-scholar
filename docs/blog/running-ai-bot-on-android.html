@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Running a 24/7 AI Bot on Android with Termux — StudyClaw Blog</title>
+    <meta name="description"
+        content="A practical guide to setting up StudyClaw on your Android phone using Termux. Includes Go installation, WhatsApp QR linking, and keeping the bot running 24/7 with nohup." />
+    <meta name="keywords"
+        content="Termux AI bot, Android AI, Termux Go setup, WhatsApp bot Android, nohup Android server, StudyClaw install" />
+    <link rel="canonical" href="https://roshan30-git.github.io/picoclaw-scholar/blog/running-ai-bot-on-android.html" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0D1117;
+            --bg2: #161B22;
+            --teal: #00BFA5;
+            --text: #E6EDF3;
+            --muted: #8B949E;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        a {
+            color: var(--teal);
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .nav-wrapper {
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+        }
+
+        .nav-inner {
+            max-width: 760px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        article {
+            max-width: 760px;
+            margin: 4rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background: rgba(0, 191, 165, 0.12);
+            color: var(--teal);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .meta {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 2.5rem 0 0.75rem;
+        }
+
+        p {
+            color: #C9D1D9;
+            margin-bottom: 1.2rem;
+        }
+
+        pre {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--teal);
+            line-height: 1.6;
+        }
+
+        code {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.88rem;
+            color: var(--teal);
+        }
+
+        .callout {
+            background: rgba(0, 191, 165, 0.08);
+            border-left: 3px solid var(--teal);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        footer {
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav-wrapper">
+        <div class="nav-inner">
+            <a href="../index.html" class="logo">🦞 StudyClaw</a>
+            <a href="../index.html#blog" style="color:var(--muted);font-size:0.9rem;text-decoration:none">← Back to
+                Blog</a>
+        </div>
+    </div>
+
+    <article>
+        <span class="tag">Android & Termux</span>
+        <h1>Running a 24/7 AI Bot on Your Android Phone with Termux</h1>
+        <div class="meta">By the StudyClaw Team · Feb 28, 2026 · 8 min read</div>
+
+        <p>Your Android phone is a surprisingly capable server. With Termux — a powerful terminal emulator — you can run
+            Go programs 24/7 without a cloud subscription. Here's exactly how to set up StudyClaw on your phone.</p>
+
+        <h2>Step 1: Install Termux from F-Droid</h2>
+        <p>Do <strong>not</strong> install Termux from the Play Store — that version is outdated. Instead, download from
+            <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Once installed, open it and
+            update the package list:</p>
+        <pre>pkg update && pkg upgrade -y</pre>
+
+        <h2>Step 2: Install Go, Git, and Build Tools</h2>
+        <pre>pkg install golang git clang make -y</pre>
+        <p>Verify Go is installed correctly:</p>
+        <pre>go version
+# Expected: go version go1.22.x linux/arm64</pre>
+
+        <h2>Step 3: Clone StudyClaw</h2>
+        <pre>git clone https://github.com/roshan30-git/picoclaw-scholar.git
+cd picoclaw-scholar
+go mod tidy</pre>
+
+        <h2>Step 4: Get Your Free Gemini API Key</h2>
+        <p>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> and create a
+            free API key. No credit card needed. Then set it in Termux:</p>
+        <pre>export GEMINI_API_KEY="AIzaSy_your_key_here"</pre>
+        <div class="callout">💡 Add this to your <code>~/.bashrc</code> or <code>~/.profile</code> so it persists across
+            sessions: <code>echo 'export GEMINI_API_KEY="..."' >> ~/.bashrc</code></div>
+
+        <h2>Step 5: Run the Bot and Scan QR</h2>
+        <pre>go run cmd/main.go</pre>
+        <p>A QR code will appear as ASCII art in your Termux terminal. Open WhatsApp on another device → Linked Devices
+            → Link a Device → Scan the code. Done!</p>
+
+        <h2>Step 6: Keep It Running 24/7 with nohup</h2>
+        <p>By default, Termux processes stop when you close the app. To run the bot in the background continuously, use
+            <code>nohup</code>:</p>
+        <pre>nohup go run cmd/main.go > studyclaw.log 2>&1 &
+echo "Bot started. PID: $!"</pre>
+        <p>To check logs: <code>tail -f studyclaw.log</code></p>
+        <p>To stop the bot: <code>pkill -f "studyclaw"</code></p>
+
+        <div class="callout">🔋 <strong>Battery tip:</strong> Enable "Disable Battery Optimization" for Termux in
+            Android settings. Otherwise, Android may kill background processes after 30–60 minutes.</div>
+
+        <h2>Resource Usage</h2>
+        <p>StudyClaw uses approximately <strong>30–50 MB of RAM</strong> at idle. On a 4GB+ RAM phone, this is
+            negligible. The Go binary compiles to a single efficient executable with no JVM overhead.</p>
+    </article>
+
+    <footer>© 2026 StudyClaw Project · <a href="../index.html">Home</a> · <a
+            href="https://github.com/roshan30-git/picoclaw-scholar">GitHub</a></footer>
+</body>
+
+</html>

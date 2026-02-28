@@ -15,9 +15,12 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
 	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/providers"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/viewer"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
 )
 
 func main() {
@@ -54,15 +57,21 @@ func main() {
 	viewerSrv := viewer.NewServer(8080)
 	go viewerSrv.Start()
 	fmt.Println("📊 Diagram viewer available at http://127.0.0.1:8080")
+	visManager := visual.NewManager(viewerSrv)
 
 	// 6. Channel Manager
 	chMgr := channels.NewManager()
 
+	// Initialize Phase 4 Engines
+	calendarEngine := study.NewCalendarEngine()
+	reflectionManager := memory.NewReflectionManager("workspace")
+
 	// 7. Agent Loop (only started if Gemini is available)
 	if provider != nil {
-		agentLoop := agent.NewAgentLoop(config.DefaultConfig(), msgBus, provider)
+		agentLoop := agent.NewAgentLoop(config.DefaultConfig(), msgBus, provider, visManager, calendarEngine, reflectionManager)
 		agentLoop.RegisterTool(study.NewQuizTool(study.NewQuizEngine(provider, db)))
 		agentLoop.RegisterTool(study.NewIngestTool(study.NewIngestionEngine(db)))
+		agentLoop.RegisterTool(tools.NewReportGeneratorTool(provider))
 		agentLoop.SetChannelManager(chMgr)
 		go agentLoop.Run(ctx)
 		fmt.Println("🤖 Agent Loop initialized with gemini-2.0-flash-lite (free tier)")
