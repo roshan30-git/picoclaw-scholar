@@ -33,6 +33,6 @@ func (t *TelegramChannel) Stop(ctx context.Context) error {
 }
 
 func (t *TelegramChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
-	log.Printf("[Telegram Send] To %s: %s", msg.ChatID, msg.Content)
+	log.Printf("[Telegram Send] To %s", msg.ChatID)
 	return nil
 }

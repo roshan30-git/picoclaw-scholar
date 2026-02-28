@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
@@ -61,7 +62,7 @@ func (l *AgentLoop) Stop() {
 }
 
 func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
-	log.Printf("[%s] Message from %s: %s", msg.Channel, msg.From, msg.Content)
+	log.Printf("[%s] Message from %s", msg.Channel, msg.From)
 
 	sessionID := msg.Channel + ":" + msg.ChatID
 	history := l.sessions[sessionID]
@@ -123,5 +124,5 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 		}
 	}
 
-	log.Printf("Response: %s", resp.Content)
+	log.Printf("[%s] Response to %s sent", msg.Channel, msg.ChatID)
 }
