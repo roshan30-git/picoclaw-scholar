@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyClaw Diagram Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@panzoom/panzoom@4/dist/panzoom.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0f1117;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 12px 20px;
+            background: #1a1d27;
+            border-bottom: 1px solid #2a2d3a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #7c8aff;
+        }
+
+        #diagram-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #diagram {
+            background: #1a1d27;
+            border-radius: 12px;
+            padding: 30px;
+            min-width: 300px;
+            min-height: 200px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #555;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🦞 StudyClaw Diagram Viewer</h1>
+    </header>
+    <div id="diagram-container">
+        <div id="diagram">
+            <p class="empty-state">Loading diagram...</p>
+        </div>
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+        async function renderDiagram() {
+            const params = new URLSearchParams(window.location.search);
+            const encoded = params.get('d') || params.get('code');
+            const container = document.getElementById('diagram');
+
+            if (!encoded) {
+                container.innerHTML = '<p class="empty-state">No diagram code provided. Use ?d=BASE64_ENCODED_MERMAID</p>';
+                return;
+            }
+
+            try {
+                // Handle standard and URL-safe base64
+                const normalized = encoded.replace(/-/g, '+').replace(/_/g, '/');
+                const decoded = atob(normalized);
+                const { svg } = await mermaid.render('mermaid-svg', decoded);
+                container.innerHTML = svg;
+
+                // Enable pan/zoom
+                const element = container.querySelector('svg');
+                if (element) {
+                    const panzoom = Panzoom(element, {
+                        maxScale: 5,
+                        minScale: 0.3,
+                        contain: 'outside'
+                    });
+                    container.addEventListener('wheel', panzoom.zoomWithWheel);
+                }
+            } catch (e) {
+                container.innerHTML = '<p class="empty-state">Error rendering diagram: ' + e.message + '</p>';
+            }
+        }
+
+        renderDiagram();
+    </script>
+</body>
+
+</html>

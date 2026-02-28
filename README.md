@@ -53,33 +53,21 @@ PicoClaw Gateway (Go, <15MB RAM)
 
 ```bash
 # 1. Install Termux from F-Droid, then:
-pkg install golang git tesseract nodejs
+pkg install golang git
 
 # 2. Clone this repo
-git clone https://github.com/YOUR_USERNAME/picoclaw-scholar.git
+git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar
 
-# 3. Build
-go build -o studyclaw ./cmd/main.go
+# 3. Setup Dependencies
+go mod tidy
 
-# 4. Configure
-cp config.json ~/.studyclaw/config.json
-nano ~/.studyclaw/config.json  # Paste your Gemini API key
+# 4. Interactive Setup Wizard
+go run cmd/setup.go
+# (This will ask for your Gemini API key and WhatsApp number to create config.json)
 
-# 5. Run (Scan WhatsApp QR on first launch)
-./studyclaw
-```
-
-## ⚙️ Configuration
-
-Edit `~/.studyclaw/config.json`:
-
-```json
-{
-  "gemini": { "api_key": "YOUR_KEY_HERE" },
-  "whatsapp": { "owner_number": "+91XXXXXXXXXX" },
-  "scheduler": { "daily_quiz_time": "20:00" }
-}
+# 5. Run & Link WhatsApp
+go run cmd/main.go
 ```
 
 Get a free Gemini API key at [aistudio.google.com](https://aistudio.google.com/app/apikey) (1M tokens/day free).

@@ -1,4 +1,4 @@
-module github.com/user/studyclaw
+module github.com/roshan30-git/picoclaw-scholar
 
 go 1.25.0
 
@@ -50,4 +50,11 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/grpc v1.66.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
+	go.mau.fi/whatsmeow latest
+	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/robfig/cron/v3 v3.0.1
+	github.com/google/generative-ai-go v0.11.0
+	google.golang.org/api v0.170.0
+	golang.org/x/oauth2 v0.18.0
+	google.golang.org/protobuf v1.33.0
 )

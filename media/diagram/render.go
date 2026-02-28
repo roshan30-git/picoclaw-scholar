@@ -9,16 +9,12 @@ import (
 	"strings"
 )
 
-// TelegramWebAppURL is the hosted StudyClaw Mini App that renders diagrams.
-// Replace with your deployed Telegram Mini App URL.
-const TelegramWebAppURL = "https://your-studyclaw-miniapp.vercel.app/diagram"
-
 // RenderForTelegram returns an inline keyboard button that opens the Telegram
 // Mini App (WebApp) to render the Mermaid diagram interactively.
 // The diagram code is passed as a URL-encoded query param.
-func RenderForTelegram(mermaidSyntax, caption string) TelegramMessage {
+func RenderForTelegram(mermaidSyntax, caption, webAppURL string) TelegramMessage {
 	encoded := strings.ReplaceAll(mermaidSyntax, "\n", "%0A")
-	url := fmt.Sprintf("%s?code=%s", TelegramWebAppURL, encoded)
+	url := fmt.Sprintf("%s?code=%s", webAppURL, encoded)
 
 	return TelegramMessage{
 		Text: fmt.Sprintf("📊 *%s*\n\nTap below to view the interactive diagram:", caption),
