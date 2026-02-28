@@ -146,9 +146,9 @@
             THE AI THAT <br class="hidden md:block" /> <span class="text-primary">ACTUALLY STUDIES.</span>
         </h1>
         <p class="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed mb-12 font-medium">
-            <!-- Increased Contrast: text-slate-300 -->
-            The only open-source technical study infrastructure. Index your university syllabus, manage PDFs, and run
-            active recall drills entirely via WhatsApp.
+            <!-- Cleaned subtext -->
+            Autonomous AI study companion. Lives in WhatsApp, runs natively on your Android phone via Termux. Powered
+            entirely by the Gemini free tier.
         </p>
 
         <!-- Quick Start Terminal (Structured Execution Mockup) -->
@@ -175,19 +175,16 @@
                 <div class="p-6 md:p-8 font-mono text-sm md:text-[15px] leading-relaxed overflow-x-auto text-slate-200">
                     <div
                         class="text-slate-500 mb-4 select-all hover:text-slate-300 transition-colors cursor-pointer block">
-                        curl -fsSL https://studyclaw.io/install.sh | bash</div>
+                        git clone https://github.com/roshan30-git/picoclaw-scholar.git</div>
 
-                    <div class="mb-1"><span class="text-primary font-bold">></span> studyclaw init --syllabus
-                        ./algorithms.pdf</div>
-                    <div class="text-slate-400 mb-1">> Indexing document pipeline... <span
-                            class="text-emerald-500 tracking-widest">[===============>]</span> 100%</div>
-                    <div class="text-emerald-400 font-bold mb-6">> Syllabus indexed successfully. Context window
-                        initialized.</div>
+                    <div class="mb-1"><span class="text-primary font-bold">></span> cd picoclaw-scholar && go mod tidy
+                    </div>
+                    <div class="text-slate-400 mb-6">> Resolved dependencies. Readiness: 100%</div>
 
-                    <div class="mb-1"><span class="text-primary font-bold">></span> studyclaw query "Explain Binary
-                        Search Trees O(n)"</div>
-                    <div class="text-blue-400 font-bold">@Gemini_Pro: <span class="text-slate-400 font-normal">Analyzing
-                            context architecture...</span></div>
+                    <div class="mb-1"><span class="text-primary font-bold">></span> go run cmd/main.go</div>
+                    <div class="text-emerald-400 font-bold mb-1">> 🦞 StudyClaw is alive!</div>
+                    <div class="text-blue-400 font-bold">@Gemini_Pro: <span class="text-slate-400 font-normal">System
+                            initialized. WhatsApp bridge active.</span></div>
                     <div class="mt-4 text-primary animate-pulse text-lg font-bold">_</div>
                 </div>
             </div>
@@ -208,8 +205,8 @@
                 <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">Vector Queries</div>
             </div>
             <div class="px-6 py-2 text-center border-l border-border/50 hidden sm:block">
-                <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">SQLite</div>
-                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">Local DB Edge</div>
+                <div class="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight font-heading">~30MB</div>
+                <div class="text-[10px] font-mono text-slate-400 uppercase tracking-[0.2em]">RAM Usage</div>
             </div>
         </div>
     </header>
@@ -345,8 +342,8 @@
                     <div>
                         <h3 class="text-xl font-bold text-white mb-3 font-heading">Native Tool Calling</h3>
                         <p class="text-[15px] text-zinc-200 leading-relaxed font-medium max-w-4xl">
-                            Uses Gemini's native function calling layer to autonomously decide when to generate quizzes
-                            or index new documents. Purely agentic behavior.
+                            Uses Gemini's native function calling to autonomously decide when to generate quizzes or
+                            index new documents.
                         </p>
                     </div>
                 </div>
@@ -432,7 +429,7 @@
 
             <p class="text-[11px] text-slate-500 font-mono">
                 Built by StudyClaw <span class="text-primary">🦞</span> community.<br />
-                Powered by Gemini Flash 2.0. Native execution on Android & Linux.
+                Powered by Gemini 2.0 Flash Lite. Runs on your Android phone via Termux.
             </p>
         </div>
     </footer>
