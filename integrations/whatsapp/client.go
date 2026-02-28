@@ -21,7 +21,7 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"google.golang.org/protobuf/proto"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // Client wraps a whatsmeow.Client and routes events to StudyClaw via MassageBus.
@@ -39,7 +39,7 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocr
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	// Open the SQLite session store
-	container, err := sqlstore.New(context.Background(), "sqlite3", sessionPath, logger)
+	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath, logger)
 	if err != nil {
 		return nil, fmt.Errorf("sqlstore: %w", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/roshan30-git/picoclaw-scholar/integrations/gdrive"
 	"github.com/roshan30-git/picoclaw-scholar/integrations/whatsapp"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/agent"
@@ -24,6 +25,7 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
 	fmt.Println("🦞 StudyClaw — Initializing...")
 
 	ctx := context.Background()
@@ -46,11 +48,26 @@ func main() {
 	// 3. Initialize Message Bus
 	msgBus := bus.NewMessageBus()
 
-	// 4. Initialize Gemini Provider (free-tier optimized: gemini-2.0-flash-lite)
-	geminiAPIKey := os.Getenv("GEMINI_API_KEY")
-	provider, err := providers.NewGeminiProvider(geminiAPIKey)
-	if err != nil {
-		log.Printf("⚠️  Gemini provider not available (set GEMINI_API_KEY env var): %v", err)
+	// 4. Initialize LLM Provider (antigravity, codex, or gemini)
+	providerType := os.Getenv("LLM_PROVIDER")
+	var provider tools.LLMProvider
+	var err error
+
+	switch providerType {
+	case "antigravity":
+		fmt.Println("🚀 Using Antigravity Provider (Cloud Code Assist)")
+		provider = providers.NewAntigravityProvider()
+	case "codex":
+		fmt.Println("🚀 Using Codex Provider (ChatGPT Pro)")
+		openaiKey := os.Getenv("OPENAI_API_KEY")
+		accountID := os.Getenv("CHATGPT_ACCOUNT_ID")
+		provider = providers.NewCodexProvider(openaiKey, accountID)
+	default:
+		geminiAPIKey := os.Getenv("GEMINI_API_KEY")
+		provider, err = providers.NewGeminiProvider(geminiAPIKey)
+		if err != nil {
+			log.Printf("⚠️  Gemini provider not available (set GEMINI_API_KEY env var): %v", err)
+		}
 	}
 
 	// 5. Diagram Viewer Server (localhost:8080)
@@ -63,26 +80,50 @@ func main() {
 	chMgr := channels.NewManager()
 
 	// Initialize Phase 4 Engines
+	cfg := config.DefaultConfig()
 	calendarEngine := study.NewCalendarEngine()
 	reflectionManager := memory.NewReflectionManager("workspace")
+	personaRouter := agent.NewPersonaRouter()
+	deadlineTracker := study.NewDeadlineTracker(db)
 
-	// 7. Agent Loop (only started if Gemini is available)
+	// 7. Agent Loop (only started if LLM is available)
 	if provider != nil {
-		agentLoop := agent.NewAgentLoop(config.DefaultConfig(), msgBus, provider, visManager, calendarEngine, reflectionManager)
+		agentLoop := agent.NewAgentLoop(cfg, msgBus, provider, visManager, personaRouter, calendarEngine, reflectionManager)
 		agentLoop.RegisterTool(study.NewQuizTool(study.NewQuizEngine(provider, db)))
 		agentLoop.RegisterTool(study.NewIngestTool(study.NewIngestionEngine(db)))
+		agentLoop.RegisterTool(study.NewSearchNotesTool(db))
+		agentLoop.RegisterTool(study.NewAddDeadlineTool(deadlineTracker))
+		agentLoop.RegisterTool(study.NewViewDeadlinesTool(deadlineTracker))
 		agentLoop.RegisterTool(tools.NewReportGeneratorTool(provider))
 		agentLoop.SetChannelManager(chMgr)
 		go agentLoop.Run(ctx)
-		fmt.Println("🤖 Agent Loop initialized with gemini-2.0-flash-lite (free tier)")
+		fmt.Println("🤖 Agent Loop initialized with current LLM provider")
 	}
 
-	// 8. WhatsApp Channel
+	// 8. Channels (WhatsApp & Telegram)
 	waClient, err := whatsapp.New("whatsapp_session.db", msgBus)
 	if err != nil {
-		log.Fatalf("Failed to init WhatsApp: %v", err)
+		log.Printf("Warning: Failed to init WhatsApp: %v", err)
+	} else {
+		chMgr.Register(waClient)
 	}
-	chMgr.Register(waClient)
+
+	telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if telegramToken != "" {
+		if cfg.Telegram == nil {
+			cfg.Telegram = &config.TelegramConfig{}
+		}
+		cfg.Telegram.Token = telegramToken
+		cfg.Telegram.Enabled = true
+
+		tgClient, err := telegram.NewTelegramChannel(cfg, msgBus)
+		if err != nil {
+			log.Printf("Warning: Failed to init Telegram channel: %v", err)
+		} else {
+			chMgr.Register(tgClient)
+			fmt.Println("✅ Telegram bot linked.")
+		}
+	}
 
 	// 9. Start all channels
 	if err := chMgr.StartAll(ctx); err != nil {

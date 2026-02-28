@@ -23,6 +23,7 @@ type AgentLoop struct {
 	tools       map[string]tools.Tool
 	mgr         *channels.Manager
 	visParser   *visual.Parser
+	router      *PersonaRouter
 	calendar    *study.CalendarEngine
 	reflections *memory.ReflectionManager
 	inbox       chan bus.InboundMessage
@@ -30,13 +31,14 @@ type AgentLoop struct {
 	sessions    map[string][]tools.Message
 }
 
-func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, cal *study.CalendarEngine, mem *memory.ReflectionManager) *AgentLoop {
+func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, router *PersonaRouter, cal *study.CalendarEngine, mem *memory.ReflectionManager) *AgentLoop {
 	return &AgentLoop{
 		cfg:         cfg,
 		bus:         b,
 		provider:    provider,
 		tools:       make(map[string]tools.Tool),
 		visParser:   visual.NewParser(vm),
+		router:      router,
 		calendar:    cal,
 		reflections: mem,
 		inbox:       b.Subscribe(),
@@ -78,7 +80,10 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	history := l.getHistory(msg.Channel, msg.ChatID)
 	l.detectCorrections(msg.Content, history)
 
-	enrichedContent := l.enrichContext(msg.Content)
+	// Determine required persona for this turn
+	persona := l.router.RouteMessage(msg)
+	
+	enrichedContent := l.enrichContext(msg.Content, persona)
 	history = append(history, tools.Message{Role: "user", Content: enrichedContent})
 
 	toolDefs := l.getToolDefinitions()
@@ -147,11 +152,42 @@ func (l *AgentLoop) detectCorrections(content string, history []tools.Message) {
 	}
 }
 
-func (l *AgentLoop) enrichContext(content string) string {
+func (l *AgentLoop) enrichContext(content string, persona PersonaType) string {
 	var preamble []string
+
+	// 1. Inject Persona Overlays
+	promptStr := string(persona)
+	if persona == PersonaNone {
+		promptStr = "agent_explainer" // safe default base
+	}
+	
+	import "os"
+	import "path/filepath"
+	
+	// Check .md first, then .txt
+	personaPathMD := filepath.Join("workspace", "PROMPTS", "agents", promptStr+".md")
+	personaPathTXT := filepath.Join("workspace", "PROMPTS", "agents", promptStr+".txt")
+	
+	var personaData []byte
+	var err error
+	if personaData, err = os.ReadFile(personaPathMD); err != nil {
+		if personaData, err = os.ReadFile(personaPathTXT); err == nil {
+			preamble = append(preamble, "🎭 SYSTEM PERSONA ACTIVE: "+promptStr+"\n"+string(personaData))
+		} else {
+			// Fallback to base_soul
+			if baseData, err := os.ReadFile(filepath.Join("workspace", "PROMPTS", "agents", "base_soul.md")); err == nil {
+				preamble = append(preamble, "🎭 SYSTEM BASE SOUL:\n"+string(baseData))
+			}
+		}
+	} else {
+		preamble = append(preamble, "🎭 SYSTEM PERSONA ACTIVE: "+promptStr+"\n"+string(personaData))
+	}
+
+	// 2. Inject Calendar
 	if l.calendar != nil {
 		preamble = append(preamble, l.calendar.GetContext())
 	}
+	// 3. Inject Autonomous Memory
 	if l.reflections != nil {
 		if lessons := l.reflections.GetRecentReflections(); lessons != "" {
 			preamble = append(preamble, lessons)

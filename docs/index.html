@@ -434,8 +434,69 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center mb-16">
                 <span
-                    class="font-mono text-primary text-xs font-bold uppercase tracking-widest border border-primary/20 bg-primary/5 px-3 py-1 rounded-full">Termux
-                    Installation Guide</span>
+                    class="font-mono text-primary text-xs font-bold uppercase tracking-widest border border-primary/20 bg-primary/5 px-3 py-1 rounded-full">Zero-Setup
+                    Windows Installation</span>
+                <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">One-Command Launch (Windows)</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">StudyClaw is natively designed to be
+                    completely setup-free on Windows using its unified PowerShell orchestrator script. <strong>No C++
+                        compilers required.</strong></p>
+            </div>
+
+            <div class="max-w-4xl mx-auto space-y-12 mb-24">
+
+                <!-- Windows Step 1 -->
+                <div class="relative pl-8 md:pl-0 group">
+                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                            <div
+                                class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                                <span class="font-mono text-lg font-bold">01</span>
+                            </div>
+                        </div>
+                        <div
+                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                            <h3 class="text-xl font-bold text-white mb-2">Requirements</h3>
+                            <p class="text-slate-400 mb-4">Ensure you have the <a href="https://golang.org/dl/"
+                                    target="_blank" class="text-primary hover:underline">Go compiler</a> installed.
+                                Then, download or clone the repository into your desired working folder.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Windows Step 2 -->
+                <div class="relative pl-8 md:pl-0 group">
+                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                            <div
+                                class="w-12 h-12 bg-[#0B1120] border-2 border-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,75,62,0.3)] text-primary transition-all">
+                                <span class="font-mono text-lg font-bold">02</span>
+                            </div>
+                        </div>
+                        <div
+                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-primary/30 shadow-[0_4px_30px_rgba(255,75,62,0.05)] transition-all">
+                            <h3 class="text-xl font-bold text-white mb-2">Launch the Orchestrator</h3>
+                            <p class="text-slate-400 mb-4">Open PowerShell in the folder and execute the interactive
+                                launcher script. It will auto-resolve dependencies, configure your environment file
+                                interactively, and launch the engine directly.</p>
+                            <div
+                                class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner mb-6">
+                                <div class="text-primary truncate">> <span class="text-slate-300">.\run.ps1</span></div>
+                            </div>
+                            <div
+                                class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-3 rounded-lg border border-accent-teal/20">
+                                <span class="material-symbols-outlined text-xl">check_circle</span>
+                                <span>The engine is now active and routing intelligence!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center mb-16 pt-16 border-t border-slate-800">
+                <span
+                    class="font-mono text-slate-400 text-xs font-bold uppercase tracking-widest border border-slate-700/50 bg-slate-800/30 px-3 py-1 rounded-full">Termux
+                    Installation Guide (Mobile)</span>
                 <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Step-by-Step Setup for Android</h2>
                 <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">Run the bot directly on your phone
                     using Termux. No server required. All you need is a free Gemini API key.</p>
