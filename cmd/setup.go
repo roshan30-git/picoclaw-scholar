@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
 )
 
 func main() {
@@ -30,7 +32,14 @@ func main() {
 		quizTime = "20:00"
 	}
 
-	config := map[string]interface{}{
+	fmt.Printf("Telegram Mini App URL (default: %s): ", config.DefaultTelegramWebAppURL)
+	webAppURL, _ := reader.ReadString('\n')
+	webAppURL = strings.TrimSpace(webAppURL)
+	if webAppURL == "" {
+		webAppURL = config.DefaultTelegramWebAppURL
+	}
+
+	cfgData := map[string]interface{}{
 		"gemini_api_key": apiKey,
 		"whatsapp": map[string]string{
 			"owner_number": phone,
@@ -38,9 +47,10 @@ func main() {
 		"scheduler": map[string]string{
 			"daily_quiz_time": quizTime,
 		},
+		"telegram_webapp_url": webAppURL,
 	}
 
-	data, _ := json.MarshalIndent(config, "", "  ")
+	data, _ := json.MarshalIndent(cfgData, "", "  ")
 	if err := os.WriteFile("config.json", data, 0644); err != nil {
 		fmt.Printf("Error writing config: %v\n", err)
 		os.Exit(1)
