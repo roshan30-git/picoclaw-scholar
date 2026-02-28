@@ -160,6 +160,8 @@
                         <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
                             href="#installation">Documentation</a>
                         <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#errors">Common Errors</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
                             href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank">GitHub</a>
                     </div>
                     <div class="flex items-center space-x-5">
@@ -569,102 +571,104 @@
 
     <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
 
-    <section class="py-24 relative overflow-hidden" id="troubleshooting">
+    <section class="py-24 relative overflow-hidden" id="errors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="text-center mb-16">
-                <span
-                    class="font-mono text-amber-500 text-xs font-bold uppercase tracking-widest border border-amber-500/20 bg-amber-500/5 px-3 py-1 rounded-full">Troubleshooting</span>
-                <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Common Errors & Solutions</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">Encountering issues? Here are the
-                    most common hurdles when setting up StudyClaw on Termux.</p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                <!-- Error 1 -->
-                <div class="glass-card p-6 rounded-xl border border-slate-700">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                            <span class="material-symbols-outlined text-red-500">error</span>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-bold text-lg">Command Not Found: go</h3>
-                            <p class="text-xs text-slate-500 font-mono mt-1">Error: bash: go: command not found</p>
-                        </div>
-                    </div>
-                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
-                        <p class="text-sm text-slate-400 leading-relaxed">
-                            You haven't installed the Go compiler yet. Run: <br />
-                            <code class="text-primary font-mono text-xs select-all">$ pkg install golang -y</code>
-                        </p>
-                    </div>
+            <div class="mb-16 md:flex md:justify-between md:items-end">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Common Errors & Patches</h2>
+                    <p class="text-slate-400 max-w-2xl text-lg font-light">Documented solutions for the most frequent
+                        technical hurdles encountered by the community.</p>
                 </div>
-
-                <!-- Error 2 -->
-                <div class="glass-card p-6 rounded-xl border border-slate-700">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                            <span class="material-symbols-outlined text-red-500">key</span>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-bold text-lg">Invalid API Key (401)</h3>
-                            <p class="text-xs text-slate-500 font-mono mt-1">Error: 401 Unauthorized / Invalid API Key
-                            </p>
-                        </div>
-                    </div>
-                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
-                        <p class="text-sm text-slate-400 leading-relaxed">
-                            Ensure you've exported your key correctly in the same session: <br />
-                            <code
-                                class="text-primary font-mono text-xs select-all">$ export GEMINI_API_KEY="YOUR_ACTUAL_KEY"</code>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Error 3 -->
-                <div class="glass-card p-6 rounded-xl border border-slate-700">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                            <span class="material-symbols-outlined text-red-500">qr_code_2</span>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-bold text-lg">QR Code Not Printing</h3>
-                            <p class="text-xs text-slate-500 font-mono mt-1">Issue: Terminal dimensions or missing fonts
-                            </p>
-                        </div>
-                    </div>
-                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
-                        <p class="text-sm text-slate-400 leading-relaxed">
-                            Pinch-to-zoom out in Termux to increase terminal width. If it still fails, try running via
-                            SSH on a PC to scan the code.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Error 4 -->
-                <div class="glass-card p-6 rounded-xl border border-slate-700">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                            <span class="material-symbols-outlined text-red-500">sync_problem</span>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-bold text-lg">Go Mod Tidy Errors</h3>
-                            <p class="text-xs text-slate-500 font-mono mt-1">Error: connection refused or checksum
-                                mismatch</p>
-                        </div>
-                    </div>
-                    <div class="bg-black/40 p-4 rounded-lg border border-slate-800">
-                        <p class="text-sm text-slate-400 leading-relaxed">
-                            This usually happens due to a slow internet connection. Try disabling your VPN or switching
-                            from mobile data to Wi-Fi.
-                        </p>
-                    </div>
+                <div
+                    class="hidden md:flex items-center space-x-2 text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    <span>Live Documentation</span>
                 </div>
             </div>
 
-            <div class="text-center mt-12">
-                <p class="text-slate-500 text-sm">Still having issues? <a
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Blog Style Error 1 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-red-500/10 text-red-400 px-3 py-1 rounded w-fit border border-red-500/20">
+                            <span class="material-symbols-outlined text-xs">bug_report</span> Critical Fix
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">
+                            Resolving "bash: go: command not found"</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Encountered when the Go toolchain isn't
+                            mapped to the system path or missing from the initial Termux bootstrap.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <div class="bg-black/60 p-3 rounded font-mono text-xs text-primary border border-slate-800">
+                                $ pkg install golang -y</div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Blog Style Error 2 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 px-3 py-1 rounded w-fit border border-amber-500/20">
+                            <span class="material-symbols-outlined text-xs">key</span> Auth Error
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">Fixing
+                            "401 Unauthorized" Key Issues</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Commonly caused by hidden characters in
+                            the export command or using a key that hasn't propagation through Google's AI Studio.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <div class="bg-black/60 p-3 rounded font-mono text-xs text-primary border border-slate-800">
+                                $ export GEMINI_API_KEY="...KEY..."</div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Blog Style Error 3 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-blue-500/10 text-blue-400 px-3 py-1 rounded w-fit border border-blue-500/20">
+                            <span class="material-symbols-outlined text-xs">aspect_ratio</span> Render Error
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">
+                            WhatsApp QR Code Scaling Issues</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">When the WhatsApp QR code appears broken
+                            or un-scannable due to Termux terminal buffer limitations.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <p class="text-[10px] text-slate-500 font-mono">Pinch-to-zoom out until the full QR block
+                                fits within your view.</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Blog Style Error 4 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1 border-l-2 border-primary/20">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-slate-800 text-slate-400 px-3 py-1 rounded w-fit border border-slate-700">
+                            Knowledge Base
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">Go Mod
+                            Tidy: Connection Refused</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-4">Network-level blocks prevent dependency
+                            downloads. Usually tied to DNS or local ISP restrictions in specific regions.</p>
+                        <ul class="text-[11px] font-mono text-slate-500 space-y-2">
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary rounded-full"></span>
+                                Toggle Wi-Fi / Airplane Mode</li>
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary rounded-full"></span>
+                                Disable Active VPNs</li>
+                        </ul>
+                    </div>
+                </article>
+            </div>
+
+            <div class="text-center mt-16 pb-8">
+                <p class="text-slate-500 text-sm">Need deep-level support? <a
                         href="https://github.com/roshan30-git/picoclaw-scholar/issues" target="_blank"
-                        class="text-primary hover:underline">Open an issue on GitHub</a></p>
+                        class="text-primary hover:underline font-bold">Open a Technical Ticket</a></p>
             </div>
         </div>
     </section>
