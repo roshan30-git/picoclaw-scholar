@@ -7,6 +7,7 @@ require (
 	github.com/mymmrac/telego v1.6.0
 	github.com/openai/openai-go/v3 v3.22.0
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/xuri/excelize/v2 v2.10.1
 	go.mau.fi/whatsmeow v0.0.0-20260219150138-7ae702b1eed4
 	golang.org/x/oauth2 v0.35.0
 	google.golang.org/api v0.197.0
@@ -63,7 +64,6 @@ require (
 	github.com/valyala/fastjson v1.6.7 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
-	github.com/xuri/excelize/v2 v2.10.1 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	go.mau.fi/libsignal v0.2.1 // indirect
 	go.mau.fi/util v0.9.6 // indirect

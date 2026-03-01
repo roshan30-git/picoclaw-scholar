@@ -33,11 +33,10 @@ type Client struct {
 }
 
 // New creates and connects a new WhatsApp client.
-// sessionPath: where to persist the login session (so QR scan is only needed once).
+// Uses phone-number pairing code so no QR scan is needed — perfect for Termux.
 func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, passiveGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
-	// Open the SQLite session store — foreign keys must be enabled for whatsmeow schema migrations
 	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath+"?_pragma=foreign_keys(1)", logger)
 	if err != nil {
 		return nil, fmt.Errorf("sqlstore: %w", err)
@@ -52,23 +51,39 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, pas
 	c := &Client{wac: wac, bus: msgBus, allowedGroups: allowedGroups, passiveGroups: passiveGroups, ocr: ocrPipeline}
 	wac.AddEventHandler(c.handleEvent)
 
-	// If not logged in, show QR code in terminal (user scans once)
 	if wac.Store.ID == nil {
-		qrChan, _ := wac.GetQRChannel(context.Background())
+		// ── NOT LOGGED IN ─────────────────────────────────────────
+		// Use pairing code instead of QR — works perfectly in Termux.
+		// The user types their number, gets a code, enters it in WhatsApp.
 		if err := wac.Connect(); err != nil {
 			return nil, fmt.Errorf("connect: %w", err)
 		}
-		for evt := range qrChan {
-			if evt.Event == "code" {
-				fmt.Println("📱 Scan this QR code in WhatsApp (Linked Devices):")
-				fmt.Println(evt.Code) // In real impl: render to terminal QR
-			}
+
+		phoneNumber := os.Getenv("STUDYCLAW_OWNER_NUMBER")
+		if phoneNumber == "" {
+			fmt.Print("\n📱 Enter your WhatsApp phone number (with country code, e.g. 919876543210): ")
+			fmt.Scanln(&phoneNumber)
 		}
+
+		code, err := wac.PairPhone(context.Background(), phoneNumber, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+		if err != nil {
+			return nil, fmt.Errorf("pair phone: %w", err)
+		}
+
+		fmt.Printf("\n╔══════════════════════════════════════╗\n")
+		fmt.Printf("║  WhatsApp Pairing Code: %s  ║\n", code)
+		fmt.Printf("╚══════════════════════════════════════╝\n\n")
+		fmt.Println("👆 Go to WhatsApp → Linked Devices → Link a Device → Link with phone number")
+		fmt.Println("   Enter the code above. You have 60 seconds.")
+		fmt.Println()
+
+		// Wait for pairing to complete
+		<-wac.DeferredDisconnect
 	} else {
+		// ── ALREADY LOGGED IN ─────────────────────────────────────
 		if err := wac.Connect(); err != nil {
 			return nil, fmt.Errorf("reconnect: %w", err)
 		}
-		// List joined groups on startup for JID discovery
 		go c.listGroups()
 	}
 
