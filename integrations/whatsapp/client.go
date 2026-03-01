@@ -34,7 +34,7 @@ type Client struct {
 
 // New creates and connects a new WhatsApp client.
 // Uses phone-number pairing code so no QR scan is needed — perfect for Termux.
-func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, passiveGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
+func New(ctx context.Context, sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, passiveGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath+"?_pragma=foreign_keys(1)", logger)
@@ -77,17 +77,33 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, pas
 		fmt.Println("   Enter the code above. You have 60 seconds.")
 		fmt.Println()
 
-		// Wait for pairing to complete (whatsmeow signals via Disconnected event)
-		disconnected := make(chan struct{}, 1)
+		// Wait for pairing to complete
+		linked := make(chan struct{}, 1)
 		wac.AddEventHandler(func(evt interface{}) {
-			if _, ok := evt.(*events.Disconnected); ok {
+			if _, ok := evt.(*events.LoggedOut); ok {
+				fmt.Println("❌ Pairing failed or was canceled.")
 				select {
-				case disconnected <- struct{}{}:
+				case linked <- struct{}{}:
+				default:
+				}
+			}
+			if wac.Store.ID != nil {
+				select {
+				case linked <- struct{}{}:
 				default:
 				}
 			}
 		})
-		<-disconnected
+
+		// Also set a timeout for pairing safety
+		select {
+		case <-linked:
+			if wac.Store.ID != nil {
+				fmt.Println("✅ Successfully linked WhatsApp!")
+			}
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
 	} else {
 		// ── ALREADY LOGGED IN ─────────────────────────────────────
 		if err := wac.Connect(); err != nil {

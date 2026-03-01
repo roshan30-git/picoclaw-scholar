@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -59,14 +60,22 @@ func main() {
 		log.Fatalf("Failed to init database: %v", err)
 	}
 
-	// 2. Initialize Google Drive (optional)
-	driveClient, err := gdrive.New(ctx)
-	if err != nil {
-		log.Printf("Warning: Google Drive not linked: %v", err)
-	} else {
-		fmt.Println("✅ Google Drive linked.")
-		_ = driveClient
+	// 2. Initialize Google Drive (strictly silent & optional)
+	var driveClient *gdrive.Client
+	enableDrive := os.Getenv("STUDYCLAW_ENABLE_GDRIVE") == "true"
+	if enableDrive {
+		home, _ := os.UserHomeDir()
+		credPath := filepath.Join(home, ".studyclaw/google_credentials.json")
+		if _, err := os.Stat(credPath); err == nil {
+			driveClient, err = gdrive.New(ctx)
+			if err != nil {
+				log.Printf("Warning: Failed to init Google Drive: %v", err)
+			} else {
+				fmt.Println("✅ Google Drive linked.")
+			}
+		}
 	}
+	_ = driveClient
 
 	// 3. Initialize Message Bus
 	msgBus := bus.NewMessageBus()
@@ -142,7 +151,7 @@ func main() {
 		log.Printf("Warning: Failed to init OCR Pipeline: %v", err)
 	}
 
-	waClient, err := whatsapp.New("whatsapp_session.db", msgBus, cfg.AllowedGroupJIDs, cfg.PassiveGroupJIDs, ocrPipeline)
+	waClient, err := whatsapp.New(ctx, "whatsapp_session.db", msgBus, cfg.AllowedGroupJIDs, cfg.PassiveGroupJIDs, ocrPipeline)
 	if err != nil {
 		log.Printf("Warning: Failed to init WhatsApp: %v", err)
 	} else {
