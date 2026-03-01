@@ -88,13 +88,14 @@ func main() {
 
 	// 7. Agent Loop (only started if LLM is available)
 	if provider != nil {
-		agentLoop := agent.NewAgentLoop(cfg, msgBus, provider, visManager, personaRouter, calendarEngine, reflectionManager)
+		agentLoop := agent.NewAgentLoop(cfg, msgBus, provider, visManager, personaRouter, calendarEngine, reflectionManager, db)
 		agentLoop.RegisterTool(study.NewQuizTool(study.NewQuizEngine(provider, db)))
 		agentLoop.RegisterTool(study.NewIngestTool(study.NewIngestionEngine(db)))
 		agentLoop.RegisterTool(study.NewSearchNotesTool(db))
 		agentLoop.RegisterTool(study.NewAddDeadlineTool(deadlineTracker))
 		agentLoop.RegisterTool(study.NewViewDeadlinesTool(deadlineTracker))
 		agentLoop.RegisterTool(tools.NewReportGeneratorTool(provider))
+		agentLoop.RegisterTool(tools.NewWebSearchTool())
 		agentLoop.SetChannelManager(chMgr)
 		go agentLoop.Run(ctx)
 		fmt.Println("🤖 Agent Loop initialized with current LLM provider")

@@ -1,103 +1,164 @@
 <div align="center">
-  <h1>🦞 StudyClaw</h1>
-  <h3>Your autonomous AI study companion — lives in WhatsApp & Telegram</h3>
-  <br/>
-  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Android%20(Termux)-orange">
-  <img src="https://img.shields.io/badge/AI-Gemini%202.0%20Flash-blue?logo=google">
-  <img src="https://img.shields.io/badge/DB-SQLite-003B57?logo=sqlite">
+
+<h1>🦞 StudyClaw</h1>
+<p><strong>Autonomous AI study agent — lives in WhatsApp & Telegram</strong></p>
+
+[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](https://golang.org/dl/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Termux-orange)]()
+[![AI](https://img.shields.io/badge/AI-Gemini%202.0%20Flash-blue?logo=google)]()
+[![Status](https://img.shields.io/badge/Status-Active-brightgreen)]()
+
 </div>
 
 ---
 
-**StudyClaw** is a Go-based agentic AI bot that runs directly on your Windows PC or Android phone (via Termux). It connects to WhatsApp and Telegram, indexes your study materials, and proactively sends you quizzes, summaries, and diagrams — powered by **Gemini**.
+**StudyClaw** is an open-source, self-hosted AI agent that runs on your Windows PC or Android phone (via Termux). It connects to **WhatsApp** and **Telegram**, monitors your college group for new content, and proactively quizzes, summarizes, and informs you — powered by **Gemini 2.0 Flash**.
 
 > [!TIP]
-> **Use Telegram for the fastest experience!** While WhatsApp is great for daily use, Telegram setup is instant and its bot interface is significantly faster for quick checks, PYQ lookups, and rapid quiz feedback.
+> **Use Telegram for the fastest experience!** Instant setup (no QR scan), faster responses, and better message formatting. Perfect for quick quiz checks and AI queries.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
 | Feature | Description |
 |:--------|:------------|
-| 📥 **Instant Indexing** | Send a PDF or text to the bot. It's instantly indexed for retrieval. |
-| 🎯 **Adaptive Quizzes** | Get 3–5 MCQs based on your actual notes, tailored to your learning pace. |
-| 📊 **Proactive Diagrams** | AI generates Mermaid diagrams; view them at `http://localhost:8080`. |
-| 📅 **Academic Soul** | The bot's personality shifts (Drill Sergeant vs. Peer) based on your exam dates. |
-| 🦾 **Native Tool Calling** | Uses Gemini's function calling to autonomously search notes or add deadlines. |
-| 🤖 **Dual-Channel** | **Telegram (Fastest)** & WhatsApp support. Pick what fits your workflow. |
+| 🧠 **Smart Message Routing** | Short msgs (≤120 chars) are silently indexed. Long messages are AI-summarized into 3 key bullets with *"Want more?"* |
+| 🌐 **Web Search** | Agent can search the internet in real-time via DuckDuckGo. No API key needed. |
+| 📥 **PDF & Image Ingestion** | Drop files in the chat. Auto-indexed for later retrieval and quiz generation. |
+| 🎯 **Adaptive Quizzes** | MCQs generated from your own notes, adapts to weak topics. |
+| 📊 **Diagram Viewer** | AI generates Mermaid diagrams, viewable at `http://localhost:8080`. |
+| 📅 **Academic Calendar** | Tracks deadlines, shifts the bot's personality closer to exam dates. |
+| 🔒 **Group Privacy** | Run in **Passive Mode** — bot reads your college group silently, never replies. |
+| 🤖 **Dual-Channel** | Telegram (recommended) + WhatsApp. |
 
 ---
 
-## 🚀 Quick Start (Windows) — Recommended
+## 🏗️ Architecture
 
-StudyClaw is optimized for Windows with a **one-click launcher**.
+```mermaid
+graph LR
+    WA[WhatsApp] --> BUS[MessageBus]
+    TG[Telegram] --> BUS
 
-1.  **Install Go**: Download from [golang.org/dl](https://golang.org/dl/).
-2.  **Clone & Run**:
-    ```powershell
-    git clone https://github.com/roshan30-git/picoclaw-scholar.git
-    cd picoclaw-scholar
-    .\run.ps1
-    ```
-3.  **Setup**: Follow the on-screen wizard to enter your Gemini API key.
-4.  **Connect**:
-    - **Telegram (Recommended)**: Paste your Bot Token from [@BotFather](https://t.me/botfather). No scanning needed!
-    - **WhatsApp**: Scan the QR code that appears in the terminal.
+    BUS --> SMART[SmartMessageHandler]
+    SMART -->|Short msg| DB[(SQLite DB)]
+    SMART -->|Long msg| LLM[Gemini 2.0 Flash]
+    SMART -->|Question| AGENT[AgentLoop]
 
----
+    AGENT --> TOOLS{Tools}
+    TOOLS --> QUIZ[Quiz Engine]
+    TOOLS --> INGEST[PDF Ingest]
+    TOOLS --> SEARCH[Web Search]
+    TOOLS --> CALENDAR[Calendar]
 
-## 🚀 Quick Start (Termux on Android)
-
-1.  **Install Environment**:
-    ```bash
-    pkg update && pkg upgrade -y
-    pkg install golang git clang make -y
-    ```
-2.  **Setup**:
-    ```bash
-    git clone https://github.com/roshan30-git/picoclaw-scholar.git
-    cd picoclaw-scholar
-    go mod tidy
-    ```
-3.  **Run**:
-    ```bash
-    export GEMINI_API_KEY="your_key"
-    export TELEGRAM_BOT_TOKEN="your_tg_token" # Highly Recommended
-    go run cmd/main.go
-    ```
-
----
-
-## 🔑 Getting Your API Key
-Get your free Gemini API key at [aistudio.google.com](https://aistudio.google.com/apikey). No credit card required.
-
----
-
-## 🛠️ Configuration
-The app uses a `.env` file for secrets. The Windows launcher (`run.ps1`) creates this for you automatically.
-
-```env
-GEMINI_API_KEY=AIza...
-TELEGRAM_BOT_TOKEN=...       # Better for fast checks!
-STUDYCLAW_OWNER_NUMBER=91...
-STUDYCLAW_ALLOWED_GROUPS=... # Comma-separated JIDs (see terminal on start)
-STUDYCLAW_PASSIVE_GROUPS=... # Groups where the bot is read-only
-LLM_PROVIDER=gemini
+    AGENT --> LLM
+    LLM --> BUS
+    BUS --> WA
+    BUS --> TG
 ```
 
 ---
 
+## 🚀 Quick Start
+
+### Windows (Recommended)
+
+```powershell
+git clone https://github.com/roshan30-git/picoclaw-scholar.git
+cd picoclaw-scholar
+.\run.ps1
+```
+
+The setup wizard will ask for your Gemini API key and Telegram token.
+
+### Termux (Android)
+
+```bash
+pkg update && pkg install golang git -y
+git clone https://github.com/roshan30-git/picoclaw-scholar.git
+cd picoclaw-scholar
+chmod +x run.sh && ./run.sh
+```
+
+---
+
+## 🔑 Getting Your Keys
+
+| Service | URL | Required? |
+|---------|-----|-----------|
+| Gemini API | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | ✅ Yes |
+| Telegram Bot | [@BotFather](https://t.me/botfather) on Telegram | ⭐ Recommended |
+| WhatsApp | Scan QR on first launch | Optional |
+
+---
+
+## ⚙️ Configuration
+
+Edit `.env` (automatically created by `run.ps1` / `run.sh`):
+
+```env
+GEMINI_API_KEY=AIza...                  # Required
+TELEGRAM_BOT_TOKEN=...                  # Recommended
+STUDYCLAW_OWNER_NUMBER=91XXXXXXXXXX     # Your WhatsApp number
+STUDYCLAW_ALLOWED_GROUPS=...            # Comma-sep JIDs (see terminal on start)
+STUDYCLAW_PASSIVE_GROUPS=...            # Groups the bot reads but never replies in
+LLM_PROVIDER=gemini
+```
+
+> [!NOTE]
+> Run the app once to see a **📋 Joined WhatsApp Groups** list in the terminal — this shows you the JIDs you need for group filtering.
+
+---
+
+## 🔒 WhatsApp Privacy
+
+StudyClaw gives you full control over group access:
+
+| Mode | How | Effect |
+|------|-----|--------|
+| **Active** | Add group JID to `STUDYCLAW_ALLOWED_GROUPS` | Bot reads and replies |
+| **Passive** | Add group JID to `STUDYCLAW_PASSIVE_GROUPS` | Bot reads silently, sends AI responses to you privately |
+| **Blocked** | Leave group JIDs empty | Bot ignores all groups |
+
+---
+
 ## 🗺️ Roadmap
-- [x] WhatsApp & Telegram Integration
-- [x] Gemini Tool Calling & PDF Ingestion
-- [x] Windows One-Click Launcher
-- [x] Academic Calendar & Reflection Engine
-- [ ] Handwriting OCR support
-- [ ] Exam Countdown Alerts
+
+- [x] WhatsApp & Telegram integration
+- [x] Gemini tool calling & PDF ingestion
+- [x] Windows one-click launcher (`run.ps1`)
+- [x] Termux launcher (`run.sh`)
+- [x] Smart message routing & summarization
+- [x] Real-time web search via DuckDuckGo
+- [x] Passive group monitoring mode
+- [x] Academic calendar & reflection engine
+- [ ] Handwriting OCR (Surya)
+- [ ] Exam countdown alerts with push notifications
+- [ ] Multi-language support
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please read `CONTRIBUTING.md` before submitting a PR.
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Commit your changes: `git commit -m 'feat: add my feature'`
+4. Push and open a Pull Request
 
 ---
 
 ## 📄 License
-MIT — Learn boldly 🦞
+
+StudyClaw is licensed under the **[GNU General Public License v3.0](LICENSE)**.
+
+> This means any derivative work must also be open-sourced under GPLv3 — keeping StudyClaw free for everyone.
+
+---
+
+<div align="center">
+Made with ☕ & Go. Learn boldly 🦞
+</div>

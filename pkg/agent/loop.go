@@ -11,6 +11,7 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
@@ -18,33 +19,35 @@ import (
 )
 
 type AgentLoop struct {
-	cfg         *config.Config
-	bus         *bus.MessageBus
-	provider    tools.LLMProvider
-	tools       map[string]tools.Tool
-	mgr         *channels.Manager
-	visParser   *visual.Parser
-	router      *PersonaRouter
-	calendar    *study.CalendarEngine
-	reflections *memory.ReflectionManager
-	inbox       chan bus.InboundMessage
-	quit        chan struct{}
-	sessions    map[string][]tools.Message
+	cfg          *config.Config
+	bus          *bus.MessageBus
+	provider     tools.LLMProvider
+	tools        map[string]tools.Tool
+	mgr          *channels.Manager
+	visParser    *visual.Parser
+	router       *PersonaRouter
+	calendar     *study.CalendarEngine
+	reflections  *memory.ReflectionManager
+	smartHandler *study.SmartMessageHandler
+	inbox        chan bus.InboundMessage
+	quit         chan struct{}
+	sessions     map[string][]tools.Message
 }
 
-func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, router *PersonaRouter, cal *study.CalendarEngine, mem *memory.ReflectionManager) *AgentLoop {
+func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, router *PersonaRouter, cal *study.CalendarEngine, mem *memory.ReflectionManager, db *pkgdb.DB) *AgentLoop {
 	return &AgentLoop{
-		cfg:         cfg,
-		bus:         b,
-		provider:    provider,
-		tools:       make(map[string]tools.Tool),
-		visParser:   visual.NewParser(vm),
-		router:      router,
-		calendar:    cal,
-		reflections: mem,
-		inbox:       b.Subscribe(),
-		quit:        make(chan struct{}),
-		sessions:    make(map[string][]tools.Message),
+		cfg:          cfg,
+		bus:          b,
+		provider:     provider,
+		tools:        make(map[string]tools.Tool),
+		visParser:    visual.NewParser(vm),
+		router:       router,
+		calendar:     cal,
+		reflections:  mem,
+		smartHandler: study.NewSmartMessageHandler(provider, db),
+		inbox:        b.Subscribe(),
+		quit:         make(chan struct{}),
+		sessions:     make(map[string][]tools.Message),
 	}
 }
 
@@ -77,6 +80,19 @@ func (l *AgentLoop) Stop() {
 
 func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	log.Printf("[%s] Message from %s", msg.Channel, msg.From)
+
+	// Pre-process: smart handler decides how to treat the message
+	if l.smartHandler != nil {
+		reply, continueToAgent := l.smartHandler.Process(ctx, msg.Content)
+		if !continueToAgent {
+			if reply != "" && l.mgr != nil {
+				_ = l.mgr.Send(ctx, bus.OutboundMessage{
+					ChatID: msg.ChatID, Content: reply, Channel: msg.Channel,
+				})
+			}
+			return
+		}
+	}
 
 	history := l.getHistory(msg.Channel, msg.ChatID)
 	l.detectCorrections(msg.Content, history)
