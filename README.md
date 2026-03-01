@@ -12,6 +12,9 @@
 
 **StudyClaw** is a Go-based agentic AI bot that runs directly on your Windows PC or Android phone (via Termux). It connects to WhatsApp and Telegram, indexes your study materials, and proactively sends you quizzes, summaries, and diagrams — powered by **Gemini**.
 
+> [!TIP]
+> **Use Telegram for the fastest experience!** While WhatsApp is great for daily use, Telegram setup is instant and its bot interface is significantly faster for quick checks, PYQ lookups, and rapid quiz feedback.
+
 ---
 
 ## ✨ Key Features
@@ -23,6 +26,7 @@
 | 📊 **Proactive Diagrams** | AI generates Mermaid diagrams; view them at `http://localhost:8080`. |
 | 📅 **Academic Soul** | The bot's personality shifts (Drill Sergeant vs. Peer) based on your exam dates. |
 | 🦾 **Native Tool Calling** | Uses Gemini's function calling to autonomously search notes or add deadlines. |
+| 🤖 **Dual-Channel** | **Telegram (Fastest)** & WhatsApp support. Pick what fits your workflow. |
 
 ---
 
@@ -38,7 +42,9 @@ StudyClaw is optimized for Windows with a **one-click launcher**.
     .\run.ps1
     ```
 3.  **Setup**: Follow the on-screen wizard to enter your Gemini API key.
-4.  **Scan**: A WhatsApp QR code will appear. Scan it with your phone. **Done!**
+4.  **Connect**:
+    - **Telegram (Recommended)**: Paste your Bot Token from [@BotFather](https://t.me/botfather). No scanning needed!
+    - **WhatsApp**: Scan the QR code that appears in the terminal.
 
 ---
 
@@ -58,6 +64,7 @@ StudyClaw is optimized for Windows with a **one-click launcher**.
 3.  **Run**:
     ```bash
     export GEMINI_API_KEY="your_key"
+    export TELEGRAM_BOT_TOKEN="your_tg_token" # Highly Recommended
     go run cmd/main.go
     ```
 
@@ -73,7 +80,7 @@ The app uses a `.env` file for secrets. The Windows launcher (`run.ps1`) creates
 
 ```env
 GEMINI_API_KEY=AIza...
-TELEGRAM_BOT_TOKEN=...
+TELEGRAM_BOT_TOKEN=...       # Better for fast checks!
 STUDYCLAW_OWNER_NUMBER=91...
 LLM_PROVIDER=gemini
 ```
