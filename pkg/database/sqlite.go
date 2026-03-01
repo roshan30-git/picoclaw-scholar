@@ -57,6 +57,11 @@ func New(path string) (*DB, error) {
 			attempts INTEGER DEFAULT 0,
 			pace_label TEXT DEFAULT 'medium'
 		)`,
+		`CREATE TABLE IF NOT EXISTS chat_summaries (
+			chat_id TEXT PRIMARY KEY,
+			content TEXT NOT NULL,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, t := range tables {
@@ -111,4 +116,23 @@ func (db *DB) QueryContext(topic string) (string, error) {
 func (db *DB) SaveQuizScore(topic string, score, total int) error {
 	_, err := db.conn.Exec(`INSERT INTO quiz_history (topic, score, total) VALUES (?, ?, ?)`, topic, score, total)
 	return err
+}
+
+func (db *DB) SaveChatSummary(chatID, content string) error {
+	_, err := db.conn.Exec(`
+		INSERT INTO chat_summaries (chat_id, content) 
+		VALUES (?, ?) 
+		ON CONFLICT(chat_id) DO UPDATE SET 
+		content = excluded.content, 
+		updated_at = CURRENT_TIMESTAMP`, chatID, content)
+	return err
+}
+
+func (db *DB) GetLatestChatSummary(chatID string) string {
+	var content string
+	err := db.conn.QueryRow(`SELECT content FROM chat_summaries WHERE chat_id = ?`, chatID).Scan(&content)
+	if err != nil {
+		return ""
+	}
+	return content
 }

@@ -29,6 +29,7 @@ type AgentLoop struct {
 	calendar     *study.CalendarEngine
 	reflections  *memory.ReflectionManager
 	profileMgr   *memory.ProfileManager
+	contextMgr   *memory.ContextManager
 	smartHandler *study.SmartMessageHandler
 	inbox        chan bus.InboundMessage
 	quit         chan struct{}
@@ -46,6 +47,7 @@ func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvi
 		calendar:     cal,
 		reflections:  mem,
 		profileMgr:   memory.NewProfileManager(db.Conn()),
+		contextMgr:   memory.NewContextManager(db, provider, memory.NewProfileManager(db.Conn()), study.NewDeadlineTracker(db)),
 		smartHandler: study.NewSmartMessageHandler(provider, db),
 		inbox:        b.Subscribe(),
 		quit:         make(chan struct{}),
@@ -102,7 +104,16 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	// Determine required persona for this turn
 	persona := l.router.RouteMessage(msg)
 
+	shortTermSummary := l.contextMgr.GetLatestChatSummary(msg.ChatID) // We'll add this wrapper method in loop soon, or just rely on ContextManager directly
+
 	enrichedContent := l.enrichContext(msg.Content, persona)
+
+	// Inject the dynamic Context Scratchpad built specifically for this message
+	contextBlock := l.contextMgr.BuildPrompt(ctx, msg.ChatID, msg.Content, shortTermSummary)
+	if contextBlock != "" {
+		enrichedContent = contextBlock + "\n\n" + enrichedContent
+	}
+
 	history = append(history, tools.Message{Role: "user", Content: enrichedContent})
 
 	toolDefs := l.getToolDefinitions()
@@ -122,7 +133,27 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	}
 
 	history = append(history, tools.Message{Role: "model", Content: resp.Content})
-	l.saveHistory(msg.Channel, msg.ChatID, history)
+
+	// Rolling Summary Logic: Every 3 logic pairs (6 messages: 3 user, 3 model), trigger summary
+	var userMsgCount int
+	for _, m := range history {
+		if m.Role == "user" {
+			userMsgCount++
+		}
+	}
+
+	if userMsgCount >= 3 {
+		l.contextMgr.SummarizeAndClear(ctx, msg.ChatID, history, func(newSummary string) {
+			// Callback executes when generation is complete. Clear internal memory slice.
+			// Keep ONLY the last model message so the immediate reply isn't fully lost mid-flight,
+			// though the ContextManager will load the summary block next time anyway.
+			l.sessions[msg.Channel+":"+msg.ChatID] = []tools.Message{
+				{Role: "model", Content: resp.Content},
+			}
+		})
+	} else {
+		l.saveHistory(msg.Channel, msg.ChatID, history)
+	}
 
 	out := bus.OutboundMessage{
 		ChatID:  msg.ChatID,
@@ -209,12 +240,7 @@ func (l *AgentLoop) enrichContext(content string, persona PersonaType) string {
 			preamble = append(preamble, lessons)
 		}
 	}
-	// 4. Inject Student Learning Profile (personalization)
-	if l.profileMgr != nil {
-		if profile := l.profileMgr.GetProfile(); profile != nil {
-			preamble = append(preamble, profile.FormatForPrompt())
-		}
-	}
+	// 4. Student Learning Profile (personalization) - Moved entirely to ContextManager
 	if len(preamble) == 0 {
 		return content
 	}
