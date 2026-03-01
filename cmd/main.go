@@ -85,6 +85,15 @@ func main() {
 	reflectionManager := memory.NewReflectionManager("workspace")
 	personaRouter := agent.NewPersonaRouter()
 	deadlineTracker := study.NewDeadlineTracker(db)
+	weeklyCards := study.NewWeeklyCardsGenerator(db, provider, msgBus, os.Getenv("STUDYCLAW_OWNER_NUMBER"))
+
+	// 6b. Start proactive cron scheduler
+	ownerID := os.Getenv("STUDYCLAW_OWNER_NUMBER")
+	scheduler := study.NewScheduler(deadlineTracker, weeklyCards, msgBus, ownerID)
+	scheduler.ScheduleReminders()
+	scheduler.ScheduleWeeklyCards()
+	go scheduler.Start(ctx)
+	fmt.Println("📅 Proactive scheduler started (daily reminders + weekly flashcards)")
 
 	// 7. Agent Loop (only started if LLM is available)
 	if provider != nil {
@@ -96,6 +105,8 @@ func main() {
 		agentLoop.RegisterTool(study.NewViewDeadlinesTool(deadlineTracker))
 		agentLoop.RegisterTool(tools.NewReportGeneratorTool(provider))
 		agentLoop.RegisterTool(tools.NewWebSearchTool())
+		agentLoop.RegisterTool(tools.NewExcelTool())
+		agentLoop.RegisterTool(tools.NewDiagramTool())
 		agentLoop.SetChannelManager(chMgr)
 		go agentLoop.Run(ctx)
 		fmt.Println("🤖 Agent Loop initialized with current LLM provider")

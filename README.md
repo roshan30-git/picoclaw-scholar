@@ -24,14 +24,16 @@
 
 | Feature | Description |
 |:--------|:------------|
-| 🧠 **Smart Message Routing** | Short msgs (≤120 chars) are silently indexed. Long messages are AI-summarized into 3 key bullets with *"Want more?"* |
-| 🌐 **Web Search** | Agent can search the internet in real-time via DuckDuckGo. No API key needed. |
-| 📥 **PDF & Image Ingestion** | Drop files in the chat. Auto-indexed for later retrieval and quiz generation. |
-| 🎯 **Adaptive Quizzes** | MCQs generated from your own notes, adapts to weak topics. |
-| 📊 **Diagram Viewer** | AI generates Mermaid diagrams, viewable at `http://localhost:8080`. |
-| 📅 **Academic Calendar** | Tracks deadlines, shifts the bot's personality closer to exam dates. |
-| 🔒 **Group Privacy** | Run in **Passive Mode** — bot reads your college group silently, never replies. |
-| 🤖 **Dual-Channel** | Telegram (recommended) + WhatsApp. |
+| 🧠 **Smart Message Routing** | Short msgs (≤120 chars) are indexed silently. Long messages are AI-summarized into 3 key bullets with *"Want more?"* |
+| 🌐 **Web Search** | Real-time internet search via DuckDuckGo — no API key needed. Agent uses it automatically for current events. |
+| 📥 **PDF & Image Ingestion** | Drop files in the chat. Auto-indexed for retrieval and quiz generation. |
+| 🎯 **Adaptive Quizzes** | MCQs generated from your own notes. Adapts difficulty based on quiz history. |
+| 📊 **Excel Export** | Ask the agent to export deadlines, quiz scores, or notes — downloads a `.xlsx` spreadsheet. |
+| 📐 **Diagrams & Circuits** | Ask for any flowchart, ER diagram, sequence diagram, mindmap, circuit schematic. Rendered at `localhost:8080`. |
+| 🎓 **Dynamic Student Memory** | Per-student learning profile: tracks weak topics, pace, and style. Every AI response adapts to your profile. |
+| 📅 **Proactive Reminders** | Daily 8 AM deadline briefings. Weekly Sunday flashcard drops. Fully automated cron scheduler. |
+| 🔒 **Group Privacy** | **Passive Mode** — bot reads your college group silently, never replies. AI responses come to you privately. |
+| 🤖 **Dual-Channel** | Telegram (recommended) + WhatsApp with full feature parity. |
 
 ---
 

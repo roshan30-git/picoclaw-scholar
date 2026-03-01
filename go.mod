@@ -49,16 +49,22 @@ require (
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/petermattis/goid v0.0.0-20260113132338-7c7de50cc741 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/richardlehane/mscfb v1.0.6 // indirect
+	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
+	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.69.0 // indirect
 	github.com/valyala/fastjson v1.6.7 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
+	github.com/xuri/efp v0.0.1 // indirect
+	github.com/xuri/excelize/v2 v2.10.1 // indirect
+	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	go.mau.fi/libsignal v0.2.1 // indirect
 	go.mau.fi/util v0.9.6 // indirect
 	go.opencensus.io v0.24.0 // indirect

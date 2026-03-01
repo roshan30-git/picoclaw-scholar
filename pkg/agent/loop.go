@@ -28,6 +28,7 @@ type AgentLoop struct {
 	router       *PersonaRouter
 	calendar     *study.CalendarEngine
 	reflections  *memory.ReflectionManager
+	profileMgr   *memory.ProfileManager
 	smartHandler *study.SmartMessageHandler
 	inbox        chan bus.InboundMessage
 	quit         chan struct{}
@@ -44,6 +45,7 @@ func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvi
 		router:       router,
 		calendar:     cal,
 		reflections:  mem,
+		profileMgr:   memory.NewProfileManager(db.Conn()),
 		smartHandler: study.NewSmartMessageHandler(provider, db),
 		inbox:        b.Subscribe(),
 		quit:         make(chan struct{}),
@@ -205,6 +207,12 @@ func (l *AgentLoop) enrichContext(content string, persona PersonaType) string {
 	if l.reflections != nil {
 		if lessons := l.reflections.GetRecentReflections(); lessons != "" {
 			preamble = append(preamble, lessons)
+		}
+	}
+	// 4. Inject Student Learning Profile (personalization)
+	if l.profileMgr != nil {
+		if profile := l.profileMgr.GetProfile(); profile != nil {
+			preamble = append(preamble, profile.FormatForPrompt())
 		}
 	}
 	if len(preamble) == 0 {
