@@ -170,8 +170,22 @@ func main() {
 	defer chMgr.StopAll(ctx)
 
 	fmt.Println("🚀 StudyClaw is alive! Send a message via WhatsApp to start.")
+	fmt.Println("   (Type 'stop' or 'exit' in terminal to shut down)")
 
-	// Graceful shutdown
+	// 10. Terminal Command Listener
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			text := strings.ToLower(strings.TrimSpace(scanner.Text()))
+			if text == "stop" || text == "exit" {
+				fmt.Println("\n🛑 Shutdown command received from terminal...")
+				cancel()
+				return
+			}
+		}
+	}()
+
+	// Graceful shutdown logic remains for signals and context cancellation
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
