@@ -36,7 +36,7 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocr
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	// Open the SQLite session store — foreign keys must be enabled for whatsmeow schema migrations
-	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath+"?_foreign_keys=on", logger)
+	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath+"?_pragma=foreign_keys(1)", logger)
 	if err != nil {
 		return nil, fmt.Errorf("sqlstore: %w", err)
 	}
