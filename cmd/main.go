@@ -47,6 +47,7 @@ func main() {
 
 	// Prompt for required keys if not already set (e.g. via .env or export)
 	promptIfEmpty("GEMINI_API_KEY", "Gemini API Key (get free at aistudio.google.com)")
+	promptIfEmpty("TELEGRAM_BOT_TOKEN", "Telegram Bot Token (optional, get from @BotFather)")
 	promptIfEmpty("STUDYCLAW_OWNER_NUMBER", "Your WhatsApp number with country code (e.g. 919876543210)")
 
 	ctx, cancel := context.WithCancel(context.Background())

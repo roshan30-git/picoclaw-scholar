@@ -19,6 +19,17 @@ show_header() {
 
 show_header
 
+# 0. Self-Update Check
+echo -e "${CYAN}[UPDATE] Syncing with GitHub...${NC}"
+if command -v git &> /dev/null; then
+    git fetch origin main &> /dev/null || true
+    git reset --hard origin/main &> /dev/null || true
+    echo -e "${GREEN}[SUCCESS] Up to date.${NC}"
+else
+    echo -e "${YELLOW}[WARNING] Git not found. Skipping auto-update.${NC}"
+fi
+echo ""
+
 # 1. Check for Go
 if ! command -v go &> /dev/null; then
     echo -e "${RED}[ERROR] Go is not installed.${NC}"
