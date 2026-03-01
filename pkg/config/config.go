@@ -55,6 +55,7 @@ type Config struct {
 	TelegramWebAppURL string         `json:"telegram_webapp_url"`
 	StudentProfile    StudentProfile `json:"student_profile"`
 	AllowedGroupJIDs  []string       `json:"allowed_group_jids"`
+	PassiveGroupJIDs  []string       `json:"passive_group_jids"`
 	Channels          ChannelsConfig `json:"channels"`
 	Agents            AgentsConfig   `json:"agents"`
 }
@@ -71,6 +72,7 @@ func DefaultConfig() *Config {
 			LearningPace: "medium",
 		},
 		AllowedGroupJIDs: []string{},
+		PassiveGroupJIDs: []string{},
 		Channels: ChannelsConfig{
 			Telegram: TelegramConfig{
 				Enabled: true,
@@ -110,6 +112,16 @@ func LoadConfig() *Config {
 			trimmed := strings.TrimSpace(g)
 			if trimmed != "" {
 				cfg.AllowedGroupJIDs = append(cfg.AllowedGroupJIDs, trimmed)
+			}
+		}
+	}
+
+	if passiveGroups := os.Getenv("STUDYCLAW_PASSIVE_GROUPS"); passiveGroups != "" {
+		groups := strings.Split(passiveGroups, ",")
+		for _, g := range groups {
+			trimmed := strings.TrimSpace(g)
+			if trimmed != "" {
+				cfg.PassiveGroupJIDs = append(cfg.PassiveGroupJIDs, trimmed)
 			}
 		}
 	}

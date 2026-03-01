@@ -107,7 +107,7 @@ func main() {
 		log.Printf("Warning: Failed to init OCR Pipeline: %v", err)
 	}
 
-	waClient, err := whatsapp.New("whatsapp_session.db", msgBus, cfg.AllowedGroupJIDs, ocrPipeline)
+	waClient, err := whatsapp.New("whatsapp_session.db", msgBus, cfg.AllowedGroupJIDs, cfg.PassiveGroupJIDs, ocrPipeline)
 	if err != nil {
 		log.Printf("Warning: Failed to init WhatsApp: %v", err)
 	} else {

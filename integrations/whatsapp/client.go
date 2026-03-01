@@ -28,12 +28,13 @@ type Client struct {
 	wac           *whatsmeow.Client
 	bus           *bus.MessageBus
 	allowedGroups []string
+	passiveGroups []string
 	ocr           *study.OCRPipeline
 }
 
 // New creates and connects a new WhatsApp client.
 // sessionPath: where to persist the login session (so QR scan is only needed once).
-func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
+func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, passiveGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
 	// Open the SQLite session store — foreign keys must be enabled for whatsmeow schema migrations
@@ -48,7 +49,7 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocr
 	}
 
 	wac := whatsmeow.NewClient(deviceStore, logger)
-	c := &Client{wac: wac, bus: msgBus, allowedGroups: allowedGroups, ocr: ocrPipeline}
+	c := &Client{wac: wac, bus: msgBus, allowedGroups: allowedGroups, passiveGroups: passiveGroups, ocr: ocrPipeline}
 	wac.AddEventHandler(c.handleEvent)
 
 	// If not logged in, show QR code in terminal (user scans once)
@@ -67,9 +68,27 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocr
 		if err := wac.Connect(); err != nil {
 			return nil, fmt.Errorf("reconnect: %w", err)
 		}
+		// List joined groups on startup for JID discovery
+		go c.listGroups()
 	}
 
 	return c, nil
+}
+
+func (c *Client) listGroups() {
+	groups, err := c.wac.GetJoinedGroups(context.Background())
+	if err != nil {
+		fmt.Printf("Warning: Failed to list joined groups: %v\n", err)
+		return
+	}
+
+	if len(groups) > 0 {
+		fmt.Println("\n📋 Joined WhatsApp Groups (for configuration):")
+		for _, g := range groups {
+			fmt.Printf("   - %s (JID: %s)\n", g.Name, g.JID)
+		}
+		fmt.Println("")
+	}
 }
 
 // handleEvent is the whatsmeow event listener.
@@ -185,18 +204,39 @@ var diagramRegex = regexp.MustCompile("(?s)```mermaid(.*?)```")
 
 // Send delivers a text message to a WhatsApp JID (contact or group).
 func (c *Client) Send(ctx context.Context, outMsg bus.OutboundMessage) error {
+	isPassive := false
+	for _, pg := range c.passiveGroups {
+		if outMsg.ChatID == pg || outMsg.ChatID == pg+"@g.us" {
+			isPassive = true
+			break
+		}
+	}
+
 	jid, err := parseJID(outMsg.ChatID)
 	if err != nil {
 		return err
 	}
 
+	targetJID := jid
 	content := outMsg.Content
+
+	if isPassive {
+		// Redirect to owner
+		owner := GetOwnerEnv()
+		if owner == "" {
+			fmt.Printf("[PASSIVE BLOCK] Response suppressed for group %s: %s\n", outMsg.ChatID, content)
+			return nil
+		}
+		targetJID, _ = parseJID(owner)
+		content = fmt.Sprintf("⚠️ [PASSIVE MODE RESPONSE FOR %s]\n\n%s", outMsg.ChatID, content)
+	}
+
 	if outMsg.VisualID != "" {
 		content += fmt.Sprintf("\n\n🔍 View Diagram/Formula here: https://studyclaw.app/viewer?id=%s&type=%s", outMsg.VisualID, outMsg.VisualType)
 	}
 
 	waMsg := &waE2E.Message{Conversation: proto.String(content)}
-	_, err = c.wac.SendMessage(context.Background(), jid, waMsg)
+	_, err = c.wac.SendMessage(context.Background(), targetJID, waMsg)
 	return err
 }
 

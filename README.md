@@ -82,6 +82,8 @@ The app uses a `.env` file for secrets. The Windows launcher (`run.ps1`) creates
 GEMINI_API_KEY=AIza...
 TELEGRAM_BOT_TOKEN=...       # Better for fast checks!
 STUDYCLAW_OWNER_NUMBER=91...
+STUDYCLAW_ALLOWED_GROUPS=... # Comma-separated JIDs (see terminal on start)
+STUDYCLAW_PASSIVE_GROUPS=... # Groups where the bot is read-only
 LLM_PROVIDER=gemini
 ```
 
