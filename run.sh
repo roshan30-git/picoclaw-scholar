@@ -62,13 +62,24 @@ EOF
     echo ""
 fi
 
-# 3. Synchronize dependencies
-echo -e "${CYAN}[DEPS] Refreshing dependencies...${NC}"
-go mod tidy
+# 3. Synchronize & Compile (Efficient for 4GB RAM)
+echo -e "${CYAN}[BUILD] Compiling StudyClaw binary...${NC}"
+go build -o studyclaw ./cmd/main.go
+echo -e "${GREEN}[SUCCESS] Binary ready.${NC}"
 
-# 4. Launch
+# 4. Termux Specific: Wake-lock (Prevents Android from killing the bot)
+if command -v termux-wake-lock &> /dev/null; then
+    echo -e "${CYAN}[TERMUX] Battery optimization: Requesting Wake-lock...${NC}"
+    termux-wake-lock
+fi
+
+# 5. Launch
 show_header
-echo -e "${GREEN}[LAUNCH] Launching StudyClaw...${NC}"
-echo "   (Press Ctrl+C to stop)"
+echo -e "${GREEN}[LAUNCH] StudyClaw is running!${NC}"
+echo "   (Send !stop from WhatsApp to shut down gracefully)"
 echo ""
-go run ./cmd/main.go
+
+# Cleanup on exit
+trap 'if command -v termux-wake-unlock &> /dev/null; then termux-wake-unlock; fi; exit' INT TERM EXIT
+
+./studyclaw
