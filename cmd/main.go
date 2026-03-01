@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/joho/godotenv"
@@ -25,9 +27,27 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
 )
 
+// promptIfEmpty checks if an env var is set; if not, asks the user to type it in.
+func promptIfEmpty(envKey, label string) {
+	if os.Getenv(envKey) != "" {
+		return
+	}
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("\n🔐 %s not set. Enter it now: ", label)
+	value, _ := reader.ReadString('\n')
+	value = strings.TrimSpace(value)
+	if value != "" {
+		os.Setenv(envKey, value)
+	}
+}
+
 func main() {
 	_ = godotenv.Load()
 	fmt.Println("🦞 StudyClaw — Initializing...")
+
+	// Prompt for required keys if not already set (e.g. via .env or export)
+	promptIfEmpty("GEMINI_API_KEY", "Gemini API Key (get free at aistudio.google.com)")
+	promptIfEmpty("STUDYCLAW_OWNER_NUMBER", "Your WhatsApp number with country code (e.g. 919876543210)")
 
 	ctx := context.Background()
 
