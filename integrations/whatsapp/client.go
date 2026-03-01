@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
@@ -77,6 +78,30 @@ func (c *Client) handleEvent(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
 		chatID := v.Info.Chat.String()
+		sender := v.Info.Sender.String()
+
+		// Debug log for JID discovery
+		if os.Getenv("DEBUG") == "true" {
+			fmt.Printf("[WHATSAPP DEBUG] Message from %s in chat %s\n", sender, chatID)
+		}
+
+		// Extract text
+		text := ""
+		if v.Message.GetConversation() != "" {
+			text = v.Message.GetConversation()
+		} else if v.Message.GetExtendedTextMessage() != nil {
+			text = v.Message.GetExtendedTextMessage().GetText()
+		}
+
+		// Administrative Commands (Owner Only)
+		isOwner := sender == GetOwnerEnv() || sender == GetOwnerEnv()+"@s.whatsapp.net"
+		if isOwner && strings.TrimSpace(text) == "!getid" {
+			c.Send(context.Background(), bus.OutboundMessage{
+				ChatID:  chatID,
+				Content: fmt.Sprintf("📍 Chat ID: %s", chatID),
+			})
+			return
+		}
 
 		// Group filtering logic
 		if v.Info.IsGroup && len(c.allowedGroups) > 0 {
@@ -92,15 +117,6 @@ func (c *Client) handleEvent(evt interface{}) {
 			}
 		}
 
-		// Extract text
-		text := ""
-		if v.Message.GetConversation() != "" {
-			text = v.Message.GetConversation()
-		} else if v.Message.GetExtendedTextMessage() != nil {
-			text = v.Message.GetExtendedTextMessage().GetText()
-		}
-
-		sender := v.Info.Sender.String()
 		mediaPath := ""
 
 		// Auto-save media

@@ -10,6 +10,19 @@ function Show-Header {
     Write-Host ""
 }
 
+# Helper to load .env into current session
+function Load-Env {
+    if (Test-Path .env) {
+        Get-Content .env | ForEach-Object {
+            $line = $_.Trim()
+            if ($line -and !$line.StartsWith("#") -and $line.Contains("=")) {
+                $name, $value = $line.Split('=', 2)
+                [System.Environment]::SetEnvironmentVariable($name.Trim(), $value.Trim(), "Process")
+            }
+        }
+    }
+}
+
 Show-Header
 
 # 1. Check for Go
@@ -19,22 +32,35 @@ if (!(Get-Command go -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# 2. Setup .env
-if (!(Test-Path .env)) {
-    Write-Host "Welcome! Let's set up StudyClaw for the first time." -ForegroundColor Yellow
+# 2. Check and Setup Configuration
+Load-Env
+$geminiKey = [System.Environment]::GetEnvironmentVariable("GEMINI_API_KEY", "Process")
+
+if ([string]::IsNullOrWhiteSpace($geminiKey)) {
+    Write-Host "Welcome! It looks like your Gemini API Key is missing." -ForegroundColor Yellow
+    Write-Host "This key is required for the AI to function."
     Write-Host ""
 
     $geminiKey = ""
-    while ($geminiKey -eq "") {
-        $geminiKey = Read-Host "Enter your GEMINI_API_KEY (from https://aistudio.google.com/apikey)"
-        if ($geminiKey -eq "") { Write-Host "   Key cannot be empty!" -ForegroundColor Red }
+    while ([string]::IsNullOrWhiteSpace($geminiKey)) {
+        $geminiKey = Read-Host "Enter your GEMINI_API_KEY (get one at https://aistudio.google.com/apikey)"
+        if ([string]::IsNullOrWhiteSpace($geminiKey)) { 
+            Write-Host "   Key cannot be empty!" -ForegroundColor Red 
+        }
     }
 
-    $ownerNumber = Read-Host "Enter your WhatsApp number (e.g. 91XXXXXXXXXX, leave empty for now)"
-    $tgToken = Read-Host "Enter your TELEGRAM_BOT_TOKEN (leave empty to skip)"
+    $tgToken = [System.Environment]::GetEnvironmentVariable("TELEGRAM_BOT_TOKEN", "Process")
+    if ([string]::IsNullOrWhiteSpace($tgToken)) {
+        $tgToken = Read-Host "Enter your TELEGRAM_BOT_TOKEN (optional, press Enter to skip)"
+    }
+
+    $ownerNumber = [System.Environment]::GetEnvironmentVariable("STUDYCLAW_OWNER_NUMBER", "Process")
+    if ([string]::IsNullOrWhiteSpace($ownerNumber)) {
+        $ownerNumber = Read-Host "Enter your WhatsApp number (e.g. 91XXXXXXXXXX, optional)"
+    }
 
     Write-Host ""
-    Write-Host "[CONFIG] Saving configuration..." -ForegroundColor Gray
+    Write-Host "[CONFIG] Saving configuration to .env..." -ForegroundColor Gray
     
     $envContent = @"
 GEMINI_API_KEY=$($geminiKey.Trim())
@@ -44,7 +70,7 @@ LLM_PROVIDER=gemini
 "@
     
     $envContent | Out-File -FilePath .env -Encoding utf8
-    Write-Host "[SUCCESS] .env created successfully!" -ForegroundColor Green
+    Write-Host "[SUCCESS] Configuration saved!" -ForegroundColor Green
     Write-Host ""
 }
 

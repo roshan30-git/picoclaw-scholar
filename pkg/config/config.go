@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 const DefaultTelegramWebAppURL = "https://your-studyclaw-miniapp.vercel.app/diagram"
 
@@ -99,6 +102,16 @@ func LoadConfig() *Config {
 	if ownerNumber := os.Getenv("STUDYCLAW_OWNER_NUMBER"); ownerNumber != "" {
 		// Populate allowed JIDs if owner number is provided
 		cfg.AllowedGroupJIDs = append(cfg.AllowedGroupJIDs, ownerNumber)
+	}
+
+	if allowedGroups := os.Getenv("STUDYCLAW_ALLOWED_GROUPS"); allowedGroups != "" {
+		groups := strings.Split(allowedGroups, ",")
+		for _, g := range groups {
+			trimmed := strings.TrimSpace(g)
+			if trimmed != "" {
+				cfg.AllowedGroupJIDs = append(cfg.AllowedGroupJIDs, trimmed)
+			}
+		}
 	}
 
 	// Provider-specific config
