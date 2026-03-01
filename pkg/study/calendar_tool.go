@@ -96,7 +96,7 @@ func (t *ViewDeadlinesTool) Execute(ctx context.Context, params map[string]any) 
 
 	msg := "📅 **Upcoming Deadlines:**\n\n"
 	for _, d := range upcoming {
-		daysOut := int(d.DueDate.Sub(time.Now()).Hours() / 24)
+		daysOut := int(time.Until(d.DueDate).Hours() / 24)
 		msg += fmt.Sprintf("- **%s** (Due in %d days)\n", d.Title, daysOut)
 	}
 

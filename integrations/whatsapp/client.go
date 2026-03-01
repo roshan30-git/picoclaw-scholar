@@ -77,8 +77,17 @@ func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, pas
 		fmt.Println("   Enter the code above. You have 60 seconds.")
 		fmt.Println()
 
-		// Wait for pairing to complete
-		<-wac.DeferredDisconnect
+		// Wait for pairing to complete (whatsmeow signals via Disconnected event)
+		disconnected := make(chan struct{}, 1)
+		wac.AddEventHandler(func(evt interface{}) {
+			if _, ok := evt.(*events.Disconnected); ok {
+				select {
+				case disconnected <- struct{}{}:
+				default:
+				}
+			}
+		})
+		<-disconnected
 	} else {
 		// ── ALREADY LOGGED IN ─────────────────────────────────────
 		if err := wac.Connect(); err != nil {

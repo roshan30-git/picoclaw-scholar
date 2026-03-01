@@ -23,29 +23,43 @@ func NewSmartMessageHandler(provider tools.LLMProvider, db *database.DB) *SmartM
 	return &SmartMessageHandler{provider: provider, db: db}
 }
 
+// groupNoteThreshold defines the minimum length for auto-saving from a passive group.
+const groupNoteThreshold = 200
+
 // Process decides how to handle a raw message.
 // Returns: (reply, shouldContinueToAgent)
+// isGroupMessage: true when from a passive-mode group channel (not the user directly)
 func (h *SmartMessageHandler) Process(ctx context.Context, content string) (string, bool) {
+	return h.ProcessWithSource(ctx, content, false)
+}
+
+// ProcessWithSource separates group monitoring logic from direct bot interaction.
+func (h *SmartMessageHandler) ProcessWithSource(ctx context.Context, content string, isGroupMessage bool) (string, bool) {
 	trimmed := strings.TrimSpace(content)
 
-	// Empty or command messages — pass through as-is
+	// Empty or command messages — always pass through
 	if trimmed == "" || strings.HasPrefix(trimmed, "!") || strings.HasPrefix(trimmed, "/") {
 		return "", true
 	}
 
-	// Short message: save silently and acknowledge
-	if len(trimmed) <= shortMessageThreshold {
-		_ = h.db.SaveNote(trimmed, trimmed, "whatsapp")
-		return "📌 Saved!", false
+	// Direct user→bot messages: ALWAYS forward to the agent, never block.
+	if !isGroupMessage {
+		return "", true
 	}
 
-	// Long message: summarize into 3 key points
+	// Group passive monitoring: short messages are silently noted
+	if len(trimmed) <= groupNoteThreshold {
+		_ = h.db.SaveNote("group_note", trimmed, "group")
+		return "", false // silent save, no reply to group
+	}
+
+	// Group passive monitoring: long messages are AI-summarized
 	summary, err := h.summarize(ctx, trimmed)
 	if err != nil {
-		return "", true // fallback to full agent on error
+		return "", false // silently skip on error
 	}
 
-	reply := fmt.Sprintf("📋 *Key Points:*\n%s\n\nWant full details? Reply with *more*", summary)
+	reply := fmt.Sprintf("📋 *Key Points:*\n%s\n\nReply *more* for full details.", summary)
 	return reply, false
 }
 
