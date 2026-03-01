@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
@@ -82,7 +83,7 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 
 	// Determine required persona for this turn
 	persona := l.router.RouteMessage(msg)
-	
+
 	enrichedContent := l.enrichContext(msg.Content, persona)
 	history = append(history, tools.Message{Role: "user", Content: enrichedContent})
 
@@ -160,14 +161,11 @@ func (l *AgentLoop) enrichContext(content string, persona PersonaType) string {
 	if persona == PersonaNone {
 		promptStr = "agent_explainer" // safe default base
 	}
-	
-	import "os"
-	import "path/filepath"
-	
+
 	// Check .md first, then .txt
 	personaPathMD := filepath.Join("workspace", "PROMPTS", "agents", promptStr+".md")
 	personaPathTXT := filepath.Join("workspace", "PROMPTS", "agents", promptStr+".txt")
-	
+
 	var personaData []byte
 	var err error
 	if personaData, err = os.ReadFile(personaPathMD); err != nil {
@@ -226,4 +224,3 @@ func (l *AgentLoop) processToolCalls(ctx context.Context, history []tools.Messag
 	}
 	return history
 }
-

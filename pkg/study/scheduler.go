@@ -53,7 +53,7 @@ func (s *Scheduler) SyncClassroom(gc *classroom.Client) {
 			log.Printf("[Scheduler] Classroom sync failed: %v", err)
 			return
 		}
-		
+
 		for _, c := range courses {
 			assignments, _ := gc.ListAssignments(context.Background(), c.Id)
 			for _, a := range assignments {
@@ -74,7 +74,7 @@ func (s *Scheduler) ScheduleReminders() {
 		if err != nil || len(upcoming) == 0 {
 			return
 		}
-		
+
 		msg := "📅 *__Morning Deadline Briefing__*\n\n"
 		count := 0
 		for _, d := range upcoming {
@@ -84,9 +84,9 @@ func (s *Scheduler) ScheduleReminders() {
 				count++
 			}
 		}
-		
+
 		if count > 0 {
-			s.bus.Publish(bus.OutboundMessage{
+			s.bus.PublishOutbound(bus.OutboundMessage{
 				ChatID:  s.ownerID,
 				Content: msg,
 				Channel: "whatsapp",

@@ -10,7 +10,7 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
 )
 
-func main() {
+func RunSetupWizard() {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Println("🦞 StudyClaw Setup Wizard")

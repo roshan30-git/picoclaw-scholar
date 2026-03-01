@@ -2,7 +2,6 @@ package memory
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"

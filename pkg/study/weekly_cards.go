@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	
+
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
@@ -28,7 +28,7 @@ func NewWeeklyCardsGenerator(db *database.DB, provider tools.LLMProvider, b *bus
 
 func (w *WeeklyCardsGenerator) GenerateAndSend(ctx context.Context) {
 	log.Println("[WeeklyCards] Triggering Sunday flashcards...")
-	
+
 	// Query weak topics where avg_score < 70 (Assuming 100 point total mapping later)
 	// Right now, if they did poorly on drills, they get added. For MVP, we fetch recent topics to review.
 	// We'll mimic fetching weak topics by just pulling recent distinct topics
@@ -66,5 +66,5 @@ func (w *WeeklyCardsGenerator) GenerateAndSend(ctx context.Context) {
 		Content: "🗂️ *__Your Sunday Revision Cards__*\n\n" + resp.Content,
 		Channel: "whatsapp",
 	}
-	w.bus.Publish(out)
+	w.bus.PublishOutbound(out)
 }

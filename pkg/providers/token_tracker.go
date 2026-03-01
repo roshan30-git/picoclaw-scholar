@@ -65,13 +65,13 @@ func (t *TokenTracker) AddUsage(ctx context.Context, inputTokens, outputTokens i
 	threshold := int(float64(t.dailyLimit) * 0.80)
 	if t.dailyTokens > threshold && !t.alertSent {
 		t.alertSent = true
-		msg := fmt.Sprintf("⚠️ *__Cost Alert__*\n\nTokens consumed today: %d / %d (%.1f%%).\nNearing Gemini free-tier daily limits.", 
+		msg := fmt.Sprintf("⚠️ *__Cost Alert__*\n\nTokens consumed today: %d / %d (%.1f%%).\nNearing Gemini free-tier daily limits.",
 			t.dailyTokens, t.dailyLimit, float64(t.dailyTokens)/float64(t.dailyLimit)*100.0)
-		
+
 		log.Println(msg)
-		
+
 		if t.bus != nil && t.ownerID != "" {
-			t.bus.Publish(bus.OutboundMessage{
+			t.bus.PublishOutbound(bus.OutboundMessage{
 				ChatID:  t.ownerID,
 				Content: msg,
 				Channel: "whatsapp", // default to whatsapp alert

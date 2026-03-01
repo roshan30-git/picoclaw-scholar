@@ -14,6 +14,7 @@ import (
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/auth"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 )
 
 const (
@@ -47,11 +48,11 @@ func NewAntigravityProvider() *AntigravityProvider {
 // project, model, request, requestType, userAgent, and requestId fields.
 func (p *AntigravityProvider) Chat(
 	ctx context.Context,
-	messages []Message,
-	tools []ToolDefinition,
+	messages []tools.Message,
+	toolDefs []tools.ToolDefinition,
 	model string,
 	options map[string]any,
-) (*LLMResponse, error) {
+) (*tools.LLMResponse, error) {
 	accessToken, projectID, err := p.tokenSource()
 	if err != nil {
 		return nil, fmt.Errorf("antigravity auth: %w", err)
@@ -71,7 +72,7 @@ func (p *AntigravityProvider) Chat(
 	})
 
 	// Build the inner Gemini-format request
-	innerRequest := p.buildRequest(messages, tools, model, options)
+	innerRequest := p.buildRequest(messages, toolDefs, model, options)
 
 	// Wrap in v1internal envelope (matches pi-ai SDK format)
 	envelope := map[string]any{
@@ -204,8 +205,8 @@ type antigravityGenConfig struct {
 }
 
 func (p *AntigravityProvider) buildRequest(
-	messages []Message,
-	tools []ToolDefinition,
+	messages []tools.Message,
+	toolDefs []tools.ToolDefinition,
 	model string,
 	options map[string]any,
 ) antigravityRequest {
@@ -290,10 +291,9 @@ func (p *AntigravityProvider) buildRequest(
 		}
 	}
 
-	// Build tools (sanitize schemas for Gemini compatibility)
-	if len(tools) > 0 {
+	if len(toolDefs) > 0 {
 		var funcDecls []antigravityFuncDecl
-		for _, t := range tools {
+		for _, t := range toolDefs {
 			if t.Type != "function" {
 				continue
 			}
@@ -328,7 +328,7 @@ func (p *AntigravityProvider) buildRequest(
 	return req
 }
 
-func normalizeStoredToolCall(tc ToolCall) (string, map[string]any, string) {
+func normalizeStoredToolCall(tc tools.ToolCall) (string, map[string]any, string) {
 	name := tc.Name
 	args := tc.Arguments
 	thoughtSignature := ""
@@ -404,7 +404,7 @@ type antigravityJSONResponse struct {
 	} `json:"usageMetadata"`
 }
 
-func (p *AntigravityProvider) parseJSONResponse(body []byte) (*LLMResponse, error) {
+func (p *AntigravityProvider) parseJSONResponse(body []byte) (*tools.LLMResponse, error) {
 	var resp antigravityJSONResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, fmt.Errorf("parsing antigravity response: %w", err)
@@ -416,7 +416,7 @@ func (p *AntigravityProvider) parseJSONResponse(body []byte) (*LLMResponse, erro
 
 	candidate := resp.Candidates[0]
 	var contentParts []string
-	var toolCalls []ToolCall
+	var toolCalls []tools.ToolCall
 
 	for _, part := range candidate.Content.Parts {
 		if part.Text != "" {
@@ -424,11 +424,11 @@ func (p *AntigravityProvider) parseJSONResponse(body []byte) (*LLMResponse, erro
 		}
 		if part.FunctionCall != nil {
 			argumentsJSON, _ := json.Marshal(part.FunctionCall.Args)
-			toolCalls = append(toolCalls, ToolCall{
+			toolCalls = append(toolCalls, tools.ToolCall{
 				ID:        fmt.Sprintf("call_%s_%d", part.FunctionCall.Name, time.Now().UnixNano()),
 				Name:      part.FunctionCall.Name,
 				Arguments: part.FunctionCall.Args,
-				Function: &FunctionCall{
+				Function: &tools.FunctionCall{
 					Name:             part.FunctionCall.Name,
 					Arguments:        string(argumentsJSON),
 					ThoughtSignature: extractPartThoughtSignature(part.ThoughtSignature, part.ThoughtSignatureSnake),
@@ -445,16 +445,16 @@ func (p *AntigravityProvider) parseJSONResponse(body []byte) (*LLMResponse, erro
 		finishReason = "length"
 	}
 
-	var usage *UsageInfo
+	var usage *tools.UsageInfo
 	if resp.UsageMetadata.TotalTokenCount > 0 {
-		usage = &UsageInfo{
+		usage = &tools.UsageInfo{
 			PromptTokens:     resp.UsageMetadata.PromptTokenCount,
 			CompletionTokens: resp.UsageMetadata.CandidatesTokenCount,
 			TotalTokens:      resp.UsageMetadata.TotalTokenCount,
 		}
 	}
 
-	return &LLMResponse{
+	return &tools.LLMResponse{
 		Content:      strings.Join(contentParts, ""),
 		ToolCalls:    toolCalls,
 		FinishReason: finishReason,
@@ -462,10 +462,10 @@ func (p *AntigravityProvider) parseJSONResponse(body []byte) (*LLMResponse, erro
 	}, nil
 }
 
-func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error) {
+func (p *AntigravityProvider) parseSSEResponse(body string) (*tools.LLMResponse, error) {
 	var contentParts []string
-	var toolCalls []ToolCall
-	var usage *UsageInfo
+	var toolCalls []tools.ToolCall
+	var usage *tools.UsageInfo
 	var finishReason string
 
 	scanner := bufio.NewScanner(strings.NewReader(body))
@@ -495,11 +495,11 @@ func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error
 				}
 				if part.FunctionCall != nil {
 					argumentsJSON, _ := json.Marshal(part.FunctionCall.Args)
-					toolCalls = append(toolCalls, ToolCall{
+					toolCalls = append(toolCalls, tools.ToolCall{
 						ID:        fmt.Sprintf("call_%s_%d", part.FunctionCall.Name, time.Now().UnixNano()),
 						Name:      part.FunctionCall.Name,
 						Arguments: part.FunctionCall.Args,
-						Function: &FunctionCall{
+						Function: &tools.FunctionCall{
 							Name:      part.FunctionCall.Name,
 							Arguments: string(argumentsJSON),
 							ThoughtSignature: extractPartThoughtSignature(
@@ -516,7 +516,7 @@ func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error
 		}
 
 		if resp.UsageMetadata.TotalTokenCount > 0 {
-			usage = &UsageInfo{
+			usage = &tools.UsageInfo{
 				PromptTokens:     resp.UsageMetadata.PromptTokenCount,
 				CompletionTokens: resp.UsageMetadata.CandidatesTokenCount,
 				TotalTokens:      resp.UsageMetadata.TotalTokenCount,
@@ -532,7 +532,7 @@ func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error
 		mappedFinish = "length"
 	}
 
-	return &LLMResponse{
+	return &tools.LLMResponse{
 		Content:      strings.Join(contentParts, ""),
 		ToolCalls:    toolCalls,
 		FinishReason: mappedFinish,

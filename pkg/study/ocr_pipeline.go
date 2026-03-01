@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"google.golang.org/genai"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"google.golang.org/genai"
 )
 
 // OCRPipeline handles extracting text from images using Gemini Vision.
@@ -38,40 +38,50 @@ func NewOCRPipeline(apiKey string, db *database.DB) (*OCRPipeline, error) {
 func (o *OCRPipeline) ExtractAndSave(ctx context.Context, imagePath string) (string, error) {
 	log.Printf("[OCR] Starting extraction for %s", filepath.Base(imagePath))
 
-	f, err := os.Open(imagePath)
+	imageBytes, err := os.ReadFile(imagePath)
 	if err != nil {
-		return "", fmt.Errorf("open image: %w", err)
+		return "", fmt.Errorf("read image: %w", err)
 	}
-	defer f.Close()
 
-	// In a real pipeline, we'd add local OpenCV contrast/deskew here before sending 
-	// to save tokens, but Gemini 2.0 Flash is robust enough for Phase 1.
-
-	uploadRes, err := o.client.Files.UploadFile(ctx, filepath.Base(imagePath), f, &genai.UploadFileOptions{})
-	if err != nil {
-		return "", fmt.Errorf("upload to gemini: %w", err)
+	// Detect mime type based on extension
+	mimeType := "image/jpeg"
+	switch filepath.Ext(imagePath) {
+	case ".png":
+		mimeType = "image/png"
+	case ".webp":
+		mimeType = "image/webp"
+	case ".gif":
+		mimeType = "image/gif"
 	}
-	defer o.client.Files.DeleteFile(ctx, uploadRes.Name)
 
 	prompt := "Extract all handwritten notes, text, and mathematical formulas from this image. Output ONLY the extracted text formatted cleanly in Markdown. If there are code snippets or circuits, describe them."
 
 	resp, err := o.client.Models.GenerateContent(
 		ctx,
 		o.model,
-		genai.FileData{URI: uploadRes.URI},
-		genai.Text(prompt),
+		[]*genai.Content{
+			{
+				Parts: []*genai.Part{
+					{InlineData: &genai.Blob{MIMEType: mimeType, Data: imageBytes}},
+					{Text: prompt},
+				},
+			},
+		},
+		&genai.GenerateContentConfig{},
 	)
 	if err != nil {
 		return "", fmt.Errorf("generate content: %w", err)
 	}
 
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil {
 		return "", fmt.Errorf("no text extracted")
 	}
 
 	extractedText := ""
-	if textPart, ok := resp.Candidates[0].Content.Parts[0].(genai.Text); ok {
-		extractedText = string(textPart)
+	for _, part := range resp.Candidates[0].Content.Parts {
+		if part.Text != "" {
+			extractedText += part.Text
+		}
 	}
 
 	title := fmt.Sprintf("OCR Note - %s", filepath.Base(imagePath))

@@ -37,12 +37,12 @@ func (t *ReportGeneratorTool) Parameters() map[string]interface{} {
 	}
 }
 
-func (t *ReportGeneratorTool) Execute(ctx context.Context, args map[string]interface{}) ToolResult {
+func (t *ReportGeneratorTool) Execute(ctx context.Context, args map[string]interface{}) *ToolResult {
 	topic, _ := args["topic"].(string)
 	depth, _ := args["depth"].(string)
 
 	if topic == "" {
-		return ToolResult{ForLLM: "Error: topic is required."}
+		return &ToolResult{ForLLM: "Error: topic is required."}
 	}
 	if depth == "" {
 		depth = "standard"
@@ -53,11 +53,11 @@ func (t *ReportGeneratorTool) Execute(ctx context.Context, args map[string]inter
 	// Since reports are generative and relatively simple structured text, flash is adequate.
 	resp, err := t.LLMProvider.Chat(ctx, []Message{{Role: "user", Content: prompt}}, nil, "gemini-2.0-flash", nil)
 	if err != nil {
-		return ToolResult{ForLLM: fmt.Sprintf("Failed to generate report: %v", err)}
+		return &ToolResult{ForLLM: fmt.Sprintf("Failed to generate report: %v", err)}
 	}
 
 	// In a full implementation, we might write this to a .md file and send it as a document via WhatsApp.
 	// For the MVP, we just return the markdown text back to the loop to send to the user.
 	header := fmt.Sprintf("📄 *Automated Report Generated [%s]*\n\n", time.Now().Format("2006-01-02"))
-	return ToolResult{ForLLM: header + resp.Content}
+	return &ToolResult{ForLLM: header + resp.Content}
 }

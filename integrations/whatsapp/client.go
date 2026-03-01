@@ -5,11 +5,9 @@ package whatsapp
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"os"
 	"regexp"
-	"time"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
@@ -32,14 +30,13 @@ type Client struct {
 	ocr           *study.OCRPipeline
 }
 
-
 // New creates and connects a new WhatsApp client.
 // sessionPath: where to persist the login session (so QR scan is only needed once).
 func New(sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
-	// Open the SQLite session store
-	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath, logger)
+	// Open the SQLite session store — foreign keys must be enabled for whatsmeow schema migrations
+	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath+"?_foreign_keys=on", logger)
 	if err != nil {
 		return nil, fmt.Errorf("sqlstore: %w", err)
 	}
@@ -80,7 +77,7 @@ func (c *Client) handleEvent(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
 		chatID := v.Info.Chat.String()
-		
+
 		// Group filtering logic
 		if v.Info.IsGroup && len(c.allowedGroups) > 0 {
 			allowed := false
@@ -105,33 +102,33 @@ func (c *Client) handleEvent(evt interface{}) {
 
 		sender := v.Info.Sender.String()
 		mediaPath := ""
-		
+
 		// Auto-save media
 		var mediaData []byte
 		var err error
-		ext := ".bin"
-		
+		fileExt := ".bin"
+
 		if v.Message.GetDocumentMessage() != nil {
-			mediaData, err = c.wac.Download(v.Message.GetDocumentMessage())
-			ext = ".pdf"
+			mediaData, err = c.wac.Download(context.Background(), v.Message.GetDocumentMessage())
+			fileExt = ".pdf"
 		} else if v.Message.GetImageMessage() != nil {
-			mediaData, err = c.wac.Download(v.Message.GetImageMessage())
-			ext = ".jpg"
+			mediaData, err = c.wac.Download(context.Background(), v.Message.GetImageMessage())
+			fileExt = ".jpg"
 		}
-		
+
 		if err == nil && len(mediaData) > 0 {
 			home, _ := os.UserHomeDir()
 			dir := home + "/.studyclaw/media"
 			os.MkdirAll(dir, 0755)
-			
+
 			// Quick unique filename
-			filename := fmt.Sprintf("%s_%s%s", sender, v.Info.ID, ext)
+			filename := fmt.Sprintf("%s_%s%s", sender, v.Info.ID, fileExt)
 			mediaPath = dir + "/" + filename
 			os.WriteFile(mediaPath, mediaData, 0644)
 			text = fmt.Sprintf("[Media Saved: %s] %s", mediaPath, text)
-			
+
 			// Process OCR if image and pipeline exists
-			if ext == ".jpg" && c.ocr != nil {
+			if fileExt == ".jpg" && c.ocr != nil {
 				extracted, err := c.ocr.ExtractAndSave(context.Background(), mediaPath)
 				if err == nil && extracted != "" {
 					text += "\n[Extracted OCR Text]:\n" + extracted
@@ -176,7 +173,7 @@ func (c *Client) Send(ctx context.Context, outMsg bus.OutboundMessage) error {
 	if err != nil {
 		return err
 	}
-	
+
 	content := outMsg.Content
 	if outMsg.VisualID != "" {
 		content += fmt.Sprintf("\n\n🔍 View Diagram/Formula here: https://studyclaw.app/viewer?id=%s&type=%s", outMsg.VisualID, outMsg.VisualType)

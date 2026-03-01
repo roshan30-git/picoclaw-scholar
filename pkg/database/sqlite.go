@@ -68,6 +68,10 @@ func New(path string) (*DB, error) {
 	return &DB{conn: conn}, nil
 }
 
+func (db *DB) Conn() *sql.DB {
+	return db.conn
+}
+
 func (db *DB) SaveNote(topic, content, source string) error {
 	_, err := db.conn.Exec(`INSERT INTO notes (topic, content, source) VALUES (?, ?, ?)`, topic, content, source)
 	return err

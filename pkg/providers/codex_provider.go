@@ -13,6 +13,7 @@ import (
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/auth"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 )
 
 const (
@@ -56,8 +57,8 @@ func NewCodexProviderWithTokenSource(
 }
 
 func (p *CodexProvider) Chat(
-	ctx context.Context, messages []Message, tools []ToolDefinition, model string, options map[string]any,
-) (*LLMResponse, error) {
+	ctx context.Context, messages []tools.Message, toolDefs []tools.ToolDefinition, model string, options map[string]any,
+) (*tools.LLMResponse, error) {
 	var opts []option.RequestOption
 	accountID := p.accountID
 	resolvedModel, fallbackReason := resolveCodexModel(model)
@@ -95,7 +96,7 @@ func (p *CodexProvider) Chat(
 		)
 	}
 
-	params := buildCodexParams(messages, tools, resolvedModel, options, p.enableWebSearch)
+	params := buildCodexParams(messages, toolDefs, resolvedModel, options, p.enableWebSearch)
 
 	stream := p.client.Responses.NewStreaming(ctx, params, opts...)
 	defer stream.Close()
@@ -117,7 +118,7 @@ func (p *CodexProvider) Chat(
 			"requested_model":    model,
 			"resolved_model":     resolvedModel,
 			"messages_count":     len(messages),
-			"tools_count":        len(tools),
+			"tools_count":        len(toolDefs),
 			"account_id_present": accountID != "",
 			"error":              err.Error(),
 		}
@@ -143,7 +144,7 @@ func (p *CodexProvider) Chat(
 			"requested_model":    model,
 			"resolved_model":     resolvedModel,
 			"messages_count":     len(messages),
-			"tools_count":        len(tools),
+			"tools_count":        len(toolDefs),
 			"account_id_present": accountID != "",
 		}
 		logger.ErrorCF("provider.codex", "Codex stream ended without completed response event", fields)
@@ -200,7 +201,7 @@ func resolveCodexModel(model string) (string, string) {
 }
 
 func buildCodexParams(
-	messages []Message, tools []ToolDefinition, model string, options map[string]any, enableWebSearch bool,
+	messages []tools.Message, tools []tools.ToolDefinition, model string, options map[string]any, enableWebSearch bool,
 ) responses.ResponseNewParams {
 	var inputItems responses.ResponseInputParam
 	var instructions string
@@ -296,7 +297,7 @@ func buildCodexParams(
 	return params
 }
 
-func resolveCodexToolCall(tc ToolCall) (name string, arguments string, ok bool) {
+func resolveCodexToolCall(tc tools.ToolCall) (name string, arguments string, ok bool) {
 	name = tc.Name
 	if name == "" && tc.Function != nil {
 		name = tc.Function.Name
@@ -320,7 +321,7 @@ func resolveCodexToolCall(tc ToolCall) (name string, arguments string, ok bool) 
 	return name, "{}", true
 }
 
-func translateToolsForCodex(tools []ToolDefinition, enableWebSearch bool) []responses.ToolUnionParam {
+func translateToolsForCodex(tools []tools.ToolDefinition, enableWebSearch bool) []responses.ToolUnionParam {
 	capHint := len(tools)
 	if enableWebSearch {
 		capHint++
@@ -349,9 +350,9 @@ func translateToolsForCodex(tools []ToolDefinition, enableWebSearch bool) []resp
 	return result
 }
 
-func parseCodexResponse(resp *responses.Response) *LLMResponse {
+func parseCodexResponse(resp *responses.Response) *tools.LLMResponse {
 	var content strings.Builder
-	var toolCalls []ToolCall
+	var toolCalls []tools.ToolCall
 
 	for _, item := range resp.Output {
 		switch item.Type {
@@ -366,7 +367,7 @@ func parseCodexResponse(resp *responses.Response) *LLMResponse {
 			if err := json.Unmarshal([]byte(item.Arguments), &args); err != nil {
 				args = map[string]any{"raw": item.Arguments}
 			}
-			toolCalls = append(toolCalls, ToolCall{
+			toolCalls = append(toolCalls, tools.ToolCall{
 				ID:        item.CallID,
 				Name:      item.Name,
 				Arguments: args,
@@ -382,16 +383,16 @@ func parseCodexResponse(resp *responses.Response) *LLMResponse {
 		finishReason = "length"
 	}
 
-	var usage *UsageInfo
+	var usage *tools.UsageInfo
 	if resp.Usage.TotalTokens > 0 {
-		usage = &UsageInfo{
+		usage = &tools.UsageInfo{
 			PromptTokens:     int(resp.Usage.InputTokens),
 			CompletionTokens: int(resp.Usage.OutputTokens),
 			TotalTokens:      int(resp.Usage.TotalTokens),
 		}
 	}
 
-	return &LLMResponse{
+	return &tools.LLMResponse{
 		Content:      content.String(),
 		ToolCalls:    toolCalls,
 		FinishReason: finishReason,

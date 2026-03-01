@@ -14,6 +14,7 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/agent"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/channels/telegram"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
 	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
@@ -51,7 +52,6 @@ func main() {
 	// 4. Initialize LLM Provider (antigravity, codex, or gemini)
 	providerType := os.Getenv("LLM_PROVIDER")
 	var provider tools.LLMProvider
-	var err error
 
 	switch providerType {
 	case "antigravity":
@@ -101,7 +101,13 @@ func main() {
 	}
 
 	// 8. Channels (WhatsApp & Telegram)
-	waClient, err := whatsapp.New("whatsapp_session.db", msgBus)
+	// Initialize OCR Pipeline for WhatsApp (using current provider)
+	ocrPipeline, err := study.NewOCRPipeline(os.Getenv("GEMINI_API_KEY"), db)
+	if err != nil {
+		log.Printf("Warning: Failed to init OCR Pipeline: %v", err)
+	}
+
+	waClient, err := whatsapp.New("whatsapp_session.db", msgBus, cfg.AllowedGroupJIDs, ocrPipeline)
 	if err != nil {
 		log.Printf("Warning: Failed to init WhatsApp: %v", err)
 	} else {
@@ -110,11 +116,8 @@ func main() {
 
 	telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	if telegramToken != "" {
-		if cfg.Telegram == nil {
-			cfg.Telegram = &config.TelegramConfig{}
-		}
-		cfg.Telegram.Token = telegramToken
-		cfg.Telegram.Enabled = true
+		cfg.Channels.Telegram.Token = telegramToken
+		cfg.Channels.Telegram.Enabled = true
 
 		tgClient, err := telegram.NewTelegramChannel(cfg, msgBus)
 		if err != nil {

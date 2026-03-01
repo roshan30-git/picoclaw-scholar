@@ -14,7 +14,8 @@ const (
 	TierAdvanced ModelTier = "gemini-2.5-pro"        // Slower, expensive, high reasoning, ideal for PYQ analysis
 )
 
-// ModelRouter dynamically selects the most cost-efficient model for a given task
+// ModelRouter dynamically selects the most cost-efficient model for a given task.
+// Implements tools.LLMProvider.
 type ModelRouter struct {
 	baseProvider tools.LLMProvider
 }
@@ -26,28 +27,27 @@ func NewModelRouter(provider tools.LLMProvider) *ModelRouter {
 	}
 }
 
-// Chat intercepts the standard Chat call and routes it to the correct model tier based on the persona/task.
-// In this scaffold, we override the requested model if we know a cheaper one suffices.
-func (m *ModelRouter) Chat(ctx context.Context, history []tools.Message, toolsDef []tools.ToolDefinition, requestedModel string, config *tools.ChatConfig) (*tools.ChatResponse, error) {
+// Chat intercepts the standard Chat call and routes it to the correct model tier.
+func (m *ModelRouter) Chat(ctx context.Context, history []tools.Message, toolsDef []tools.ToolDefinition, requestedModel string, options map[string]any) (*tools.LLMResponse, error) {
 	targetModel := string(TierStandard) // Default to flash
 
-	// Heuristics for overriding requested models to save cost:
-	// 1. If it's a simple scheduler task, flash-lite might suffice (but stick to flash for tool reliability MVP)
-	// 2. If it's the "Exam Strategist" or dealing with large PDFs, use Pro natively.
-	// For MVP, we let the explicitly requested model pass unless we build strict overrides.
-	
 	if requestedModel != "" {
 		targetModel = requestedModel
 	}
 
-	return m.baseProvider.Chat(ctx, history, toolsDef, targetModel, config)
+	return m.baseProvider.Chat(ctx, history, toolsDef, targetModel, options)
+}
+
+// GetDefaultModel satisfies tools.LLMProvider.
+func (m *ModelRouter) GetDefaultModel() string {
+	return string(TierStandard)
 }
 
 // RouteCost returns the selected tier based on a hint.
 func (m *ModelRouter) RouteCost(taskHint string) string {
 	switch taskHint {
 	case "indexer", "scheduler":
-		return string(TierFree) // Could use flash-lite if reliable enough for tools
+		return string(TierFree)
 	case "strategist", "deep_analysis":
 		return string(TierAdvanced)
 	default:
