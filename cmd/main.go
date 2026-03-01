@@ -80,7 +80,7 @@ func main() {
 	chMgr := channels.NewManager()
 
 	// Initialize Phase 4 Engines
-	cfg := config.DefaultConfig()
+	cfg := config.LoadConfig()
 	calendarEngine := study.NewCalendarEngine()
 	reflectionManager := memory.NewReflectionManager("workspace")
 	personaRouter := agent.NewPersonaRouter()

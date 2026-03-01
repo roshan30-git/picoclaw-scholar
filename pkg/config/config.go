@@ -1,5 +1,7 @@
 package config
 
+import "os"
+
 const DefaultTelegramWebAppURL = "https://your-studyclaw-miniapp.vercel.app/diagram"
 
 type StudentProfile struct {
@@ -78,4 +80,31 @@ func DefaultConfig() *Config {
 			},
 		},
 	}
+}
+
+// LoadConfig initializes the configuration from environment variables,
+// falling back to defaults where necessary.
+func LoadConfig() *Config {
+	cfg := DefaultConfig()
+
+	if model := os.Getenv("MODEL_NAME"); model != "" {
+		cfg.ModelName = model
+	}
+	if promptDir := os.Getenv("PROMPT_DIR"); promptDir != "" {
+		cfg.PromptDir = promptDir
+	}
+	if webAppURL := os.Getenv("TELEGRAM_WEBAPP_URL"); webAppURL != "" {
+		cfg.TelegramWebAppURL = webAppURL
+	}
+	if ownerNumber := os.Getenv("STUDYCLAW_OWNER_NUMBER"); ownerNumber != "" {
+		// Populate allowed JIDs if owner number is provided
+		cfg.AllowedGroupJIDs = append(cfg.AllowedGroupJIDs, ownerNumber)
+	}
+
+	// Provider-specific config
+	if provider := os.Getenv("LLM_PROVIDER"); provider != "" {
+		cfg.Agents.Defaults.Provider = provider
+	}
+
+	return cfg
 }
