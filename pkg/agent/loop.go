@@ -34,6 +34,7 @@ type AgentLoop struct {
 	inbox        chan bus.InboundMessage
 	quit         chan struct{}
 	sessions     map[string][]tools.Message
+	onShutdown   func()
 }
 
 func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, router *PersonaRouter, cal *study.CalendarEngine, mem *memory.ReflectionManager, db *pkgdb.DB) *AgentLoop {
@@ -53,6 +54,10 @@ func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvi
 		quit:         make(chan struct{}),
 		sessions:     make(map[string][]tools.Message),
 	}
+}
+
+func (l *AgentLoop) SetOnShutdown(f func()) {
+	l.onShutdown = f
 }
 
 func (l *AgentLoop) SetChannelManager(mgr *channels.Manager) {
@@ -87,6 +92,24 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 
 	if l.handleSmartPreprocessing(ctx, msg) {
 		return
+	}
+
+	// 🛑 Manual Stop Command (Owner Only)
+	if strings.TrimSpace(msg.Content) == "!stop" {
+		owner := os.Getenv("STUDYCLAW_OWNER_NUMBER")
+		if msg.From == owner || strings.Contains(msg.From, owner) {
+			log.Printf("[AgentLoop] Shutdown command received from owner (%s)", msg.From)
+			if l.mgr != nil {
+				_ = l.mgr.Send(ctx, bus.OutboundMessage{
+					ChatID: msg.ChatID, Content: "🛑 *StudyClaw is shutting down...* Goodbye!", Channel: msg.Channel,
+				})
+			}
+			if l.onShutdown != nil {
+				l.onShutdown()
+			}
+			return
+		}
+		log.Printf("[AgentLoop] Unauthorized !stop attempt from: %s", msg.From)
 	}
 
 	history := l.prepareEnrichedHistory(ctx, msg)

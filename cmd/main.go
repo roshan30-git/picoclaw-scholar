@@ -49,7 +49,8 @@ func main() {
 	promptIfEmpty("GEMINI_API_KEY", "Gemini API Key (get free at aistudio.google.com)")
 	promptIfEmpty("STUDYCLAW_OWNER_NUMBER", "Your WhatsApp number with country code (e.g. 919876543210)")
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// 1. Initialize Database
 	db, err := pkgdb.New("studyclaw.db")
@@ -128,6 +129,7 @@ func main() {
 		agentLoop.RegisterTool(tools.NewExcelTool())
 		agentLoop.RegisterTool(tools.NewDiagramTool())
 		agentLoop.SetChannelManager(chMgr)
+		agentLoop.SetOnShutdown(cancel)
 		go agentLoop.Run(ctx)
 		fmt.Println("🤖 Agent Loop initialized with current LLM provider")
 	}
