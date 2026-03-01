@@ -48,64 +48,84 @@ func NewContextManager(db *database.DB, provider tools.LLMProvider, profileMgr *
 	}
 }
 
-// BuildPrompt assembles the Context Scratchpad block, prioritizing UX (up to ~1000 tokens)
 func (cm *ContextManager) BuildPrompt(ctx context.Context, chatID string, userMessage string, shortTermSummary string) string {
 	var builder strings.Builder
 
-	// 1. Core Profile
-	builder.WriteString("### ACADEMIC CONTEXT ###\n")
-	if cm.profileMgr != nil {
-		if profile := cm.profileMgr.GetProfile(); profile != nil {
-			builder.WriteString(profile.FormatForPrompt() + "\n")
-		}
-	}
+	cm.injectProfile(&builder)
+	cm.injectTemporalContext(&builder)
+	cm.injectShortTermMemory(&builder, userMessage, shortTermSummary)
+	cm.injectBackgroundKnowledge(&builder, userMessage)
 
-	// 2. Temporal Context
+	return builder.String()
+}
+
+func (cm *ContextManager) injectProfile(builder *strings.Builder) {
+	if cm.profileMgr == nil {
+		return
+	}
+	if profile := cm.profileMgr.GetProfile(); profile != nil {
+		builder.WriteString("### ACADEMIC CONTEXT ###\n")
+		builder.WriteString(profile.FormatForPrompt() + "\n")
+	}
+}
+
+func (cm *ContextManager) injectTemporalContext(builder *strings.Builder) {
 	builder.WriteString("### TEMPORAL CONTEXT ###\n")
 	now := time.Now()
 	builder.WriteString(fmt.Sprintf("Current Date: %s\n", now.Format(time.RFC822)))
 
-	if cm.deadlineMgr != nil {
-		deadlines, _ := cm.deadlineMgr.GetUpcoming() // Fetch upcoming deadlines
-		if len(deadlines) > 0 {
-			closest := deadlines[0]
-			daysUntil := int(time.Until(closest.DueDate).Hours() / 24)
-			builder.WriteString(fmt.Sprintf("Days until next major deadline (%s): %d days\n", closest.Title, daysUntil))
-			if daysUntil < 14 {
-				builder.WriteString("⚠️ EXAM INTENSITY MODE ACTIVE: Provide high-yield, concise, rigorous answers aimed at rapid revision.\n")
-			}
-		}
+	if cm.deadlineMgr == nil {
+		return
 	}
 
-	// 3. Short Term Memory Context (if pronouns exist or summary is present)
-	pronouns := []string{" it", " that", " his", " this", " she", " he", " they", " them"}
-	hasPronoun := false
-	lowerMsg := strings.ToLower(userMessage)
-	for _, p := range pronouns {
-		if strings.Contains(lowerMsg, p) {
-			hasPronoun = true
-			break
-		}
+	deadlines, _ := cm.deadlineMgr.GetUpcoming()
+	if len(deadlines) == 0 {
+		return
 	}
 
-	if hasPronoun && shortTermSummary != "" {
+	closest := deadlines[0]
+	daysUntil := int(time.Until(closest.DueDate).Hours() / 24)
+	builder.WriteString(fmt.Sprintf("Days until next major deadline (%s): %d days\n", closest.Title, daysUntil))
+
+	if daysUntil < 14 {
+		builder.WriteString("⚠️ EXAM INTENSITY MODE ACTIVE: Provide high-yield, concise, rigorous answers aimed at rapid revision.\n")
+	}
+}
+
+func (cm *ContextManager) injectShortTermMemory(builder *strings.Builder, userMessage, shortTermSummary string) {
+	if shortTermSummary == "" {
+		return
+	}
+
+	if hasPronouns(userMessage) {
 		builder.WriteString("### SHORT TERM SCRATCHPAD (Recent Chat Context) ###\n")
 		builder.WriteString(shortTermSummary + "\n")
 	}
+}
 
-	// 4. Semantic Search / Background (Asynchronous fetching generally done beforehand; blocking here for precision)
+func (cm *ContextManager) injectBackgroundKnowledge(builder *strings.Builder, userMessage string) {
 	backgroundNotes, _ := cm.db.QueryContext(userMessage)
-	if backgroundNotes != "" {
-		builder.WriteString("### BACKGROUND KNOWLEDGE (Semantic Hits) ###\n")
-		// Limit the background notes string length to roughly fit budget (~600 words)
-		words := strings.Fields(backgroundNotes)
-		if len(words) > 600 {
-			backgroundNotes = strings.Join(words[:600], " ") + "..."
-		}
-		builder.WriteString(backgroundNotes + "\n")
+	if backgroundNotes == "" {
+		return
 	}
 
-	return builder.String()
+	builder.WriteString("### BACKGROUND KNOWLEDGE (Semantic Hits) ###\n")
+	words := strings.Fields(backgroundNotes)
+	if len(words) > 600 {
+		backgroundNotes = strings.Join(words[:600], " ") + "..."
+	}
+	builder.WriteString(backgroundNotes + "\n")
+}
+
+func hasPronouns(msg string) bool {
+	pronouns := []string{" it", " that", " his", " this", " she", " he", " they", " them"}
+	lower := strings.ToLower(msg)
+	for _, p := range pronouns {
+		if strings.Contains(lower, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // SummarizeAndClear fires after every 3rd message to roll the context

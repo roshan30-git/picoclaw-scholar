@@ -85,72 +85,73 @@ func (l *AgentLoop) Stop() {
 func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	log.Printf("[%s] Message from %s", msg.Channel, msg.From)
 
-	// Pre-process: smart handler decides how to treat the message
-	if l.smartHandler != nil {
-		reply, continueToAgent := l.smartHandler.Process(ctx, msg.Content)
-		if !continueToAgent {
-			if reply != "" && l.mgr != nil {
-				_ = l.mgr.Send(ctx, bus.OutboundMessage{
-					ChatID: msg.ChatID, Content: reply, Channel: msg.Channel,
-				})
-			}
-			return
-		}
+	if l.handleSmartPreprocessing(ctx, msg) {
+		return
 	}
 
+	history := l.prepareEnrichedHistory(ctx, msg)
+
+	resp, err := l.runAgentChat(ctx, history)
+	if err != nil {
+		log.Printf("[AgentLoop] Chat failed: %v", err)
+		return
+	}
+
+	l.handlePostChatLogic(ctx, msg, resp, history)
+}
+
+func (l *AgentLoop) handleSmartPreprocessing(ctx context.Context, msg bus.InboundMessage) bool {
+	if l.smartHandler == nil {
+		return false
+	}
+	reply, continueToAgent := l.smartHandler.Process(ctx, msg.Content)
+	if !continueToAgent {
+		if reply != "" && l.mgr != nil {
+			_ = l.mgr.Send(ctx, bus.OutboundMessage{
+				ChatID: msg.ChatID, Content: reply, Channel: msg.Channel,
+			})
+		}
+		return true
+	}
+	return false
+}
+
+func (l *AgentLoop) prepareEnrichedHistory(ctx context.Context, msg bus.InboundMessage) []tools.Message {
 	history := l.getHistory(msg.Channel, msg.ChatID)
 	l.detectCorrections(msg.Content, history)
 
-	// Determine required persona for this turn
 	persona := l.router.RouteMessage(msg)
+	summary := l.contextMgr.GetLatestChatSummary(msg.ChatID)
+	enriched := l.enrichContext(msg.Content, persona)
 
-	shortTermSummary := l.contextMgr.GetLatestChatSummary(msg.ChatID) // We'll add this wrapper method in loop soon, or just rely on ContextManager directly
-
-	enrichedContent := l.enrichContext(msg.Content, persona)
-
-	// Inject the dynamic Context Scratchpad built specifically for this message
-	contextBlock := l.contextMgr.BuildPrompt(ctx, msg.ChatID, msg.Content, shortTermSummary)
-	if contextBlock != "" {
-		enrichedContent = contextBlock + "\n\n" + enrichedContent
+	ctxBlock := l.contextMgr.BuildPrompt(ctx, msg.ChatID, msg.Content, summary)
+	if ctxBlock != "" {
+		enriched = ctxBlock + "\n\n" + enriched
 	}
 
-	history = append(history, tools.Message{Role: "user", Content: enrichedContent})
+	return append(history, tools.Message{Role: "user", Content: enriched})
+}
 
+func (l *AgentLoop) runAgentChat(ctx context.Context, history []tools.Message) (*tools.LLMResponse, error) {
 	toolDefs := l.getToolDefinitions()
 	resp, err := l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
 	if err != nil {
-		log.Printf("LLM error: %v", err)
-		return
+		return nil, err
 	}
 
 	if len(resp.ToolCalls) > 0 {
 		history = l.processToolCalls(ctx, history, resp.ToolCalls, toolDefs)
-		resp, err = l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
-		if err != nil {
-			log.Printf("Post-tool LLM error: %v", err)
-			return
-		}
+		return l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
 	}
 
+	return resp, nil
+}
+
+func (l *AgentLoop) handlePostChatLogic(ctx context.Context, msg bus.InboundMessage, resp *tools.LLMResponse, history []tools.Message) {
 	history = append(history, tools.Message{Role: "model", Content: resp.Content})
 
-	// Rolling Summary Logic: Every 3 logic pairs (6 messages: 3 user, 3 model), trigger summary
-	var userMsgCount int
-	for _, m := range history {
-		if m.Role == "user" {
-			userMsgCount++
-		}
-	}
-
-	if userMsgCount >= 3 {
-		l.contextMgr.SummarizeAndClear(ctx, msg.ChatID, history, func(newSummary string) {
-			// Callback executes when generation is complete. Clear internal memory slice.
-			// Keep ONLY the last model message so the immediate reply isn't fully lost mid-flight,
-			// though the ContextManager will load the summary block next time anyway.
-			l.sessions[msg.Channel+":"+msg.ChatID] = []tools.Message{
-				{Role: "model", Content: resp.Content},
-			}
-		})
+	if l.shouldTriggerSummary(history) {
+		l.triggerRollingSummary(ctx, msg, resp.Content, history)
 	} else {
 		l.saveHistory(msg.Channel, msg.ChatID, history)
 	}
@@ -166,10 +167,26 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	}
 
 	if l.mgr != nil && out.Content != "" {
-		if err := l.mgr.Send(ctx, out); err != nil {
-			log.Printf("Failed to route response: %v", err)
+		_ = l.mgr.Send(ctx, out)
+	}
+}
+
+func (l *AgentLoop) shouldTriggerSummary(history []tools.Message) bool {
+	count := 0
+	for _, m := range history {
+		if m.Role == "user" {
+			count++
 		}
 	}
+	return count >= 3
+}
+
+func (l *AgentLoop) triggerRollingSummary(ctx context.Context, msg bus.InboundMessage, lastResp string, history []tools.Message) {
+	l.contextMgr.SummarizeAndClear(ctx, msg.ChatID, history, func(newSummary string) {
+		l.sessions[msg.Channel+":"+msg.ChatID] = []tools.Message{
+			{Role: "model", Content: lastResp},
+		}
+	})
 }
 
 func (l *AgentLoop) getHistory(channel, chatID string) []tools.Message {
@@ -205,46 +222,48 @@ func (l *AgentLoop) detectCorrections(content string, history []tools.Message) {
 func (l *AgentLoop) enrichContext(content string, persona PersonaType) string {
 	var preamble []string
 
-	// 1. Inject Persona Overlays
-	promptStr := string(persona)
-	if persona == PersonaNone {
-		promptStr = "agent_explainer" // safe default base
+	if personaPrompt := l.loadPersona(persona); personaPrompt != "" {
+		preamble = append(preamble, personaPrompt)
 	}
 
-	// Check .md first, then .txt
-	personaPathMD := filepath.Join("workspace", "PROMPTS", "agents", promptStr+".md")
-	personaPathTXT := filepath.Join("workspace", "PROMPTS", "agents", promptStr+".txt")
-
-	var personaData []byte
-	var err error
-	if personaData, err = os.ReadFile(personaPathMD); err != nil {
-		if personaData, err = os.ReadFile(personaPathTXT); err == nil {
-			preamble = append(preamble, "🎭 SYSTEM PERSONA ACTIVE: "+promptStr+"\n"+string(personaData))
-		} else {
-			// Fallback to base_soul
-			if baseData, err := os.ReadFile(filepath.Join("workspace", "PROMPTS", "agents", "base_soul.md")); err == nil {
-				preamble = append(preamble, "🎭 SYSTEM BASE SOUL:\n"+string(baseData))
-			}
-		}
-	} else {
-		preamble = append(preamble, "🎭 SYSTEM PERSONA ACTIVE: "+promptStr+"\n"+string(personaData))
-	}
-
-	// 2. Inject Calendar
 	if l.calendar != nil {
 		preamble = append(preamble, l.calendar.GetContext())
 	}
-	// 3. Inject Autonomous Memory
+
 	if l.reflections != nil {
 		if lessons := l.reflections.GetRecentReflections(); lessons != "" {
 			preamble = append(preamble, lessons)
 		}
 	}
-	// 4. Student Learning Profile (personalization) - Moved entirely to ContextManager
+
 	if len(preamble) == 0 {
 		return content
 	}
 	return strings.Join(preamble, "\n\n") + "\n\nUser Message:\n" + content
+}
+
+func (l *AgentLoop) loadPersona(persona PersonaType) string {
+	promptName := string(persona)
+	if persona == PersonaNone {
+		promptName = "agent_explainer"
+	}
+
+	paths := []string{
+		filepath.Join("workspace", "PROMPTS", "agents", promptName+".md"),
+		filepath.Join("workspace", "PROMPTS", "agents", promptName+".txt"),
+	}
+
+	for _, p := range paths {
+		if data, err := os.ReadFile(p); err == nil {
+			return fmt.Sprintf("🎭 SYSTEM PERSONA ACTIVE: %s\n%s", promptName, string(data))
+		}
+	}
+
+	// Final fallback
+	if base, err := os.ReadFile(filepath.Join("workspace", "PROMPTS", "agents", "base_soul.md")); err == nil {
+		return "🎭 SYSTEM BASE SOUL:\n" + string(base)
+	}
+	return ""
 }
 
 func (l *AgentLoop) getToolDefinitions() []tools.ToolDefinition {
