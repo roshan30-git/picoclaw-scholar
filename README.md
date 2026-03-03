@@ -7,6 +7,7 @@
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](https://golang.org/dl/)
 [![Platform](https://img.shields.io/badge/Platform-Termux%20%7C%20Windows-FF69B4)]()
 [![AI](https://img.shields.io/badge/AI-Gemini_2.0_Flash-blue?logo=google)]()
+[![Update](https://img.shields.io/badge/Tele_Update-2026-blueviolet?logo=telegram)]()
 
 <p>
   <a href="#-quick-start">Quick Start</a> •
@@ -21,6 +22,9 @@
 
 **StudyClaw** is a production-grade, autonomous AI tutor designed for 4GB RAM devices. It turns **WhatsApp** and **Telegram** into a personalized learning cockpit, proactively monitoring group chats, summarizing academic materials, and generating adaptive quizzes using the high-speed **PicoClaw Architecture**.
 
+> [!IMPORTANT]
+> **TELE UPDATE (March 2026)**: StudyClaw now fully supports Telegram! You can now use all AI features through a dedicated Telegram bot, providing an even more stable and lightweight experience than WhatsApp.
+
 ## ✨ Pro Features
 
 | Feature                         | The StudyClaw Edge                                                                              |
@@ -32,6 +36,9 @@
 | 🎯**Adaptive Quizzes**    | MCQs generated on-the-fly from your college group's long messages or uploaded PDFs.             |
 | 📐**Visual Intelligence** | Instant Flowcharts, ERDs, and Circuit schematics rendered via a local web viewer.               |
 | 🎓**Passive Monitoring**  | Silently "listens" to teacher groups and sends private summaries to you—never spams the group. |
+| 🔍**Conversational RAG** | Ask questions about your own notes/PDFs. Uses conversational memory to refine searches.    |
+| 📅**Smart Calendar**     | AI-powered scheduling. Add events, deadlines, and get reminders directly in chat.          |
+| 🧠**Autonomous Memory**  | AI remembers your learning pace, weak topics, and style across different sessions.         |
 
 ---
 
@@ -62,7 +69,9 @@ git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar && chmod +x run.sh && ./run.sh
 ```
 
-### 💻 Windows
+### 💻 Windows (Zero-Setup)
+
+For the easiest experience on Windows, use the built-in orchestrator script. It handles dependency checks, environment setup, and launching automatically.
 
 ```powershell
 git clone https://github.com/roshan30-git/picoclaw-scholar.git
@@ -85,6 +94,16 @@ cd picoclaw-scholar
 - **`!stop`**: Shut down the bot remotely (Owner only).
 - **`@librarian` persona**: Focuses on deep indexing and PDF analysis.
 - **`@drill_sergeant` persona**: Forces a rigorous, high-intensity quiz mode.
+
+---
+
+## 🔧 Troubleshooting
+
+### 🛑 429 Quota Exceeded / "Thinking..." Stuck
+If you are using a **Free Tier** Gemini API Key from Google AI Studio, you may encounter rate limits (429 errors) if you send messages too quickly.
+- **Symptoms**: The bot replies with an error message or briefly stops responding.
+- **Solution**: Wait 60 seconds for the free quota to reset. StudyClaw now includes a "Connection Failed" fallback message to prevent permanent hangs.
+- **Pro Tip**: Use the Telegram channel for a more reliable, lightweight experience.
 
 ---
 
