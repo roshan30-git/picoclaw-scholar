@@ -13,8 +13,9 @@ type DB struct {
 	conn *sql.DB
 }
 
-func New(path string) (*DB, error) {
-	conn, err := sql.Open("sqlite", path)
+	// Enable WAL and 5s timeout to prevent locking when concurrent reads/writes occur
+	connectionString := path + "?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
+	conn, err := sql.Open("sqlite", connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}

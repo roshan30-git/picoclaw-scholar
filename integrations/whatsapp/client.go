@@ -37,7 +37,9 @@ type Client struct {
 func New(ctx context.Context, sessionPath string, msgBus *bus.MessageBus, allowedGroups []string, passiveGroups []string, ocrPipeline *study.OCRPipeline) (*Client, error) {
 	logger := waLog.Stdout("WhatsApp", "INFO", true)
 
-	container, err := sqlstore.New(context.Background(), "sqlite", sessionPath+"?_pragma=foreign_keys(1)", logger)
+	// Append modernc SQLite pragmas: Enable WAL to prevent locking errors during history sync
+	connectionString := sessionPath + "?_pragma=foreign_keys(1)&_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)"
+	container, err := sqlstore.New(context.Background(), "sqlite", connectionString, logger)
 	if err != nil {
 		return nil, fmt.Errorf("sqlstore: %w", err)
 	}
