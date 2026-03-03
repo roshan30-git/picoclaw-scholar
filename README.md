@@ -23,15 +23,15 @@
 
 ## ✨ Pro Features
 
-| Feature | The StudyClaw Edge |
-|:--------|:-------------------|
-| 🧠 **Context Scratchpad** | Zero-memory overhead context injection using 1000-token rolling summaries. |
-| 🔋 **Termux Optimized** | Pre-built binaries + `termux-wake-lock` integration for 24/7 background uptime on Android. |
-| 🛑 **Remote Shutdown** | Send `!stop` from your phone to instantly kill the process and save 100% battery/RAM. |
-| 🎓 **Dynamic Memory** | Tracks your Semester, University, and weak topics to adapt every AI response to your syllabus. |
-| 🎯 **Adaptive Quizzes** | MCQs generated on-the-fly from your college group's long messages or uploaded PDFs. |
-| 📐 **Visual Intelligence** | Instant Flowcharts, ERDs, and Circuit schematics rendered via a local web viewer. |
-| 🎓 **Passive Monitoring** | Silently "listens" to teacher groups and sends private summaries to you—never spams the group. |
+| Feature                         | The StudyClaw Edge                                                                              |
+| :------------------------------ | :---------------------------------------------------------------------------------------------- |
+| 🧠**Context Scratchpad**  | Zero-memory overhead context injection using 1000-token rolling summaries.                      |
+| 🔋**Termux Optimized**    | Pre-built binaries +`termux-wake-lock` integration for 24/7 background uptime on Android.     |
+| 🛑**Remote Shutdown**     | Send `!stop` from your phone to instantly kill the process and save 100% battery/RAM.         |
+| 🎓**Dynamic Memory**      | Tracks your Semester, University, and weak topics to adapt every AI response to your syllabus.  |
+| 🎯**Adaptive Quizzes**    | MCQs generated on-the-fly from your college group's long messages or uploaded PDFs.             |
+| 📐**Visual Intelligence** | Instant Flowcharts, ERDs, and Circuit schematics rendered via a local web viewer.               |
+| 🎓**Passive Monitoring**  | Silently "listens" to teacher groups and sends private summaries to you—never spams the group. |
 
 ---
 
@@ -55,6 +55,7 @@ graph TD
 ## 🚀 Quick Start
 
 ### 📱 Termux (Fastest for Phones)
+
 ```bash
 pkg update && pkg install golang git -y
 git clone https://github.com/roshan30-git/picoclaw-scholar.git
@@ -62,6 +63,7 @@ cd picoclaw-scholar && chmod +x run.sh && ./run.sh
 ```
 
 ### 💻 Windows
+
 ```powershell
 git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar
@@ -72,13 +74,14 @@ cd picoclaw-scholar
 
 ## 🔑 Configuration (.env)
 
-| Key | Description | Get it at |
-|:----|:------------|:----------|
-| `GEMINI_API_KEY` | Core AI Brain | [AI Studio](https://aistudio.google.com/apikey) |
-| `TELEGRAM_BOT_TOKEN` | Bot identity | [@BotFather](https://t.me/botfather) |
-| `STUDYCLAW_OWNER_NUMBER` | Remote Command Access | Your mobile number |
+| Key                        | Description           | Get it at                                    |
+| :------------------------- | :-------------------- | :------------------------------------------- |
+| `GEMINI_API_KEY`         | Core AI Brain         | [AI Studio](https://aistudio.google.com/apikey) |
+| `TELEGRAM_BOT_TOKEN`     | Bot identity          | [@BotFather](https://t.me/botfather)            |
+| `STUDYCLAW_OWNER_NUMBER` | Remote Command Access | Your mobile number                           |
 
 ### 🛠️ Elite Commands
+
 - **`!stop`**: Shut down the bot remotely (Owner only).
 - **`@librarian` persona**: Focuses on deep indexing and PDF analysis.
 - **`@drill_sergeant` persona**: Forces a rigorous, high-intensity quiz mode.
@@ -87,7 +90,8 @@ cd picoclaw-scholar
 
 ## 📄 License & Copyleft
 
-StudyClaw is licensed under the **GNU General Public License v3.0**. 
+StudyClaw is licensed under the **GNU General Public License v3.0**.
+
 > This ensures the project remains free and open-source forever. Any derivative works must be shared under the same license.
 
 ---
