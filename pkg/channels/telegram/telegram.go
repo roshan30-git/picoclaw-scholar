@@ -19,6 +19,7 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/utils"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/voice"
@@ -29,6 +30,7 @@ type TelegramChannel struct {
 	bot          *telego.Bot
 	commands     TelegramCommander
 	config       *config.Config
+	db           *pkgdb.DB
 	chatIDs      map[string]int64
 	transcriber  *voice.GroqTranscriber
 	placeholders sync.Map // chatID -> messageID
@@ -45,7 +47,7 @@ func (c *thinkingCancel) Cancel() {
 	}
 }
 
-func NewTelegramChannel(cfg *config.Config, bus *bus.MessageBus) (*TelegramChannel, error) {
+func NewTelegramChannel(cfg *config.Config, bus *bus.MessageBus, db *pkgdb.DB) (*TelegramChannel, error) {
 	var opts []telego.BotOption
 	telegramCfg := cfg.Channels.Telegram
 
@@ -77,9 +79,10 @@ func NewTelegramChannel(cfg *config.Config, bus *bus.MessageBus) (*TelegramChann
 
 	return &TelegramChannel{
 		BaseChannel:  base,
-		commands:     NewTelegramCommands(bot, cfg),
+		commands:     NewTelegramCommands(bot, cfg, db),
 		bot:          bot,
 		config:       cfg,
+		db:           db,
 		chatIDs:      make(map[string]int64),
 		transcriber:  nil,
 		placeholders: sync.Map{},
@@ -370,6 +373,43 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 		"is_group":   fmt.Sprintf("%t", message.Chat.Type != "private"),
 		"peer_kind":  peerKind,
 		"peer_id":    peerID,
+	}
+
+	// Onboarding Intercept
+	if message.Chat.Type == "private" && c.db != nil {
+		profile, err := c.db.GetUserProfile(chatIDStr)
+		if err == nil && !profile.OnboardingComplete {
+			// Stop thinking animation for onboarding questions
+			if prevStop, ok := c.stopThinking.Load(chatIDStr); ok {
+				if cf, ok := prevStop.(*thinkingCancel); ok && cf != nil {
+					cf.Cancel()
+				}
+			}
+
+			// Clean up placeholder if exists
+			if pID, ok := c.placeholders.Load(chatIDStr); ok {
+				_ = c.bot.DeleteMessage(ctx, &telego.DeleteMessageParams{
+					ChatID:    telego.ChatID{ID: chatID},
+					MessageID: pID.(int),
+				})
+				c.placeholders.Delete(chatIDStr)
+			}
+
+			if profile.University == "" {
+				profile.University = content
+				_ = c.db.SaveUserProfile(profile)
+				_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), fmt.Sprintf("Got it. %s!\n\nNow, which semester are you in? (e.g., 4th Semester)", content)))
+				return nil
+			} else if profile.Semester == "" {
+				profile.Semester = content
+				profile.OnboardingComplete = true
+				_ = c.db.SaveUserProfile(profile)
+
+				finalMsg := fmt.Sprintf("Awesome. You're in %s at %s.\n\nSetup complete! You can now send me PDFs, ask questions, or link your Google Auth via the local web setup.", profile.Semester, profile.University)
+				_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), finalMsg))
+				return nil
+			}
+		}
 	}
 
 	c.HandleMessage(fmt.Sprintf("%d", user.ID), fmt.Sprintf("%d", chatID), content, mediaPaths, metadata)

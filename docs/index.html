@@ -537,157 +537,164 @@
                             <p class="text-slate-400 mb-4">Open PowerShell in the folder and execute the interactive
                                 launcher script. It will auto-resolve dependencies, configure your environment file
                                 interactively, and launch the engine directly.</p>
-                            <div
-                                class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner mb-6">
-                                <div class="text-primary truncate">> <span class="text-slate-300">.\run.ps1</span></div>
+                            <div class="text-primary truncate">> <span class="text-slate-300">.\run.ps1</span></div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-4 rounded-lg border border-accent-teal/20 mb-4">
+                            <span class="material-symbols-outlined text-xl">rocket_launch</span>
+                            <div>
+                                <p class="font-bold">Zero-Cost Setup Portal</p>
+                                <p class="text-xs opacity-80">The engine now launches a local web UI for automated
+                                    config. Just visit the link shown in your terminal!</p>
                             </div>
-                            <div
-                                class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-3 rounded-lg border border-accent-teal/20">
-                                <span class="material-symbols-outlined text-xl">check_circle</span>
-                                <span>The engine is now active and routing intelligence!</span>
-                            </div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-3 text-sm font-medium text-slate-400 p-3 rounded-lg border border-slate-800">
+                            <span class="material-symbols-outlined text-xl">check_circle</span>
+                            <span>Installation complete! Message the bot "Hi" on Telegram to begin.</span>
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <div class="text-center mb-16 pt-16 border-t border-slate-800">
-                <span
-                    class="font-mono text-slate-400 text-xs font-bold uppercase tracking-widest border border-slate-700/50 bg-slate-800/30 px-3 py-1 rounded-full">Termux
-                    Installation Guide (Mobile)</span>
-                <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Step-by-Step Setup for Android</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">Run the bot directly on your phone
-                    using Termux. No server required. All you need is a free Gemini API key.</p>
+        </div>
+
+        <div class="text-center mb-16 pt-16 border-t border-slate-800">
+            <span
+                class="font-mono text-slate-400 text-xs font-bold uppercase tracking-widest border border-slate-700/50 bg-slate-800/30 px-3 py-1 rounded-full">Termux
+                Installation Guide (Mobile)</span>
+            <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Step-by-Step Setup for Android</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">Run the bot directly on your phone
+                using Termux. No server required. All you need is a free Gemini API key.</p>
+        </div>
+
+        <div class="max-w-4xl mx-auto space-y-12">
+
+            <!-- Step 1 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">01</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
+                            1</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Install Termux & Prerequisites</h3>
+                        <p class="text-slate-400 mb-4">Download <strong class="text-slate-300">Termux</strong> from
+                            F-Droid (do not use the Play Store version). Open it and run the following commands to
+                            install Go, Git, and Clang:</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
+                            <div class="text-slate-500 select-none mb-1"># Update packages and install prerequisites
+                            </div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">pkg update && pkg
+                                    upgrade -y</span></div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">pkg install golang git
+                                    clang make -y</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="max-w-4xl mx-auto space-y-12">
-
-                <!-- Step 1 -->
-                <div class="relative pl-8 md:pl-0 group">
-                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
-                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
-                            <div
-                                class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
-                                <span class="font-mono text-lg font-bold">01</span>
-                            </div>
-                        </div>
+            <!-- Step 2 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
                         <div
-                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
-                            <div
-                                class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
-                                1</div>
-                            <h3 class="text-xl font-bold text-white mb-2">Install Termux & Prerequisites</h3>
-                            <p class="text-slate-400 mb-4">Download <strong class="text-slate-300">Termux</strong> from
-                                F-Droid (do not use the Play Store version). Open it and run the following commands to
-                                install Go, Git, and Clang:</p>
-                            <div
-                                class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
-                                <div class="text-slate-500 select-none mb-1"># Update packages and install prerequisites
-                                </div>
-                                <div class="text-primary truncate">$ <span class="text-slate-300">pkg update && pkg
-                                        upgrade -y</span></div>
-                                <div class="text-primary truncate">$ <span class="text-slate-300">pkg install golang git
-                                        clang make -y</span></div>
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">02</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
+                            2</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Clone the Repository</h3>
+                        <p class="text-slate-400 mb-4">Download the StudyClaw base image and configure the workspace
+                            environment dependencies.</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
+                            <div class="text-primary truncate">$ <span class="text-slate-300">git clone
+                                    https://github.com/roshan30-git/picoclaw-scholar.git</span></div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">cd
+                                    picoclaw-scholar</span></div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">go mod tidy</span>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Step 2 -->
-                <div class="relative pl-8 md:pl-0 group">
-                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
-                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
-                            <div
-                                class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
-                                <span class="font-mono text-lg font-bold">02</span>
-                            </div>
-                        </div>
-                        <div
-                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
-                            <div
-                                class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
-                                2</div>
-                            <h3 class="text-xl font-bold text-white mb-2">Clone the Repository</h3>
-                            <p class="text-slate-400 mb-4">Download the StudyClaw base image and configure the workspace
-                                environment dependencies.</p>
-                            <div
-                                class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
-                                <div class="text-primary truncate">$ <span class="text-slate-300">git clone
-                                        https://github.com/roshan30-git/picoclaw-scholar.git</span></div>
-                                <div class="text-primary truncate">$ <span class="text-slate-300">cd
-                                        picoclaw-scholar</span></div>
-                                <div class="text-primary truncate">$ <span class="text-slate-300">go mod tidy</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="relative pl-8 md:pl-0 group">
-                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
-                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
-                            <div
-                                class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
-                                <span class="font-mono text-lg font-bold">03</span>
-                            </div>
-                        </div>
-                        <div
-                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
-                            <div
-                                class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
-                                3</div>
-                            <h3 class="text-xl font-bold text-white mb-2">Configure API Keys</h3>
-                            <p class="text-slate-400 mb-4">Get your free Gemini key at <a
-                                    href="https://aistudio.google.com/app/apikey" target="_blank"
-                                    class="text-primary hover:underline">Google AI Studio</a>. Set it as an environment
-                                variable in Termux.</p>
-                            <div
-                                class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
-                                <div class="text-primary truncate">$ <span class="text-slate-300">export
-                                        GEMINI_API_KEY="AIzaSy..."</span></div>
-                                <div class="text-slate-500 select-none mt-2 mb-1"># Optional: Set your own number to
-                                    access admin tools</div>
-                                <div class="text-primary truncate">$ <span class="text-slate-300">export
-                                        STUDYCLAW_OWNER_NUMBER="91XXXXXXXXXX"</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 4 -->
-                <div class="relative pl-8 md:pl-0 group">
-                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
-                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
-                            <div
-                                class="w-12 h-12 bg-[#0B1120] border-2 border-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,75,62,0.3)] text-primary transition-all">
-                                <span class="font-mono text-lg font-bold">04</span>
-                            </div>
-                        </div>
-                        <div
-                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 border-primary/30 shadow-[0_4px_30px_rgba(255,75,62,0.05)]">
-                            <div
-                                class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden shadow-[0_0_10px_rgba(255,75,62,0.6)]">
-                                4</div>
-                            <h3 class="text-xl font-bold text-white mb-2">Launch and Link WhatsApp</h3>
-                            <p class="text-slate-400 mb-4">Run the bot! A QR code will display in the terminal. Open
-                                WhatsApp on your primary phone, go to <strong>Linked Devices</strong>, and scan it.</p>
-                            <div
-                                class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner mb-6">
-                                <div class="text-primary truncate">$ <span class="text-slate-300">go run
-                                        cmd/main.go</span></div>
-                            </div>
-                            <div
-                                class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-3 rounded-lg border border-accent-teal/20">
-                                <span class="material-symbols-outlined text-xl">check_circle</span>
-                                <span>Installation complete! Message the bot "Hi" on WhatsApp to begin.</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            <!-- Step 3 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">03</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
+                            3</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Configure API Keys</h3>
+                        <p class="text-slate-400 mb-4">Get your free Gemini key at <a
+                                href="https://aistudio.google.com/app/apikey" target="_blank"
+                                class="text-primary hover:underline">Google AI Studio</a>. Set it as an environment
+                            variable in Termux.</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
+                            <div class="text-primary truncate">$ <span class="text-slate-300">export
+                                    GEMINI_API_KEY="AIzaSy..."</span></div>
+                            <div class="text-slate-500 select-none mt-2 mb-1"># Optional: Set your own number to
+                                access admin tools</div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">export
+                                    STUDYCLAW_OWNER_NUMBER="91XXXXXXXXXX"</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,75,62,0.3)] text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">04</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 border-primary/30 shadow-[0_4px_30px_rgba(255,75,62,0.05)]">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden shadow-[0_0_10px_rgba(255,75,62,0.6)]">
+                            4</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Launch and Link WhatsApp</h3>
+                        <p class="text-slate-400 mb-4">Run the bot! A QR code will display in the terminal. Open
+                            WhatsApp on your primary phone, go to <strong>Linked Devices</strong>, and scan it.</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner mb-6">
+                            <div class="text-primary truncate">$ <span class="text-slate-300">go run
+                                    cmd/main.go</span></div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-3 rounded-lg border border-accent-teal/20">
+                            <span class="material-symbols-outlined text-xl">check_circle</span>
+                            <span>Installation complete! Message the bot "Hi" on WhatsApp to begin.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
         </div>
     </section>
 

@@ -64,6 +64,12 @@ func New(path string) (*DB, error) {
 			content TEXT NOT NULL,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS user_profiles (
+			chat_id TEXT PRIMARY KEY,
+			university TEXT,
+			semester TEXT,
+			onboarding_complete BOOLEAN DEFAULT 0
+		)`,
 	}
 
 	for _, t := range tables {
@@ -137,4 +143,36 @@ func (db *DB) GetLatestChatSummary(chatID string) string {
 		return ""
 	}
 	return content
+}
+
+type UserProfile struct {
+	ChatID             string
+	University         string
+	Semester           string
+	OnboardingComplete bool
+}
+
+func (db *DB) GetUserProfile(chatID string) (*UserProfile, error) {
+	profile := &UserProfile{ChatID: chatID}
+	err := db.conn.QueryRow(`SELECT university, semester, onboarding_complete FROM user_profiles WHERE chat_id = ?`, chatID).
+		Scan(&profile.University, &profile.Semester, &profile.OnboardingComplete)
+	if err == sql.ErrNoRows {
+		return profile, nil // Return empty profile
+	}
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
+}
+
+func (db *DB) SaveUserProfile(profile *UserProfile) error {
+	_, err := db.conn.Exec(`
+		INSERT INTO user_profiles (chat_id, university, semester, onboarding_complete) 
+		VALUES (?, ?, ?, ?) 
+		ON CONFLICT(chat_id) DO UPDATE SET 
+		university = excluded.university, 
+		semester = excluded.semester,
+		onboarding_complete = excluded.onboarding_complete`,
+		profile.ChatID, profile.University, profile.Semester, profile.OnboardingComplete)
+	return err
 }

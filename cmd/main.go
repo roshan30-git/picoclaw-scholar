@@ -22,34 +22,19 @@ import (
 	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/providers"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/setup"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/viewer"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
 )
 
-// promptIfEmpty checks if an env var is set; if not, asks the user to type it in.
-func promptIfEmpty(envKey, label string) {
-	if os.Getenv(envKey) != "" {
-		return
-	}
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("\n🔐 %s not set. Enter it now: ", label)
-	value, _ := reader.ReadString('\n')
-	value = strings.TrimSpace(value)
-	if value != "" {
-		os.Setenv(envKey, value)
-	}
-}
-
 func main() {
 	_ = godotenv.Load()
 	fmt.Println("🦞 StudyClaw — Initializing...")
 
-	// Prompt for required keys if not already set (e.g. via .env or export)
-	promptIfEmpty("GEMINI_API_KEY", "Gemini API Key (get free at aistudio.google.com)")
-	promptIfEmpty("TELEGRAM_BOT_TOKEN", "Telegram Bot Token (optional, get from @BotFather)")
-	promptIfEmpty("STUDYCLAW_OWNER_NUMBER", "Your WhatsApp number with country code (e.g. 919876543210)")
+	// Launch local web UI if critical configuration is missing
+	setup.RunServerIfConfigMissing()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -163,7 +148,7 @@ func main() {
 		cfg.Channels.Telegram.Token = telegramToken
 		cfg.Channels.Telegram.Enabled = true
 
-		tgClient, err := telegram.NewTelegramChannel(cfg, msgBus)
+		tgClient, err := telegram.NewTelegramChannel(cfg, msgBus, db)
 		if err != nil {
 			log.Printf("Warning: Failed to init Telegram channel: %v", err)
 		} else {

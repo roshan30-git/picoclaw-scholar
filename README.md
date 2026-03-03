@@ -59,9 +59,15 @@ graph TD
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Windows / Desktop)
 
-### 📱 Termux (Fastest for Phones)
+1. [Download the latest release](https://github.com/roshan30-git/picoclaw-scholar/releases).
+2. Run `studyclaw.exe` (or `.\run.ps1`).
+3. **No manual config needed!** Follow the instructions in the link provided (`http://localhost:8080/setup`) to link your Telegram bot and API keys in seconds.
+
+---
+
+## 📱 Termux (Fastest for Phones)
 
 ```bash
 pkg update && pkg install golang git -y
@@ -69,25 +75,15 @@ git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar && chmod +x run.sh && ./run.sh
 ```
 
-### 💻 Windows (Zero-Setup)
-
-For the easiest experience on Windows, use the built-in orchestrator script. It handles dependency checks, environment setup, and launching automatically.
-
-```powershell
-git clone https://github.com/roshan30-git/picoclaw-scholar.git
-cd picoclaw-scholar
-.\run.ps1
-```
-
 ---
 
-## 🔑 Configuration (.env)
+## 🔑 Automation & Magic
+StudyClaw now features a **Graphical Setup Wizard**. No more editing `.env` files or using a terminal to provide API keys. 
 
-| Key                        | Description           | Get it at                                    |
-| :------------------------- | :-------------------- | :------------------------------------------- |
-| `GEMINI_API_KEY`         | Core AI Brain         | [AI Studio](https://aistudio.google.com/apikey) |
-| `TELEGRAM_BOT_TOKEN`     | Bot identity          | [@BotFather](https://t.me/botfather)            |
-| `STUDYCLAW_OWNER_NUMBER` | Remote Command Access | Your mobile number                           |
+- **Local Setup Portal**: A built-in web-UI for linking Gemini, OpenAI, and Telegram.
+- **Google OAuth Integration**: Connect Google Drive and Google Classroom with one click.
+- **Bot-Led Discovery**: Your Telegram bot greets you and helps set up your university details on the first message.
+
 
 ### 🛠️ Elite Commands
 

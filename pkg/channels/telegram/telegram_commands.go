@@ -8,6 +8,7 @@ import (
 	"github.com/mymmrac/telego"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
 )
 
 type TelegramCommander interface {
@@ -20,12 +21,14 @@ type TelegramCommander interface {
 type cmd struct {
 	bot    *telego.Bot
 	config *config.Config
+	db     *pkgdb.DB
 }
 
-func NewTelegramCommands(bot *telego.Bot, cfg *config.Config) TelegramCommander {
+func NewTelegramCommands(bot *telego.Bot, cfg *config.Config, db *pkgdb.DB) TelegramCommander {
 	return &cmd{
 		bot:    bot,
 		config: cfg,
+		db:     db,
 	}
 }
 
@@ -54,9 +57,27 @@ func (c *cmd) Help(ctx context.Context, message telego.Message) error {
 }
 
 func (c *cmd) Start(ctx context.Context, message telego.Message) error {
-	_, err := c.bot.SendMessage(ctx, &telego.SendMessageParams{
+	chatIDStr := fmt.Sprintf("%d", message.Chat.ID)
+
+	// Check if user is already onboarded
+	profile, err := c.db.GetUserProfile(chatIDStr)
+
+	var text string
+	if err == nil && profile.OnboardingComplete {
+		text = "Hello again! I'm PicoClaw 🦞. Ready to study?"
+	} else if err == nil && profile.University != "" && profile.Semester == "" {
+		text = "You're almost there! Which semester are you in?"
+	} else {
+		// Start fresh onboarding
+		_ = c.db.SaveUserProfile(&pkgdb.UserProfile{
+			ChatID: chatIDStr,
+		})
+		text = "Welcome to StudyClaw 🦞!\n\nTo customize your learning experience, let's do a quick setup.\n\nFirst, what University or College do you attend?"
+	}
+
+	_, err = c.bot.SendMessage(ctx, &telego.SendMessageParams{
 		ChatID: telego.ChatID{ID: message.Chat.ID},
-		Text:   "Hello! I am PicoClaw 🦞",
+		Text:   text,
 		ReplyParameters: &telego.ReplyParameters{
 			MessageID: message.MessageID,
 		},
