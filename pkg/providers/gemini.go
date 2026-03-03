@@ -170,13 +170,13 @@ func (g *GeminiProvider) Chat(
 		resp, err := g.client.Models.GenerateContent(ctx, model, contents, cfg)
 		if err != nil {
 			lastErr = err
-			if strings.Contains(err.Error(), "429") {
+			if strings.Contains(err.Error(), "429") || strings.Contains(err.Error(), "Quota") {
 				continue
 			}
 			return nil, fmt.Errorf("gemini generate: %w", err)
 		}
 
-		if len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil {
+		if resp == nil || len(resp.Candidates) == 0 || resp.Candidates[0].Content == nil {
 			return &tools.LLMResponse{Content: ""}, nil
 		}
 

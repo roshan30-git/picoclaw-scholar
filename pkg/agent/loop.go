@@ -117,6 +117,13 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 	resp, err := l.runAgentChat(ctx, history)
 	if err != nil {
 		log.Printf("[AgentLoop] Chat failed: %v", err)
+		if l.mgr != nil {
+			_ = l.mgr.Send(ctx, bus.OutboundMessage{
+				ChatID:  msg.ChatID,
+				Content: "⚠️ _Connection to the AI provider failed. Please try again in a moment._",
+				Channel: msg.Channel,
+			})
+		}
 		return
 	}
 
