@@ -194,17 +194,22 @@ func (l *AgentLoop) runAgentChat(ctx context.Context, history []tools.Message) (
 }
 
 func (l *AgentLoop) handlePostChatLogic(ctx context.Context, msg bus.InboundMessage, resp *tools.LLMResponse, history []tools.Message) {
-	history = append(history, tools.Message{Role: "model", Content: resp.Content})
+	content := strings.TrimSpace(resp.Content)
+	if content == "" {
+		content = "🤔 I couldn't formulate a response. Could you rephrase your question?"
+	}
+
+	history = append(history, tools.Message{Role: "model", Content: content})
 
 	if l.shouldTriggerSummary(history) {
-		l.triggerRollingSummary(ctx, msg, resp.Content, history)
+		l.triggerRollingSummary(ctx, msg, content, history)
 	} else {
 		l.saveHistory(msg.Channel, msg.ChatID, history)
 	}
 
 	out := bus.OutboundMessage{
 		ChatID:  msg.ChatID,
-		Content: resp.Content,
+		Content: content,
 		Channel: msg.Channel,
 	}
 

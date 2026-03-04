@@ -339,56 +339,42 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 	chatIDStr := fmt.Sprintf("%d", chatID)
 
 	// Onboarding Intercept (Private Chat Only)
-	if message.Chat.Type == "private" && c.db != nil {
+	// Only intercept messages when the user is actively in the onboarding flow
+	// (i.e. they've started /start but haven't finished University/Semester entry)
+	if message.Chat.Type == "private" && c.db != nil && !strings.HasPrefix(content, "/") && !strings.HasPrefix(content, "!") {
 		profile, _ := c.db.GetUserProfile(chatIDStr)
 		if profile != nil && !profile.OnboardingComplete {
-			// If it's a command, let command handler handle it (like /start)
-			if strings.HasPrefix(content, "/") {
-				if strings.HasPrefix(content, "/start") {
-					// Fallthrough to bh.HandleMessage for /start in telegram_commands.go
-				} else {
-					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), "Please complete the onboarding first! Use /start if you're stuck."))
-					return nil
-				}
-			} else {
-				// We are in middle of onboarding survey
-				if profile.University == "" {
-					profile.University = content
-					_ = c.db.SaveUserProfile(profile)
+			if profile.University == "" {
+				// Capture university name
+				profile.University = content
+				_ = c.db.SaveUserProfile(profile)
 
-					keyboard := tu.InlineKeyboard(
-						tu.InlineKeyboardRow(
-							tu.InlineKeyboardButton("1st Sem").WithCallbackData("sem_1st Semester"),
-							tu.InlineKeyboardButton("2nd Sem").WithCallbackData("sem_2nd Semester"),
-						),
-						tu.InlineKeyboardRow(
-							tu.InlineKeyboardButton("3rd Sem").WithCallbackData("sem_3rd Semester"),
-							tu.InlineKeyboardButton("4th Sem").WithCallbackData("sem_4th Semester"),
-						),
-						tu.InlineKeyboardRow(
-							tu.InlineKeyboardButton("5th Sem").WithCallbackData("sem_5th Semester"),
-							tu.InlineKeyboardButton("6th Sem").WithCallbackData("sem_6th Semester"),
-						),
-						tu.InlineKeyboardRow(
-							tu.InlineKeyboardButton("7th Sem").WithCallbackData("sem_7th Semester"),
-							tu.InlineKeyboardButton("8th Sem").WithCallbackData("sem_8th Semester"),
-						),
-					)
-
-					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID),
-						fmt.Sprintf("Got it. %s! 🎓\n\nNow, which semester are you in?", content)).
-						WithReplyMarkup(keyboard))
-					return nil
-				} else if profile.Semester == "" {
-					profile.Semester = content
-					profile.OnboardingComplete = true
-					_ = c.db.SaveUserProfile(profile)
-
-					finalMsg := fmt.Sprintf("Awesome. You're in %s at %s.\n\nSetup complete! 🚀\n\nYou can now send me PDFs, ask questions, or link your Google Drive via the local web setup.", profile.Semester, profile.University)
-					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), finalMsg))
-					return nil
-				}
+				keyboard := tu.InlineKeyboard(
+					tu.InlineKeyboardRow(
+						tu.InlineKeyboardButton("Sem 1").WithCallbackData("sem_1st Semester"),
+						tu.InlineKeyboardButton("Sem 2").WithCallbackData("sem_2nd Semester"),
+						tu.InlineKeyboardButton("Sem 3").WithCallbackData("sem_3rd Semester"),
+					),
+					tu.InlineKeyboardRow(
+						tu.InlineKeyboardButton("Sem 4").WithCallbackData("sem_4th Semester"),
+						tu.InlineKeyboardButton("Sem 5").WithCallbackData("sem_5th Semester"),
+						tu.InlineKeyboardButton("Sem 6").WithCallbackData("sem_6th Semester"),
+					),
+					tu.InlineKeyboardRow(
+						tu.InlineKeyboardButton("Sem 7").WithCallbackData("sem_7th Semester"),
+						tu.InlineKeyboardButton("Sem 8").WithCallbackData("sem_8th Semester"),
+					),
+				)
+				_, _ = c.bot.SendMessage(ctx, &telego.SendMessageParams{
+					ChatID:      telego.ChatID{ID: chatID},
+					Text:        fmt.Sprintf("🎓 Got it — <b>%s</b>!\n\nWhich semester are you in?", content),
+					ParseMode:   telego.ModeHTML,
+					ReplyMarkup: keyboard,
+				})
+				return nil
 			}
+			// If University is set but Semester is not → semester buttons were shown.
+			// User clicking a button handles this via callback. Plain text here just continues to AI.
 		}
 	}
 

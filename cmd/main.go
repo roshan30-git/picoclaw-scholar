@@ -105,7 +105,13 @@ func main() {
 
 	// 6b. Start proactive cron scheduler
 	ownerID := os.Getenv("STUDYCLAW_OWNER_NUMBER")
-	scheduler := study.NewScheduler(deadlineTracker, weeklyCards, msgBus, ownerID)
+	// Determine active channel for scheduler notifications
+	activeChannel := "whatsapp"
+	if os.Getenv("TELEGRAM_BOT_TOKEN") != "" {
+		activeChannel = "telegram"
+	}
+
+	scheduler := study.NewScheduler(deadlineTracker, weeklyCards, msgBus, ownerID, activeChannel)
 	scheduler.ScheduleReminders()
 	scheduler.ScheduleWeeklyCards()
 	go scheduler.Start(ctx)
