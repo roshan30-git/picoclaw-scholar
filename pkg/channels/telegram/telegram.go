@@ -129,6 +129,10 @@ func (c *TelegramChannel) Start(ctx context.Context) error {
 		return c.handleMessage(ctx, &message)
 	}, th.AnyMessage())
 
+	bh.HandleCallbackQuery(func(ctx *th.Context, query telego.CallbackQuery) error {
+		return c.handleCallbackQuery(ctx, query)
+	})
+
 	c.SetRunning(true)
 	logger.InfoCF("telegram", "Telegram bot connected", map[string]any{
 		"username": c.bot.Username(),
@@ -332,6 +336,62 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 		"preview":   utils.Truncate(content, 50),
 	})
 
+	chatIDStr := fmt.Sprintf("%d", chatID)
+
+	// Onboarding Intercept (Private Chat Only)
+	if message.Chat.Type == "private" && c.db != nil {
+		profile, _ := c.db.GetUserProfile(chatIDStr)
+		if profile != nil && !profile.OnboardingComplete {
+			// If it's a command, let command handler handle it (like /start)
+			if strings.HasPrefix(content, "/") {
+				if strings.HasPrefix(content, "/start") {
+					// Fallthrough to bh.HandleMessage for /start in telegram_commands.go
+				} else {
+					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), "Please complete the onboarding first! Use /start if you're stuck."))
+					return nil
+				}
+			} else {
+				// We are in middle of onboarding survey
+				if profile.University == "" {
+					profile.University = content
+					_ = c.db.SaveUserProfile(profile)
+
+					keyboard := tu.InlineKeyboard(
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("1st Sem").WithCallbackData("sem_1st Semester"),
+							tu.InlineKeyboardButton("2nd Sem").WithCallbackData("sem_2nd Semester"),
+						),
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("3rd Sem").WithCallbackData("sem_3rd Semester"),
+							tu.InlineKeyboardButton("4th Sem").WithCallbackData("sem_4th Semester"),
+						),
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("5th Sem").WithCallbackData("sem_5th Semester"),
+							tu.InlineKeyboardButton("6th Sem").WithCallbackData("sem_6th Semester"),
+						),
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("7th Sem").WithCallbackData("sem_7th Semester"),
+							tu.InlineKeyboardButton("8th Sem").WithCallbackData("sem_8th Semester"),
+						),
+					)
+
+					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID),
+						fmt.Sprintf("Got it. %s! 🎓\n\nNow, which semester are you in?", content)).
+						WithReplyMarkup(keyboard))
+					return nil
+				} else if profile.Semester == "" {
+					profile.Semester = content
+					profile.OnboardingComplete = true
+					_ = c.db.SaveUserProfile(profile)
+
+					finalMsg := fmt.Sprintf("Awesome. You're in %s at %s.\n\nSetup complete! 🚀\n\nYou can now send me PDFs, ask questions, or link your Google Drive via the local web setup.", profile.Semester, profile.University)
+					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), finalMsg))
+					return nil
+				}
+			}
+		}
+	}
+
 	// Thinking indicator
 	err := c.bot.SendChatAction(ctx, tu.ChatAction(tu.ID(chatID), telego.ChatActionTyping))
 	if err != nil {
@@ -341,7 +401,6 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 	}
 
 	// Stop any previous thinking animation
-	chatIDStr := fmt.Sprintf("%d", chatID)
 	if prevStop, ok := c.stopThinking.Load(chatIDStr); ok {
 		if cf, ok := prevStop.(*thinkingCancel); ok && cf != nil {
 			cf.Cancel()
@@ -375,44 +434,35 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 		"peer_id":    peerID,
 	}
 
-	// Onboarding Intercept
-	if message.Chat.Type == "private" && c.db != nil {
-		profile, err := c.db.GetUserProfile(chatIDStr)
-		if err == nil && !profile.OnboardingComplete {
-			// Stop thinking animation for onboarding questions
-			if prevStop, ok := c.stopThinking.Load(chatIDStr); ok {
-				if cf, ok := prevStop.(*thinkingCancel); ok && cf != nil {
-					cf.Cancel()
-				}
-			}
+	c.HandleMessage(fmt.Sprintf("%d", user.ID), fmt.Sprintf("%d", chatID), content, mediaPaths, metadata)
+	return nil
+}
 
-			// Clean up placeholder if exists
-			if pID, ok := c.placeholders.Load(chatIDStr); ok {
-				_ = c.bot.DeleteMessage(ctx, &telego.DeleteMessageParams{
-					ChatID:    telego.ChatID{ID: chatID},
-					MessageID: pID.(int),
-				})
-				c.placeholders.Delete(chatIDStr)
-			}
+func (c *TelegramChannel) handleCallbackQuery(ctx context.Context, query telego.CallbackQuery) error {
+	chatID := query.Message.GetChat().ID
+	chatIDStr := fmt.Sprintf("%d", chatID)
+	data := query.Data
 
-			if profile.University == "" {
-				profile.University = content
-				_ = c.db.SaveUserProfile(profile)
-				_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), fmt.Sprintf("Got it. %s!\n\nNow, which semester are you in? (e.g., 4th Semester)", content)))
-				return nil
-			} else if profile.Semester == "" {
-				profile.Semester = content
-				profile.OnboardingComplete = true
-				_ = c.db.SaveUserProfile(profile)
+	if strings.HasPrefix(data, "sem_") {
+		semester := strings.TrimPrefix(data, "sem_")
+		profile, _ := c.db.GetUserProfile(chatIDStr)
+		if profile != nil && profile.Semester == "" {
+			profile.Semester = semester
+			profile.OnboardingComplete = true
+			_ = c.db.SaveUserProfile(profile)
 
-				finalMsg := fmt.Sprintf("Awesome. You're in %s at %s.\n\nSetup complete! You can now send me PDFs, ask questions, or link your Google Auth via the local web setup.", profile.Semester, profile.University)
-				_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), finalMsg))
-				return nil
-			}
+			// Update the message to remove buttons and show confirmation
+			finalMsg := fmt.Sprintf("Awesome! You're in %s at %s.\n\nSetup complete! 🚀\n\nYou can now send me PDFs, ask questions, or link your Google Drive via the local web setup.", semester, profile.University)
+			_, _ = c.bot.EditMessageText(ctx, &telego.EditMessageTextParams{
+				ChatID:    telego.ChatID{ID: chatID},
+				MessageID: query.Message.GetMessageID(),
+				Text:      finalMsg,
+			})
+
+			// Answer callback to remove spinner
+			_ = c.bot.AnswerCallbackQuery(ctx, tu.CallbackQuery(query.ID).WithText("Semester selected!"))
 		}
 	}
-
-	c.HandleMessage(fmt.Sprintf("%d", user.ID), fmt.Sprintf("%d", chatID), content, mediaPaths, metadata)
 	return nil
 }
 

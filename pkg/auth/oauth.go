@@ -172,7 +172,7 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		if result.err != nil {
 			return nil, result.err
 		}
-		return exchangeCodeForTokens(cfg, result.code, pkce.CodeVerifier, redirectURI)
+		return ExchangeCodeForTokens(cfg, result.code, pkce.CodeVerifier, redirectURI)
 	case manualInput := <-manualCh:
 		if manualInput == "" {
 			return nil, fmt.Errorf("manual input cancelled")
@@ -188,7 +188,7 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		if code == "" {
 			return nil, fmt.Errorf("could not find authorization code in input")
 		}
-		return exchangeCodeForTokens(cfg, code, pkce.CodeVerifier, redirectURI)
+		return ExchangeCodeForTokens(cfg, code, pkce.CodeVerifier, redirectURI)
 	case <-time.After(5 * time.Minute):
 		return nil, fmt.Errorf("authentication timed out after 5 minutes")
 	}
@@ -337,7 +337,7 @@ func pollDeviceCode(cfg OAuthProviderConfig, deviceAuthID, userCode string) (*Au
 	}
 
 	redirectURI := cfg.Issuer + "/deviceauth/callback"
-	return exchangeCodeForTokens(cfg, tokenResp.AuthorizationCode, tokenResp.CodeVerifier, redirectURI)
+	return ExchangeCodeForTokens(cfg, tokenResp.AuthorizationCode, tokenResp.CodeVerifier, redirectURI)
 }
 
 func RefreshAccessToken(cred *AuthCredential, cfg OAuthProviderConfig) (*AuthCredential, error) {
@@ -429,7 +429,7 @@ func buildAuthorizeURL(cfg OAuthProviderConfig, pkce PKCECodes, state, redirectU
 	return cfg.Issuer + "/oauth/authorize?" + params.Encode()
 }
 
-func exchangeCodeForTokens(cfg OAuthProviderConfig, code, codeVerifier, redirectURI string) (*AuthCredential, error) {
+func ExchangeCodeForTokens(cfg OAuthProviderConfig, code, codeVerifier, redirectURI string) (*AuthCredential, error) {
 	data := url.Values{
 		"grant_type":    {"authorization_code"},
 		"code":          {code},
