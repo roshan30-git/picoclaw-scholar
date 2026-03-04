@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/mymmrac/telego"
+	tu "github.com/mymmrac/telego/telegoutil"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
 	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
@@ -82,9 +83,9 @@ func (c *cmd) Start(ctx context.Context, message telego.Message) error {
 			message.From.FirstName, profile.Semester, profile.University)
 
 		_, err = c.bot.SendMessage(ctx, &telego.SendMessageParams{
-			ChatID:    telego.ChatID{ID: message.Chat.ID},
-			Text:      text,
-			ParseMode: telego.ModeHTML,
+			ChatID:      telego.ChatID{ID: message.Chat.ID},
+			Text:        text,
+			ParseMode:   telego.ModeHTML,
 			ReplyMarkup: keyboard,
 		})
 		return err
