@@ -129,6 +129,7 @@ func main() {
 		agentLoop.RegisterTool(tools.NewWebSearchTool())
 		agentLoop.RegisterTool(tools.NewExcelTool())
 		agentLoop.RegisterTool(tools.NewDiagramTool())
+		agentLoop.RegisterTool(study.NewHeatmapTool(db))
 		agentLoop.SetChannelManager(chMgr)
 		agentLoop.SetOnShutdown(cancel)
 		go agentLoop.Run(ctx)
