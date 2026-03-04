@@ -443,6 +443,9 @@ func (c *TelegramChannel) handleCallbackQuery(ctx context.Context, query telego.
 	chatIDStr := fmt.Sprintf("%d", chatID)
 	data := query.Data
 
+	_ = c.bot.AnswerCallbackQuery(ctx, tu.CallbackQuery(query.ID))
+
+	// ── Semester Selection ───────────────────────────────────────────────
 	if strings.HasPrefix(data, "sem_") {
 		semester := strings.TrimPrefix(data, "sem_")
 		profile, _ := c.db.GetUserProfile(chatIDStr)
@@ -451,18 +454,47 @@ func (c *TelegramChannel) handleCallbackQuery(ctx context.Context, query telego.
 			profile.OnboardingComplete = true
 			_ = c.db.SaveUserProfile(profile)
 
-			// Update the message to remove buttons and show confirmation
-			finalMsg := fmt.Sprintf("Awesome! You're in %s at %s.\n\nSetup complete! 🚀\n\nYou can now send me PDFs, ask questions, or link your Google Drive via the local web setup.", semester, profile.University)
-			_, _ = c.bot.EditMessageText(ctx, &telego.EditMessageTextParams{
-				ChatID:    telego.ChatID{ID: chatID},
-				MessageID: query.Message.GetMessageID(),
-				Text:      finalMsg,
-			})
+			finalMsg := fmt.Sprintf(
+				"🎉 <b>Setup Complete!</b>\n\nYou're in <b>%s</b> at <b>%s</b>.\n\n"+
+					"<i>You're now ready! Here's how to get started:</i>\n\n"+
+					"• Send me any <b>PDF or image</b> to index it\n"+
+					"• Type <b>quiz me</b> to start a practice session\n"+
+					"• Type <b>deadlines</b> to check upcoming exams\n"+
+					"• Just <b>ask anything</b> — I'm your 24/7 tutor 🦞",
+				semester, profile.University)
 
-			// Answer callback to remove spinner
-			_ = c.bot.AnswerCallbackQuery(ctx, tu.CallbackQuery(query.ID).WithText("Semester selected!"))
+			_, _ = c.bot.EditMessageText(ctx, &telego.EditMessageTextParams{
+				ChatID: telego.ChatID{ID: chatID}, MessageID: query.Message.GetMessageID(),
+				Text: finalMsg, ParseMode: telego.ModeHTML,
+			})
+		}
+		return nil
+	}
+
+	// ── Action Quick-Access Buttons ──────────────────────────────────────
+	actionMsgs := map[string]string{
+		"action_quiz":            "🎯 Send me a topic or just say <b>quiz me</b> and I'll generate MCQs from your notes!",
+		"action_deadlines":       "📅 Type <b>view deadlines</b> or <b>add deadline: [subject] on [date]</b>",
+		"action_report":          "📊 Type <b>generate report</b> to get your weekly study performance summary.",
+		"action_search":          "🔍 Type <b>search: [topic]</b> to find relevant notes from your indexed PDFs.",
+		"action_upload":          "📥 <b>Just send me a PDF or image!</b>\nI'll automatically index it and make it searchable for quizzes.",
+		"action_help":            "❓ <b>Quick Help:</b>\n\n• <b>quiz me</b> — generate MCQs\n• <b>search: X</b> — search notes\n• <b>deadlines</b> — view upcoming exams\n• <b>add deadline: X on Y</b> — add deadline\n• <b>draw: X</b> — generate a diagram\n• <b>report</b> — weekly performance\n• <b>!stop</b> — shut down the bot (owner only)",
+		"action_skip_onboarding": "✅ <b>No problem!</b> Feel free to ask me anything, upload PDFs, or type <b>quiz me</b>. You can always do setup later with /start.",
+	}
+
+	if txt, ok := actionMsgs[data]; ok {
+		_, _ = c.bot.SendMessage(ctx, &telego.SendMessageParams{
+			ChatID: telego.ChatID{ID: chatID}, Text: txt, ParseMode: telego.ModeHTML,
+		})
+		if data == "action_skip_onboarding" {
+			profile, _ := c.db.GetUserProfile(chatIDStr)
+			if profile != nil {
+				profile.OnboardingComplete = true
+				_ = c.db.SaveUserProfile(profile)
+			}
 		}
 	}
+
 	return nil
 }
 

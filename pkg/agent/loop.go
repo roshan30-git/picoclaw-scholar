@@ -134,7 +134,23 @@ func (l *AgentLoop) handleSmartPreprocessing(ctx context.Context, msg bus.Inboun
 	if l.smartHandler == nil {
 		return false
 	}
-	reply, continueToAgent := l.smartHandler.Process(ctx, msg.Content)
+
+	// Questions, commands, and short conversational messages always go to the AI.
+	// Never swallow them silently.
+	content := strings.TrimSpace(msg.Content)
+	if strings.HasSuffix(content, "?") ||
+		len(content) < 80 ||
+		strings.HasPrefix(strings.ToLower(content), "quiz") ||
+		strings.HasPrefix(strings.ToLower(content), "hi") ||
+		strings.HasPrefix(strings.ToLower(content), "hello") ||
+		strings.HasPrefix(strings.ToLower(content), "search") ||
+		strings.HasPrefix(strings.ToLower(content), "deadline") ||
+		strings.HasPrefix(strings.ToLower(content), "report") ||
+		strings.HasPrefix(strings.ToLower(content), "draw") {
+		return false // Let the AI Agent handle it
+	}
+
+	reply, continueToAgent := l.smartHandler.Process(ctx, content)
 	if !continueToAgent {
 		if reply != "" && l.mgr != nil {
 			_ = l.mgr.Send(ctx, bus.OutboundMessage{
