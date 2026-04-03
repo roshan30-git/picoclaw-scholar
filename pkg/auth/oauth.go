@@ -31,20 +31,22 @@ type OAuthProviderConfig struct {
 	Port         int
 }
 
-func OpenAIOAuthConfig() OAuthProviderConfig {
-	// Uses the ClientID from environment variable for Codex CLI.
+func OpenAIOAuthConfig() (OAuthProviderConfig, error) {
 	clientID := os.Getenv("STUDYCLAW_OPENAI_CLIENT_ID")
+	if clientID == "" {
+		return OAuthProviderConfig{}, fmt.Errorf("STUDYCLAW_OPENAI_CLIENT_ID environment variable is not set")
+	}
 	return OAuthProviderConfig{
 		Issuer:     "https://auth.openai.com",
 		ClientID:   clientID,
 		Scopes:     "openid profile email offline_access",
 		Originator: "codex_cli_rs",
 		Port:       1455,
-	}
+	}, nil
 }
 
 // GoogleAntigravityOAuthConfig returns the OAuth configuration for Google Cloud Code Assist (Antigravity).
-func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
+func GoogleAntigravityOAuthConfig() (OAuthProviderConfig, error) {
 	clientID := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID")
 	clientSecret := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET")
 
@@ -55,6 +57,7 @@ func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
 		ClientSecret: clientSecret,
 		Scopes:       "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cclog https://www.googleapis.com/auth/experimentsandconfigs",
 		Port:         51121,
+	}, nil
 	}
 }
 
