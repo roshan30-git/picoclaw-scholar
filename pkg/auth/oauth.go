@@ -31,12 +31,8 @@ type OAuthProviderConfig struct {
 }
 
 func OpenAIOAuthConfig() OAuthProviderConfig {
-	// Defaults to the public community ClientID for Codex CLI if not overridden.
+	// Uses the ClientID from environment variable for Codex CLI.
 	clientID := os.Getenv("STUDYCLAW_OPENAI_CLIENT_ID")
-	if clientID == "" {
-		// Split to bypass naive secret scanners
-		clientID = "app_" + "EMoamEEZ" + "73f0CkXaXp7h" + "rann"
-	}
 	return OAuthProviderConfig{
 		Issuer:     "https://auth.openai.com",
 		ClientID:   clientID,
@@ -49,23 +45,7 @@ func OpenAIOAuthConfig() OAuthProviderConfig {
 // GoogleAntigravityOAuthConfig returns the OAuth configuration for Google Cloud Code Assist (Antigravity).
 func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
 	clientID := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID")
-	if clientID == "" {
-		// Split to bypass naive secret scanners
-		p1 := "MTA3MTAwNjA2MDU5MS10bWhz"
-		p2 := "c2luMmgyMWxjcmUyMzV2dG9s"
-		p3 := "b2poNGc0MDNlcC5hcHBzLmdv"
-		p4 := "b2dsZXVzZXJjb250ZW50LmNvbQ=="
-		clientID = decodeBase64(p1 + p2 + p3 + p4)
-	}
-
 	clientSecret := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET")
-	if clientSecret == "" {
-		// Split to bypass naive secret scanners
-		s1 := "R09DU1BY"
-		s2 := "LUs1OEZXUjQ4Nkxk"
-		s3 := "TEoxbUxCOHNYQzR6NnFEQWY="
-		clientSecret = decodeBase64(s1 + s2 + s3)
-	}
 
 	return OAuthProviderConfig{
 		Issuer:       "https://accounts.google.com/o/oauth2/v2",
@@ -75,14 +55,6 @@ func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
 		Scopes:       "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cclog https://www.googleapis.com/auth/experimentsandconfigs",
 		Port:         51121,
 	}
-}
-
-func decodeBase64(s string) string {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return s
-	}
-	return string(data)
 }
 
 func generateState() (string, error) {
