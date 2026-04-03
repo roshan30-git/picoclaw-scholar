@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 	"io"
 	"net"
 	"net/http"
@@ -144,20 +145,15 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		server.Shutdown(ctx)
 	}()
 
-	fmt.Printf("Open this URL to authenticate:\n\n%s\n\n", authURL)
+	logger.InfoCF("oauth", "Open this URL to authenticate", map[string]any{"url": authURL})
 
 	if err := openBrowser(authURL); err != nil {
-		fmt.Printf("Could not open browser automatically.\nPlease open this URL manually:\n\n%s\n\n", authURL)
+		logger.InfoCF("oauth", "Could not open browser automatically, please open URL manually", map[string]any{"url": authURL})
 	}
 
-	fmt.Printf(
-		"Wait! If you are in a headless environment (like Coolify/VPS) and cannot reach localhost:%d,\n",
-		cfg.Port,
-	)
-	fmt.Println(
-		"please complete the login in your local browser and then PASTE the final redirect URL (or just the code) here.",
-	)
-	fmt.Println("Waiting for authentication (browser or manual paste)...")
+	logger.InfoCF("oauth", "Headless environment note", map[string]any{"port": cfg.Port})
+	logger.InfoC("oauth", "Please complete the login in your local browser and then PASTE the final redirect URL (or just the code) here.")
+	logger.InfoC("oauth", "Waiting for authentication (browser or manual paste)...")
 
 	// Start manual input in a goroutine
 	manualCh := make(chan string)
@@ -279,11 +275,11 @@ func LoginDeviceCode(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		deviceResp.Interval = 5
 	}
 
-	fmt.Printf(
-		"\nTo authenticate, open this URL in your browser:\n\n  %s/codex/device\n\nThen enter this code: %s\n\nWaiting for authentication...\n",
-		cfg.Issuer,
-		deviceResp.UserCode,
-	)
+	logger.InfoCF("oauth", "Device authentication required", map[string]any{
+		"url":  fmt.Sprintf("%s/codex/device", cfg.Issuer),
+		"code": deviceResp.UserCode,
+	})
+	logger.InfoC("oauth", "Waiting for authentication...")
 
 	deadline := time.After(15 * time.Minute)
 	ticker := time.NewTicker(time.Duration(deviceResp.Interval) * time.Second)
