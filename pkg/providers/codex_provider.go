@@ -411,7 +411,10 @@ func createCodexTokenSource() func() (string, string, error) {
 		}
 
 		if cred.AuthMethod == "oauth" && cred.NeedsRefresh() && cred.RefreshToken != "" {
-			oauthCfg := auth.OpenAIOAuthConfig()
+			oauthCfg, err := auth.OpenAIOAuthConfig()
+			if err != nil {
+				return "", "", fmt.Errorf("openai oauth config: %w", err)
+			}
 			refreshed, err := auth.RefreshAccessToken(cred, oauthCfg)
 			if err != nil {
 				return "", "", fmt.Errorf("refreshing token: %w", err)

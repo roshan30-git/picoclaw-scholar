@@ -67,7 +67,11 @@ func TestBuildAuthorizeURL(t *testing.T) {
 }
 
 func TestBuildAuthorizeURLOpenAIExtras(t *testing.T) {
-	cfg := OpenAIOAuthConfig()
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
+	cfg, err := OpenAIOAuthConfig()
+	if err != nil {
+		t.Fatalf("OpenAIOAuthConfig() error: %v", err)
+	}
 	pkce := PKCECodes{CodeVerifier: "test-verifier", CodeChallenge: "test-challenge"}
 
 	u := BuildAuthorizeURL(cfg, pkce, "test-state", "http://localhost:1455/auth/callback")
@@ -277,14 +281,18 @@ func TestRefreshAccessToken(t *testing.T) {
 }
 
 func TestRefreshAccessTokenNoRefreshToken(t *testing.T) {
-	cfg := OpenAIOAuthConfig()
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
+	cfg, err := OpenAIOAuthConfig()
+	if err != nil {
+		t.Fatalf("OpenAIOAuthConfig() error: %v", err)
+	}
 	cred := &AuthCredential{
 		AccessToken: "old-token",
 		Provider:    "openai",
 		AuthMethod:  "oauth",
 	}
 
-	_, err := RefreshAccessToken(cred, cfg)
+	_, err = RefreshAccessToken(cred, cfg)
 	if err == nil {
 		t.Error("expected error for missing refresh token")
 	}
@@ -322,12 +330,16 @@ func TestRefreshAccessTokenPreservesRefreshAndAccountID(t *testing.T) {
 }
 
 func TestOpenAIOAuthConfig(t *testing.T) {
-	cfg := OpenAIOAuthConfig()
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
+	cfg, err := OpenAIOAuthConfig()
+	if err != nil {
+		t.Fatalf("OpenAIOAuthConfig() error: %v", err)
+	}
 	if cfg.Issuer != "https://auth.openai.com" {
 		t.Errorf("Issuer = %q, want %q", cfg.Issuer, "https://auth.openai.com")
 	}
-	if cfg.ClientID == "" {
-		t.Error("ClientID is empty")
+	if cfg.ClientID != "test-client-id" {
+		t.Errorf("ClientID = %q, want %q", cfg.ClientID, "test-client-id")
 	}
 	if cfg.Port != 1455 {
 		t.Errorf("Port = %d, want 1455", cfg.Port)
@@ -351,6 +363,49 @@ func TestParseDeviceCodeResponseIntervalAsNumber(t *testing.T) {
 	if resp.Interval != 5 {
 		t.Errorf("Interval = %d, want %d", resp.Interval, 5)
 	}
+}
+
+func TestOpenAIOAuthConfig_MissingEnv(t *testing.T) {
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "")
+	_, err := OpenAIOAuthConfig()
+	if err == nil {
+		t.Error("expected error for missing STUDYCLAW_OPENAI_CLIENT_ID")
+	}
+}
+
+func TestGoogleAntigravityOAuthConfig_MissingEnv(t *testing.T) {
+	t.Run("missing client id", func(t *testing.T) {
+		t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID", "")
+		t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET", "test-secret")
+		_, err := GoogleAntigravityOAuthConfig()
+		if err == nil {
+			t.Error("expected error for missing STUDYCLAW_ANTIGRAVITY_CLIENT_ID")
+		}
+	})
+
+	t.Run("missing client secret", func(t *testing.T) {
+		t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID", "test-id")
+		t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET", "")
+		_, err := GoogleAntigravityOAuthConfig()
+		if err == nil {
+			t.Error("expected error for missing STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET")
+		}
+	})
+
+	t.Run("success", func(t *testing.T) {
+		t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID", "test-id")
+		t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET", "test-secret")
+		cfg, err := GoogleAntigravityOAuthConfig()
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if cfg.ClientID != "test-id" {
+			t.Errorf("ClientID = %q, want %q", cfg.ClientID, "test-id")
+		}
+		if cfg.ClientSecret != "test-secret" {
+			t.Errorf("ClientSecret = %q, want %q", cfg.ClientSecret, "test-secret")
+		}
+	})
 }
 
 func TestParseDeviceCodeResponseIntervalAsString(t *testing.T) {

@@ -30,12 +30,10 @@ type OAuthProviderConfig struct {
 	Port         int
 }
 
-func OpenAIOAuthConfig() OAuthProviderConfig {
-	// Defaults to the public community ClientID for Codex CLI if not overridden.
+func OpenAIOAuthConfig() (OAuthProviderConfig, error) {
 	clientID := os.Getenv("STUDYCLAW_OPENAI_CLIENT_ID")
 	if clientID == "" {
-		// Split to bypass naive secret scanners
-		clientID = "app_" + "EMoamEEZ" + "73f0CkXaXp7h" + "rann"
+		return OAuthProviderConfig{}, fmt.Errorf("STUDYCLAW_OPENAI_CLIENT_ID environment variable is not set")
 	}
 	return OAuthProviderConfig{
 		Issuer:     "https://auth.openai.com",
@@ -43,28 +41,19 @@ func OpenAIOAuthConfig() OAuthProviderConfig {
 		Scopes:     "openid profile email offline_access",
 		Originator: "codex_cli_rs",
 		Port:       1455,
-	}
+	}, nil
 }
 
 // GoogleAntigravityOAuthConfig returns the OAuth configuration for Google Cloud Code Assist (Antigravity).
-func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
+func GoogleAntigravityOAuthConfig() (OAuthProviderConfig, error) {
 	clientID := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID")
 	if clientID == "" {
-		// Split to bypass naive secret scanners
-		p1 := "MTA3MTAwNjA2MDU5MS10bWhz"
-		p2 := "c2luMmgyMWxjcmUyMzV2dG9s"
-		p3 := "b2poNGc0MDNlcC5hcHBzLmdv"
-		p4 := "b2dsZXVzZXJjb250ZW50LmNvbQ=="
-		clientID = decodeBase64(p1 + p2 + p3 + p4)
+		return OAuthProviderConfig{}, fmt.Errorf("STUDYCLAW_ANTIGRAVITY_CLIENT_ID environment variable is not set")
 	}
 
 	clientSecret := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET")
 	if clientSecret == "" {
-		// Split to bypass naive secret scanners
-		s1 := "R09DU1BY"
-		s2 := "LUs1OEZXUjQ4Nkxk"
-		s3 := "TEoxbUxCOHNYQzR6NnFEQWY="
-		clientSecret = decodeBase64(s1 + s2 + s3)
+		return OAuthProviderConfig{}, fmt.Errorf("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET environment variable is not set")
 	}
 
 	return OAuthProviderConfig{
@@ -74,15 +63,7 @@ func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
 		ClientSecret: clientSecret,
 		Scopes:       "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cclog https://www.googleapis.com/auth/experimentsandconfigs",
 		Port:         51121,
-	}
-}
-
-func decodeBase64(s string) string {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return s
-	}
-	return string(data)
+	}, nil
 }
 
 func generateState() (string, error) {
