@@ -165,17 +165,8 @@ func (c *Client) handleEvent(evt interface{}) {
 		}
 
 		// Group filtering logic
-		if v.Info.IsGroup && len(c.allowedGroups) > 0 {
-			allowed := false
-			for _, allowedJID := range c.allowedGroups {
-				if chatID == allowedJID || chatID == allowedJID+"@g.us" {
-					allowed = true
-					break
-				}
-			}
-			if !allowed {
-				return // Ignore non-allowed group message
-			}
+		if v.Info.IsGroup && !c.isAllowedGroup(chatID) {
+			return // Ignore non-allowed group message
 		}
 
 		mediaPath := ""
@@ -196,12 +187,12 @@ func (c *Client) handleEvent(evt interface{}) {
 		if err == nil && len(mediaData) > 0 {
 			home, _ := os.UserHomeDir()
 			dir := home + "/.studyclaw/media"
-			os.MkdirAll(dir, 0755)
+			os.MkdirAll(dir, 0700)
 
 			// Quick unique filename
 			filename := fmt.Sprintf("%s_%s%s", sender, v.Info.ID, fileExt)
 			mediaPath = dir + "/" + filename
-			os.WriteFile(mediaPath, mediaData, 0644)
+			os.WriteFile(mediaPath, mediaData, 0600)
 			text = fmt.Sprintf("[Media Saved: %s] %s", mediaPath, text)
 
 			// Process OCR if image and pipeline exists
@@ -242,17 +233,32 @@ func (c *Client) IsRunning() bool {
 	return c.wac.IsConnected()
 }
 
+func (c *Client) isAllowedGroup(chatID string) bool {
+	if len(c.allowedGroups) == 0 {
+		return true
+	}
+	for _, g := range c.allowedGroups {
+		if chatID == g || chatID == g+"@g.us" {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Client) isPassiveGroup(chatID string) bool {
+	for _, g := range c.passiveGroups {
+		if chatID == g || chatID == g+"@g.us" {
+			return true
+		}
+	}
+	return false
+}
+
 var diagramRegex = regexp.MustCompile("(?s)```mermaid(.*?)```")
 
 // Send delivers a text message to a WhatsApp JID (contact or group).
 func (c *Client) Send(ctx context.Context, outMsg bus.OutboundMessage) error {
-	isPassive := false
-	for _, pg := range c.passiveGroups {
-		if outMsg.ChatID == pg || outMsg.ChatID == pg+"@g.us" {
-			isPassive = true
-			break
-		}
-	}
+	isPassive := c.isPassiveGroup(outMsg.ChatID)
 
 	jid, err := parseJID(outMsg.ChatID)
 	if err != nil {

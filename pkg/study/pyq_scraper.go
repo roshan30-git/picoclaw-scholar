@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 )
 
 type PYQScraper struct {
