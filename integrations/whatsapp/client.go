@@ -196,12 +196,12 @@ func (c *Client) handleEvent(evt interface{}) {
 		if err == nil && len(mediaData) > 0 {
 			home, _ := os.UserHomeDir()
 			dir := home + "/.studyclaw/media"
-			os.MkdirAll(dir, 0755)
+			os.MkdirAll(dir, 0700)
 
 			// Quick unique filename
 			filename := fmt.Sprintf("%s_%s%s", sender, v.Info.ID, fileExt)
 			mediaPath = dir + "/" + filename
-			os.WriteFile(mediaPath, mediaData, 0644)
+			os.WriteFile(mediaPath, mediaData, 0600)
 			text = fmt.Sprintf("[Media Saved: %s] %s", mediaPath, text)
 
 			// Process OCR if image and pipeline exists
