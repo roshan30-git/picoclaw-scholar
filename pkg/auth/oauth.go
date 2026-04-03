@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 	"io"
 	"net"
 	"net/http"
@@ -47,14 +48,7 @@ func OpenAIOAuthConfig() (OAuthProviderConfig, error) {
 // GoogleAntigravityOAuthConfig returns the OAuth configuration for Google Cloud Code Assist (Antigravity).
 func GoogleAntigravityOAuthConfig() (OAuthProviderConfig, error) {
 	clientID := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID")
-	if clientID == "" {
-		return OAuthProviderConfig{}, fmt.Errorf("STUDYCLAW_ANTIGRAVITY_CLIENT_ID environment variable is not set")
-	}
-
 	clientSecret := os.Getenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET")
-	if clientSecret == "" {
-		return OAuthProviderConfig{}, fmt.Errorf("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET environment variable is not set")
-	}
 
 	return OAuthProviderConfig{
 		Issuer:       "https://accounts.google.com/o/oauth2/v2",
@@ -64,6 +58,7 @@ func GoogleAntigravityOAuthConfig() (OAuthProviderConfig, error) {
 		Scopes:       "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/cclog https://www.googleapis.com/auth/experimentsandconfigs",
 		Port:         51121,
 	}, nil
+	}
 }
 
 func generateState() (string, error) {
@@ -125,20 +120,15 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		server.Shutdown(ctx)
 	}()
 
-	fmt.Printf("Open this URL to authenticate:\n\n%s\n\n", authURL)
+	logger.InfoCF("oauth", "Open this URL to authenticate", map[string]any{"url": authURL})
 
 	if err := openBrowser(authURL); err != nil {
-		fmt.Printf("Could not open browser automatically.\nPlease open this URL manually:\n\n%s\n\n", authURL)
+		logger.InfoCF("oauth", "Could not open browser automatically, please open URL manually", map[string]any{"url": authURL})
 	}
 
-	fmt.Printf(
-		"Wait! If you are in a headless environment (like Coolify/VPS) and cannot reach localhost:%d,\n",
-		cfg.Port,
-	)
-	fmt.Println(
-		"please complete the login in your local browser and then PASTE the final redirect URL (or just the code) here.",
-	)
-	fmt.Println("Waiting for authentication (browser or manual paste)...")
+	logger.InfoCF("oauth", "Headless environment note", map[string]any{"port": cfg.Port})
+	logger.InfoC("oauth", "Please complete the login in your local browser and then PASTE the final redirect URL (or just the code) here.")
+	logger.InfoC("oauth", "Waiting for authentication (browser or manual paste)...")
 
 	// Start manual input in a goroutine
 	manualCh := make(chan string)
@@ -153,7 +143,7 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		if result.err != nil {
 			return nil, result.err
 		}
-		return exchangeCodeForTokens(cfg, result.code, pkce.CodeVerifier, redirectURI)
+		return ExchangeCodeForTokens(cfg, result.code, pkce.CodeVerifier, redirectURI)
 	case manualInput := <-manualCh:
 		if manualInput == "" {
 			return nil, fmt.Errorf("manual input cancelled")
@@ -169,7 +159,7 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		if code == "" {
 			return nil, fmt.Errorf("could not find authorization code in input")
 		}
-		return exchangeCodeForTokens(cfg, code, pkce.CodeVerifier, redirectURI)
+		return ExchangeCodeForTokens(cfg, code, pkce.CodeVerifier, redirectURI)
 	case <-time.After(5 * time.Minute):
 		return nil, fmt.Errorf("authentication timed out after 5 minutes")
 	}
@@ -260,11 +250,11 @@ func LoginDeviceCode(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		deviceResp.Interval = 5
 	}
 
-	fmt.Printf(
-		"\nTo authenticate, open this URL in your browser:\n\n  %s/codex/device\n\nThen enter this code: %s\n\nWaiting for authentication...\n",
-		cfg.Issuer,
-		deviceResp.UserCode,
-	)
+	logger.InfoCF("oauth", "Device authentication required", map[string]any{
+		"url":  fmt.Sprintf("%s/codex/device", cfg.Issuer),
+		"code": deviceResp.UserCode,
+	})
+	logger.InfoC("oauth", "Waiting for authentication...")
 
 	deadline := time.After(15 * time.Minute)
 	ticker := time.NewTicker(time.Duration(deviceResp.Interval) * time.Second)
@@ -318,7 +308,7 @@ func pollDeviceCode(cfg OAuthProviderConfig, deviceAuthID, userCode string) (*Au
 	}
 
 	redirectURI := cfg.Issuer + "/deviceauth/callback"
-	return exchangeCodeForTokens(cfg, tokenResp.AuthorizationCode, tokenResp.CodeVerifier, redirectURI)
+	return ExchangeCodeForTokens(cfg, tokenResp.AuthorizationCode, tokenResp.CodeVerifier, redirectURI)
 }
 
 func RefreshAccessToken(cred *AuthCredential, cfg OAuthProviderConfig) (*AuthCredential, error) {
@@ -410,7 +400,7 @@ func buildAuthorizeURL(cfg OAuthProviderConfig, pkce PKCECodes, state, redirectU
 	return cfg.Issuer + "/oauth/authorize?" + params.Encode()
 }
 
-func exchangeCodeForTokens(cfg OAuthProviderConfig, code, codeVerifier, redirectURI string) (*AuthCredential, error) {
+func ExchangeCodeForTokens(cfg OAuthProviderConfig, code, codeVerifier, redirectURI string) (*AuthCredential, error) {
 	data := url.Values{
 		"grant_type":    {"authorization_code"},
 		"code":          {code},

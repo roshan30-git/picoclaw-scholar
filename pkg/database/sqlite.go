@@ -70,6 +70,13 @@ func New(path string) (*DB, error) {
 			semester TEXT,
 			onboarding_complete BOOLEAN DEFAULT 0
 		)`,
+		`CREATE TABLE IF NOT EXISTS pyq_bank (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			subject TEXT NOT NULL,
+			question_text TEXT NOT NULL,
+			year INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, t := range tables {
@@ -175,4 +182,29 @@ func (db *DB) SaveUserProfile(profile *UserProfile) error {
 		onboarding_complete = excluded.onboarding_complete`,
 		profile.ChatID, profile.University, profile.Semester, profile.OnboardingComplete)
 	return err
+}
+
+func (db *DB) SavePYQs(subject string, questions []string, year int) error {
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`INSERT INTO pyq_bank (subject, question_text, year) VALUES (?, ?, ?)`)
+	if err != nil {
+		return fmt.Errorf("prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, q := range questions {
+		if _, err := stmt.Exec(subject, q, year); err != nil {
+			return fmt.Errorf("exec statement: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
+	}
+	return nil
 }

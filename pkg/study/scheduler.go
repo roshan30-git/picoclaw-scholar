@@ -12,20 +12,25 @@ import (
 )
 
 type Scheduler struct {
-	cron    *cron.Cron
-	tracker *DeadlineTracker
-	cards   *WeeklyCardsGenerator
-	bus     *bus.MessageBus
-	ownerID string // JID or ChatID to send reminders
+	cron          *cron.Cron
+	tracker       *DeadlineTracker
+	cards         *WeeklyCardsGenerator
+	bus           *bus.MessageBus
+	ownerID       string // JID or ChatID to send reminders
+	activeChannel string // "telegram" or "whatsapp"
 }
 
-func NewScheduler(tracker *DeadlineTracker, cards *WeeklyCardsGenerator, b *bus.MessageBus, ownerID string) *Scheduler {
+func NewScheduler(tracker *DeadlineTracker, cards *WeeklyCardsGenerator, b *bus.MessageBus, ownerID string, activeChannel string) *Scheduler {
+	if activeChannel == "" {
+		activeChannel = "whatsapp"
+	}
 	return &Scheduler{
-		cron:    cron.New(),
-		tracker: tracker,
-		cards:   cards,
-		bus:     b,
-		ownerID: ownerID,
+		cron:          cron.New(),
+		tracker:       tracker,
+		cards:         cards,
+		bus:           b,
+		ownerID:       ownerID,
+		activeChannel: activeChannel,
 	}
 }
 
@@ -89,7 +94,7 @@ func (s *Scheduler) ScheduleReminders() {
 			s.bus.PublishOutbound(bus.OutboundMessage{
 				ChatID:  s.ownerID,
 				Content: msg,
-				Channel: "whatsapp",
+				Channel: s.activeChannel,
 			})
 		}
 	})

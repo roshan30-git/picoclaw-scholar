@@ -134,7 +134,23 @@ func (l *AgentLoop) handleSmartPreprocessing(ctx context.Context, msg bus.Inboun
 	if l.smartHandler == nil {
 		return false
 	}
-	reply, continueToAgent := l.smartHandler.Process(ctx, msg.Content)
+
+	// Questions, commands, and short conversational messages always go to the AI.
+	// Never swallow them silently.
+	content := strings.TrimSpace(msg.Content)
+	if strings.HasSuffix(content, "?") ||
+		len(content) < 80 ||
+		strings.HasPrefix(strings.ToLower(content), "quiz") ||
+		strings.HasPrefix(strings.ToLower(content), "hi") ||
+		strings.HasPrefix(strings.ToLower(content), "hello") ||
+		strings.HasPrefix(strings.ToLower(content), "search") ||
+		strings.HasPrefix(strings.ToLower(content), "deadline") ||
+		strings.HasPrefix(strings.ToLower(content), "report") ||
+		strings.HasPrefix(strings.ToLower(content), "draw") {
+		return false // Let the AI Agent handle it
+	}
+
+	reply, continueToAgent := l.smartHandler.Process(ctx, content)
 	if !continueToAgent {
 		if reply != "" && l.mgr != nil {
 			_ = l.mgr.Send(ctx, bus.OutboundMessage{
@@ -178,17 +194,22 @@ func (l *AgentLoop) runAgentChat(ctx context.Context, history []tools.Message) (
 }
 
 func (l *AgentLoop) handlePostChatLogic(ctx context.Context, msg bus.InboundMessage, resp *tools.LLMResponse, history []tools.Message) {
-	history = append(history, tools.Message{Role: "model", Content: resp.Content})
+	content := strings.TrimSpace(resp.Content)
+	if content == "" {
+		content = "🤔 I couldn't formulate a response. Could you rephrase your question?"
+	}
+
+	history = append(history, tools.Message{Role: "model", Content: content})
 
 	if l.shouldTriggerSummary(history) {
-		l.triggerRollingSummary(ctx, msg, resp.Content, history)
+		l.triggerRollingSummary(ctx, msg, content, history)
 	} else {
 		l.saveHistory(msg.Channel, msg.ChatID, history)
 	}
 
 	out := bus.OutboundMessage{
 		ChatID:  msg.ChatID,
-		Content: resp.Content,
+		Content: content,
 		Channel: msg.Channel,
 	}
 

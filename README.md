@@ -59,37 +59,110 @@ graph TD
 
 ---
 
-## 🚀 Quick Start (Windows / Desktop)
+---
 
-1. [Download the latest release](https://github.com/roshan30-git/picoclaw-scholar/releases).
-2. Run `studyclaw.exe` (or `.\run.ps1`).
-3. **No manual config needed!** Follow the instructions in the link provided (`http://localhost:8080/setup`) to link your Telegram bot and API keys in seconds.
+## 🚀 Installation & Deployment
+
+StudyClaw is cross-platform by design. Choose the method that best fits your workflow.
+
+### 💻 Windows (Desktop)
+
+#### Method 1: The One-Click Orchestrator (Recommended)
+This method auto-detects your environment, installs missing tools, and configures everything via a web wizard.
+1. Open PowerShell and run:
+   ```powershell
+   git clone https://github.com/roshan30-git/picoclaw-scholar.git
+   cd picoclaw-scholar
+   .\run.ps1
+   ```
+2. Navigate to `http://localhost:8080/setup` to link your bot.
+
+#### Method 2: Manual Build (For Developers)
+If you prefer full control over your environment:
+1. Clone the repo and install dependencies:
+   ```powershell
+   go mod tidy
+   ```
+2. Create a `.env` file (see [Configuration](#-advanced-configuration)).
+3. Build and run:
+   ```powershell
+   go build -o studyclaw.exe ./cmd
+   .\studyclaw.exe
+   ```
+
+#### Method 3: Binary Release
+Download the [Pre-compiled Binary](https://github.com/roshan30-git/picoclaw-scholar/releases), extract it, and run `studyclaw.exe`.
 
 ---
 
-## 📱 Termux (Fastest for Phones)
+### 📱 Termux (Mobile Integration)
 
+Optimized for ARM64 with built-in `termux-wake-lock` support to prevent Android from killing the bot.
 ```bash
-pkg update && pkg install golang git -y
+pkg update && pkg install golang git clang make -y
 git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar && chmod +x run.sh && ./run.sh
 ```
 
 ---
 
-## 🔑 Automation & Magic
-StudyClaw now features a **Graphical Setup Wizard**. No more editing `.env` files or using a terminal to provide API keys. 
+## 🏗️ System Architecture
 
-- **Local Setup Portal**: A built-in web-UI for linking Gemini, OpenAI, and Telegram.
-- **Google OAuth Integration**: Connect Google Drive and Google Classroom with one click.
-- **Bot-Led Discovery**: Your Telegram bot greets you and helps set up your university details on the first message.
+StudyClaw follows the **PicoClaw Blueprint**—a modular architecture designed for high throughput and low memory usage.
 
+### Directory Structure
+```text
+├── cmd/                # Entry points (main application)
+├── integrations/       # Platform bridges (WhatsApp, Telegram)
+├── pkg/
+│   ├── agent/          # Core AI logic & Persona Router
+│   ├── channels/       # Message abstraction layer
+│   ├── providers/      # LLM API implementations (Gemini, etc.)
+│   ├── study/          # Features: RAG, Search, Summarization
+│   ├── tools/          # AI Tool implementations (Calendar, Quiz)
+│   ├── database/       # SQLite WAL-mode persistence
+│   └── viewer/         # Local web server for visualizations
+├── docs/               # Landing page & Documentation
+└── workspace/          # User data, prompts, and temporary files
+```
 
-### 🛠️ Elite Commands
+### Module Breakdown
+- **Zero-CGO SQLite**: Uses `modernc.org/sqlite` for 100% Go compatibility, enabling zero-setup installations on Windows.
+- **WAL Persistence**: Database is configured with Write-Ahead Logging to prevent lockups during heavy message syncs.
+- **Pico-Summarization**: Long group messages are processed in chunks to keep AI context windows efficient.
 
-- **`!stop`**: Shut down the bot remotely (Owner only).
-- **`@librarian` persona**: Focuses on deep indexing and PDF analysis.
-- **`@drill_sergeant` persona**: Forces a rigorous, high-intensity quiz mode.
+---
+
+## 🔑 Advanced Configuration
+
+While the **Web Setup Wizard** is the easiest way to configure StudyClaw, you can manually edit the `.env` file for advanced tuning:
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `GEMINI_API_KEY` | Your Google AI Studio Key | *Required* |
+| `TELEGRAM_APITOKEN` | Your BotFather Token | *Optional* |
+| `STUDY_PORT` | Port for the web UI & Visualization | `8080` |
+| `DATABASE_PATH` | Path to the SQLite store | `./studyclaw.db` |
+| `PASSIVE_GROUPS` | CSV of Group IDs to index silently | `""` |
+
+---
+
+## 🤖 Elite Commands & Personas
+
+Interacting with StudyClaw is more than just chatting. Use specialized **Personas** to change the bot's behavior:
+
+- **`!persona status`**: Check current active persona.
+- **`@librarian`**: Use this prefix for deep indexing. The bot will focus on technical accuracy and PDF reference.
+- **`@drill_sergeant`**: Activates "Challenge Mode". The bot will ignore casual chat and only ask difficult quiz questions.
+- **`@mentor`**: (Default) Provides balanced support with encouraging feedback.
+
+---
+
+## 🛠️ Performance & Tuning
+
+- **Low Data Mode**: In your Telegram bot settings, limit document downloads to prevent high bandwidth usage.
+- **Rate Limiting**: If you encounter `429 Too Many Requests`, the bot will automatically notify you. We recommend spreading out complex queries by at least 10 seconds.
+- **Memory Usage**: StudyClaw typically consumes `< 40MB` RAM. If usage spikes, use `!stop` and restart to clear the internal scratchpad.
 
 ---
 
@@ -108,6 +181,21 @@ If you are using a **Free Tier** Gemini API Key from Google AI Studio, you may e
 StudyClaw is licensed under the **GNU General Public License v3.0**.
 
 > This ensures the project remains free and open-source forever. Any derivative works must be shared under the same license.
+
+---
+
+---
+
+## 🤝 Contributing & Community
+
+We welcome contributions from students and developers! 
+- **Bug Reports**: Open an issue if something breaks.
+- **Feature Requests**: Have an idea for a new study tool? Let us know.
+- **Code**: PRs are welcome. Please ensure your code follows the "PicoClaw" philosophy: low memory, modular, and well-documented.
+
+### Top Contributors
+- [Roshan](https://github.com/roshan30-git) — Core Architect
+- [Community Contributor] — Bug fixes & UI Polish
 
 ---
 

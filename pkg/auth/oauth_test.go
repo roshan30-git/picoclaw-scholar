@@ -223,9 +223,9 @@ func TestExchangeCodeForTokens(t *testing.T) {
 		Port:     1455,
 	}
 
-	cred, err := exchangeCodeForTokens(cfg, "test-code", "test-verifier", "http://localhost:1455/auth/callback")
+	cred, err := ExchangeCodeForTokens(cfg, "test-code", "test-verifier", "http://localhost:1455/auth/callback")
 	if err != nil {
-		t.Fatalf("exchangeCodeForTokens() error: %v", err)
+		t.Fatalf("ExchangeCodeForTokens() error: %v", err)
 	}
 
 	if cred.AccessToken != "mock-access-token" {
@@ -330,11 +330,8 @@ func TestRefreshAccessTokenPreservesRefreshAndAccountID(t *testing.T) {
 }
 
 func TestOpenAIOAuthConfig(t *testing.T) {
-	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
-	cfg, err := OpenAIOAuthConfig()
-	if err != nil {
-		t.Fatalf("OpenAIOAuthConfig() error: %v", err)
-	}
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-openai-client-id")
+	cfg := OpenAIOAuthConfig()
 	if cfg.Issuer != "https://auth.openai.com" {
 		t.Errorf("Issuer = %q, want %q", cfg.Issuer, "https://auth.openai.com")
 	}

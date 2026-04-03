@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 )
 
 type PYQScraper struct {
@@ -19,8 +20,8 @@ func NewPYQScraper(db *database.DB) *PYQScraper {
 // ScrapePastPapers simulates scraping of a university website or GitHub archive for past year questions.
 func (p *PYQScraper) ScrapePastPapers(ctx context.Context, subject string) error {
 	// For MVP: Simulator since we don't have the actual GTU HTML structure to parse via goquery.
-	
-	fmt.Printf("[PYQ Scraper] Scraping archives for %s...\n", subject)
+
+	logger.InfoCF("pyq_scraper", "Scraping archives", map[string]any{"subject": subject})
 	time.Sleep(2 * time.Second) // Simulate network delay
 	
 	// Simulated scraped questions
@@ -32,12 +33,10 @@ func (p *PYQScraper) ScrapePastPapers(ctx context.Context, subject string) error
 		fmt.Sprintf("Calculate the efficiency of a standard %s circuit.", subject),
 	}
 
-	for _, q := range mockQuestions {
-		// Mock inserting into the database pyq_bank table
-		// p.db.Conn().Exec("INSERT INTO pyq_bank (subject, question_text, year) VALUES (?, ?, ?)", subject, q, 2023)
-		_ = q
+	if err := p.db.SavePYQs(subject, mockQuestions, 2023); err != nil {
+		return fmt.Errorf("failed to save pyqs: %w", err)
 	}
-	
-	fmt.Println("[PYQ Scraper] Successfully scraped and indexed 5 past year questions.")
+
+	logger.InfoC("pyq_scraper", "Successfully scraped and indexed 5 past year questions.")
 	return nil
 }
