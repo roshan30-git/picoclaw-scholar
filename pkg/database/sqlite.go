@@ -97,8 +97,26 @@ func (db *DB) SaveEmbedding(noteID int64, vector []float64) error {
 }
 
 func (db *DB) GetNotesForTopic(topic string) ([]string, error) {
-	query := "%" + topic + "%"
-	rows, err := db.conn.Query(`SELECT content FROM notes WHERE topic LIKE ? OR content LIKE ? LIMIT 10`, query, query)
+	keywords := strings.Fields(topic)
+	if len(keywords) == 0 {
+		return nil, nil
+	}
+
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT content FROM notes WHERE ")
+
+	args := make([]interface{}, 0, len(keywords)*2)
+	for i, kw := range keywords {
+		if i > 0 {
+			queryBuilder.WriteString(" OR ")
+		}
+		queryBuilder.WriteString("(topic LIKE ? OR content LIKE ?)")
+		pattern := "%" + kw + "%"
+		args = append(args, pattern, pattern)
+	}
+	queryBuilder.WriteString(" LIMIT 10")
+
+	rows, err := db.conn.Query(queryBuilder.String(), args...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +125,9 @@ func (db *DB) GetNotesForTopic(topic string) ([]string, error) {
 	var results []string
 	for rows.Next() {
 		var c string
-		rows.Scan(&c)
+		if err := rows.Scan(&c); err != nil {
+			return nil, err
+		}
 		results = append(results, c)
 	}
 	return results, nil
