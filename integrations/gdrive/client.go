@@ -5,14 +5,13 @@ package gdrive
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/roshan30-git/picoclaw-scholar/pkg/auth"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
 )
@@ -20,42 +19,44 @@ import (
 const (
 	// StudyClawFolderName is the root Drive folder StudyClaw will use.
 	StudyClawFolderName = "StudyClaw Books"
-	// CredentialsFile is the path to the Google OAuth2 credentials JSON.
-	CredentialsFile = "~/.studyclaw/google_credentials.json"
-	// TokenFile stores the OAuth2 token after first login.
-	TokenFile = "~/.studyclaw/google_token.json"
 )
 
 // Client wraps the Google Drive service.
 type Client struct {
-	svc      *drive.Service
-	rootID   string // ID of the StudyClaw Books folder
+	svc    *drive.Service
+	rootID string // ID of the StudyClaw Books folder
 }
 
-// New authenticates and returns a new Google Drive client.
-// On first run, it opens a browser for OAuth2 consent.
+// New authenticates and returns a new Google Drive client using the centralized auth store.
 func New(ctx context.Context) (*Client, error) {
-	credBytes, err := os.ReadFile(expandHome(CredentialsFile))
-	if err != nil {
-		return nil, fmt.Errorf("read credentials: %w (see README for setup)", err)
+	// Import the private auth package
+	// We use strings for path because it's a separate package
+	cred, err := auth.GetCredential("google-antigravity")
+	if err != nil || cred == nil {
+		return nil, fmt.Errorf("google drive not connected. please run setup and connect google accounts")
 	}
 
-	config, err := google.ConfigFromJSON(credBytes, drive.DriveFileScope)
-	if err != nil {
-		return nil, fmt.Errorf("parse credentials: %w", err)
+	authCfg := auth.GoogleAntigravityOAuthConfig()
+	config := &oauth2.Config{
+		ClientID:     authCfg.ClientID,
+		ClientSecret: authCfg.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  authCfg.Issuer + "/auth",
+			TokenURL: authCfg.TokenURL,
+		},
+		Scopes: []string{drive.DriveFileScope},
 	}
 
-	token, err := loadToken(expandHome(TokenFile))
-	if err != nil {
-		// First run: generate token via browser
-		token, err = getTokenFromWeb(config)
-		if err != nil {
-			return nil, err
-		}
-		saveToken(expandHome(TokenFile), token)
+	token := &oauth2.Token{
+		AccessToken:  cred.AccessToken,
+		RefreshToken: cred.RefreshToken,
+		Expiry:       cred.ExpiresAt,
 	}
 
+	// TokenSource handles auto-refresh if config and refresh token are provided
 	ts := config.TokenSource(ctx, token)
+
+	// Create service
 	svc, err := drive.NewService(ctx, option.WithTokenSource(ts))
 	if err != nil {
 		return nil, fmt.Errorf("drive service: %w", err)
@@ -162,43 +163,4 @@ func (c *Client) ensureFolder(ctx context.Context, name string) (string, error) 
 		return "", fmt.Errorf("create folder: %w", err)
 	}
 	return folder.Id, nil
-}
-
-func loadToken(path string) (*oauth2.Token, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	token := &oauth2.Token{}
-	if err := json.NewDecoder(f).Decode(token); err != nil {
-		return nil, err
-	}
-	return token, nil
-}
-
-func saveToken(path string, token *oauth2.Token) {
-	f, err := os.Create(path)
-	if err != nil {
-		fmt.Printf("Warning: Unable to cache oauth token: %v\n", err)
-		return
-	}
-	defer f.Close()
-	json.NewEncoder(f).Encode(token)
-}
-
-func getTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("📂 Open this URL in your browser to link Google Drive:\n%s\n\nPaste the code here: ", authURL)
-	var code string
-	fmt.Scan(&code)
-	return config.Exchange(context.Background(), code)
-}
-
-func expandHome(path string) string {
-	home, _ := os.UserHomeDir()
-	if len(path) > 1 && path[:2] == "~/" {
-		return filepath.Join(home, path[2:])
-	}
-	return path
 }

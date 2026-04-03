@@ -2,25 +2,26 @@ package setup
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/auth"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/drive/v3"
 )
 
 var (
-	oauthConfig *oauth2.Config
-	oauthState  = "studyclaw-setup-state"
-	envData     map[string]string
+	oauthState      = "studyclaw-setup-state"
+	pendingVerifier string
+	envData         map[string]string
 )
 
 const setupHTML = `
@@ -29,51 +30,195 @@ const setupHTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyClaw Setup</title>
+    <title>StudyClaw | Premium Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
-        h1 { margin-top: 0; color: #333; text-align: center; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; resize: vertical; min-height: 80px; }
-        .hint { font-size: 12px; color: #888; margin-top: 4px; }
-        button { width: 100%; padding: 12px; background: #FF69B4; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #E05CA0; }
-        .optional { color: #888; font-weight: normal; font-size: 13px; }
+        :root {
+            --primary: #FF69B4;
+            --secondary: #7000FF;
+            --bg: #0a0a14;
+        }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(112, 0, 255, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(255, 105, 180, 0.15) 0px, transparent 50%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container {
+            width: 100%;
+            max-width: 550px;
+            padding: 20px;
+            z-index: 1;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .logo {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            margin: 0 0 30px 0;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(255, 105, 180, 0.1);
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .connect-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .btn-google {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .btn-google:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        .btn-chatgpt {
+            background: linear-gradient(135deg, var(--secondary), #4a00ff);
+            color: white;
+            box-shadow: 0 10px 20px -5px rgba(112, 0, 255, 0.3);
+        }
+        .btn-chatgpt:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(112, 0, 255, 0.4);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), #ff1493);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px -5px rgba(255, 105, 180, 0.3);
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(255, 105, 180, 0.4);
+        }
+        .hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 6px;
+        }
+        .icon { width: 20px; height: 20px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>🦞 StudyClaw Setup</h1>
-        <form action="/save" method="POST">
-            <div class="form-group">
-                <label>Telegram Bot Token</label>
-                <input type="text" name="TELEGRAM_BOT_TOKEN" placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ" required>
-                <div class="hint">Get this from @BotFather on Telegram.</div>
+    <div class="container">
+        <div class="glass-card">
+            <div class="logo">🦞</div>
+            <h1>StudyClaw Setup</h1>
+            
+            <div class="section-title">Step 1: Connect Accounts</div>
+            <div class="btn-grid">
+                <a href="/auth/google" class="connect-btn btn-google">
+                    <img src="https://www.google.com/favicon.ico" class="icon" alt="">
+                    Google Drive
+                </a>
+                <a href="/auth/chatgpt" class="connect-btn btn-chatgpt">
+                    <span>✨</span>
+                    ChatGPT Pro
+                </a>
             </div>
-            <div class="form-group">
-                <label>Your Phone Number</label>
-                <input type="text" name="STUDYCLAW_OWNER_NUMBER" placeholder="e.g. 14155552671" required>
-                <div class="hint">With country code. Used for admin commands.</div>
-            </div>
-            <div class="form-group">
-                <label>Gemini API Key</label>
-                <input type="password" name="GEMINI_API_KEY" placeholder="AIzaSy...">
-                <div class="hint">Get a free key from Google AI Studio.</div>
-            </div>
-            <div class="form-group">
-                <label>OpenAI API Key <span class="optional">(Optional)</span></label>
-                <input type="password" name="OPENAI_API_KEY" placeholder="sk-...">
-            </div>
-            <div class="form-group">
-                <label>Google Drive/Classroom Credentials JSON <span class="optional">(Optional)</span></label>
-                <textarea name="GOOGLE_CREDENTIALS" placeholder="{&quot;installed&quot;:{...}}"></textarea>
-                <div class="hint">Paste your Google Cloud OAuth 2.0 Client ID JSON here to enable GDrive integration. If provided, you will be redirected to log in with Google.</div>
-            </div>
-            <button type="submit">Complete Setup</button>
-        </form>
+
+            <div class="section-title">Step 2: Configuration</div>
+            <form action="/save" method="POST">
+                <div class="form-group">
+                    <label>Telegram Bot Token</label>
+                    <input type="text" name="TELEGRAM_BOT_TOKEN" placeholder="123456789:ABC..." required>
+                    <div class="hint">Get from @BotFather</div>
+                </div>
+                <div class="form-group">
+                    <label>Admin Phone Number</label>
+                    <input type="text" name="STUDYCLAW_OWNER_NUMBER" placeholder="e.g. 919832XXXXXX" required>
+                    <div class="hint">With country code, no "+"</div>
+                </div>
+                <div class="form-group">
+                    <label>Gemini API Key (Optional)</label>
+                    <input type="password" name="GEMINI_API_KEY" placeholder="AIzaSy...">
+                    <div class="hint">For fallback or direct vision features</div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Complete Setup & Launch 🚀</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>
@@ -84,12 +229,18 @@ const successHTML = `
 <html>
 <head>
     <meta charset="UTF-8"><title>Setup Complete</title>
-    <style>body { font-family: sans-serif; text-align: center; padding: 50px; }</style>
+    <style>
+        body { font-family: 'Inter', sans-serif; text-align: center; padding: 100px; background: #0a0a14; color: white; }
+        .success-logo { font-size: 80px; margin-bottom: 20px; }
+        h1 { font-size: 40px; margin-bottom: 10px; }
+        p { color: rgba(255,255,255,0.6); font-size: 18px; }
+    </style>
 </head>
 <body>
-    <h1>✅ Setup Complete!</h1>
-    <p>You can close this tab and return to the terminal.</p>
-    <p>StudyClaw will now continue launching.</p>
+    <div class="success-logo">✅</div>
+    <h1>Setup Complete!</h1>
+    <p>StudyClaw is now fully configured and launching.</p>
+    <p>You can close this tab and return to your terminal.</p>
 </body>
 </html>
 `
@@ -109,25 +260,15 @@ func writeEnv(env map[string]string) error {
 	return nil
 }
 
-func saveGoogleCredentials(jsonContent string) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
-	dir := filepath.Join(home, ".studyclaw")
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
-	}
-	path := filepath.Join(dir, "google_credentials.json")
-	return os.WriteFile(path, []byte(jsonContent), 0644)
-}
-
 func saveGoogleToken(token *oauth2.Token) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
 	path := filepath.Join(home, ".studyclaw", "google_token.json")
+	dir := filepath.Dir(path)
+	_ = os.MkdirAll(dir, 0755)
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -136,24 +277,31 @@ func saveGoogleToken(token *oauth2.Token) error {
 	return json.NewEncoder(f).Encode(token)
 }
 
+func generateState() (string, error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(buf), nil
+}
+
 // RunServerIfConfigMissing checks if critical config is missing.
 // If it is, it starts a blocking web server on port 8080 until setup is complete.
 func RunServerIfConfigMissing() {
 	_ = godotenv.Load()
 
-	gemini := os.Getenv("GEMINI_API_KEY")
-	openai := os.Getenv("OPENAI_API_KEY")
 	tg := os.Getenv("TELEGRAM_BOT_TOKEN")
+	owner := os.Getenv("STUDYCLAW_OWNER_NUMBER")
 
-	if (gemini != "" || openai != "") && tg != "" {
+	if tg != "" && owner != "" {
 		return // Initialized
 	}
 
-	fmt.Println("======================================================")
-	fmt.Println("🚀 Initial Setup Required!")
-	fmt.Println("Please open your browser and visit:")
-	fmt.Println("👉 http://localhost:8080/setup")
-	fmt.Println("======================================================")
+	logger.InfoC("setup", "======================================================")
+	logger.InfoC("setup", "🚀 StudyClaw: Initial Setup Required!")
+	logger.InfoC("setup", "Please open your browser and visit:")
+	logger.InfoC("setup", "👉 http://localhost:8080/setup")
+	logger.InfoC("setup", "======================================================")
 
 	mux := http.NewServeMux()
 	server := &http.Server{Addr: ":8080", Handler: mux}
@@ -163,6 +311,85 @@ func RunServerIfConfigMissing() {
 	mux.HandleFunc("/setup", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(setupHTML))
+	})
+
+	mux.HandleFunc("/auth/google", func(w http.ResponseWriter, r *http.Request) {
+		cfg := auth.GoogleAntigravityOAuthConfig()
+		pkce, _ := auth.GeneratePKCE()
+		state, _ := generateState()
+
+		redirectURI := "http://localhost:8080/auth/google/callback"
+		authURL := auth.BuildAuthorizeURL(cfg, pkce, state, redirectURI)
+
+		oauthState = state
+		pendingVerifier = pkce.CodeVerifier
+
+		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
+	})
+
+	mux.HandleFunc("/auth/chatgpt", func(w http.ResponseWriter, r *http.Request) {
+		cfg := auth.OpenAIOAuthConfig()
+		pkce, _ := auth.GeneratePKCE()
+		state, _ := generateState()
+
+		redirectURI := "http://localhost:8080/auth/chatgpt/callback"
+		authURL := auth.BuildAuthorizeURL(cfg, pkce, state, redirectURI)
+
+		oauthState = state
+		pendingVerifier = pkce.CodeVerifier
+
+		http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
+	})
+
+	mux.HandleFunc("/auth/google/callback", func(w http.ResponseWriter, r *http.Request) {
+		state := r.FormValue("state")
+		if state != oauthState {
+			http.Error(w, "State mismatch", http.StatusBadRequest)
+			return
+		}
+
+		code := r.FormValue("code")
+		cfg := auth.GoogleAntigravityOAuthConfig()
+		redirectURI := "http://localhost:8080/auth/google/callback"
+
+		cred, err := auth.ExchangeCodeForTokens(cfg, code, pendingVerifier, redirectURI)
+		if err != nil {
+			http.Error(w, "Auth failed: "+err.Error(), 500)
+			return
+		}
+
+		_ = auth.SetCredential("google-antigravity", cred)
+
+		token := &oauth2.Token{
+			AccessToken:  cred.AccessToken,
+			RefreshToken: cred.RefreshToken,
+			Expiry:       cred.ExpiresAt,
+			TokenType:    "Bearer",
+		}
+		_ = saveGoogleToken(token)
+
+		http.Redirect(w, r, "/setup", http.StatusSeeOther)
+	})
+
+	mux.HandleFunc("/auth/chatgpt/callback", func(w http.ResponseWriter, r *http.Request) {
+		state := r.FormValue("state")
+		if state != oauthState {
+			http.Error(w, "State mismatch", http.StatusBadRequest)
+			return
+		}
+
+		code := r.FormValue("code")
+		cfg := auth.OpenAIOAuthConfig()
+		redirectURI := "http://localhost:8080/auth/chatgpt/callback"
+
+		cred, err := auth.ExchangeCodeForTokens(cfg, code, pendingVerifier, redirectURI)
+		if err != nil {
+			http.Error(w, "Auth failed: "+err.Error(), 500)
+			return
+		}
+
+		_ = auth.SetCredential("openai", cred)
+		http.Redirect(w, r, "/setup", http.StatusSeeOther)
 	})
 
 	mux.HandleFunc("/save", func(w http.ResponseWriter, r *http.Request) {
@@ -175,30 +402,11 @@ func RunServerIfConfigMissing() {
 			"TELEGRAM_BOT_TOKEN":     r.FormValue("TELEGRAM_BOT_TOKEN"),
 			"STUDYCLAW_OWNER_NUMBER": r.FormValue("STUDYCLAW_OWNER_NUMBER"),
 			"GEMINI_API_KEY":         r.FormValue("GEMINI_API_KEY"),
-			"OPENAI_API_KEY":         r.FormValue("OPENAI_API_KEY"),
 		}
 
-		googleCreds := strings.TrimSpace(r.FormValue("GOOGLE_CREDENTIALS"))
-		if googleCreds != "" {
-			if err := saveGoogleCredentials(googleCreds); err != nil {
-				http.Error(w, "Failed to save Google credentials: "+err.Error(), 500)
-				return
-			}
-
-			// Enable GDrive implicitly
+		cred, _ := auth.GetCredential("google-antigravity")
+		if cred != nil {
 			envData["STUDYCLAW_ENABLE_GDRIVE"] = "true"
-
-			cfg, err := google.ConfigFromJSON([]byte(googleCreds), drive.DriveFileScope)
-			if err != nil {
-				http.Error(w, "Invalid Google JSON: "+err.Error(), 400)
-				return
-			}
-			cfg.RedirectURL = "http://localhost:8080/auth/google/callback"
-			oauthConfig = cfg
-
-			authURL := oauthConfig.AuthCodeURL(oauthState, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
-			http.Redirect(w, r, authURL, http.StatusTemporaryRedirect)
-			return
 		}
 
 		if err := writeEnv(envData); err != nil {
@@ -208,45 +416,6 @@ func RunServerIfConfigMissing() {
 
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(successHTML))
-		go func() {
-			time.Sleep(1 * time.Second)
-			server.Shutdown(context.Background())
-			done <- true
-		}()
-	})
-
-	mux.HandleFunc("/auth/google/callback", func(w http.ResponseWriter, r *http.Request) {
-		state := r.FormValue("state")
-		if state != oauthState {
-			http.Error(w, "Invalid OAuth state", http.StatusBadRequest)
-			return
-		}
-
-		code := r.FormValue("code")
-		if code == "" {
-			http.Error(w, "Code not found", http.StatusBadRequest)
-			return
-		}
-
-		token, err := oauthConfig.Exchange(context.Background(), code)
-		if err != nil {
-			http.Error(w, "Token exchange failed: "+err.Error(), 500)
-			return
-		}
-
-		if err := saveGoogleToken(token); err != nil {
-			http.Error(w, "Failed to save token: "+err.Error(), 500)
-			return
-		}
-
-		if err := writeEnv(envData); err != nil {
-			http.Error(w, "Failed to write .env", 500)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(successHTML))
-
 		go func() {
 			time.Sleep(1 * time.Second)
 			server.Shutdown(context.Background())
@@ -261,6 +430,6 @@ func RunServerIfConfigMissing() {
 	}()
 
 	<-done
-	fmt.Println("✅ Setup completed. Resuming startup...")
-	_ = godotenv.Load() // Reload the newly created .env variables into the current process
+	logger.InfoC("setup", "✅ Setup completed. Resuming startup...")
+	_ = godotenv.Load()
 }
