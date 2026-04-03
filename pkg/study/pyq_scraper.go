@@ -33,10 +33,8 @@ func (p *PYQScraper) ScrapePastPapers(ctx context.Context, subject string) error
 		fmt.Sprintf("Calculate the efficiency of a standard %s circuit.", subject),
 	}
 
-	for _, q := range mockQuestions {
-		// Mock inserting into the database pyq_bank table
-		// p.db.Conn().Exec("INSERT INTO pyq_bank (subject, question_text, year) VALUES (?, ?, ?)", subject, q, 2023)
-		_ = q
+	if err := p.db.SavePYQs(subject, mockQuestions, 2023); err != nil {
+		return fmt.Errorf("failed to save pyqs: %w", err)
 	}
 
 	logger.InfoC("pyq_scraper", "Successfully scraped and indexed 5 past year questions.")
