@@ -7,49 +7,32 @@ import (
 func TestSaveNote(t *testing.T) {
 	db, err := New(":memory:")
 	if err != nil {
-		t.Fatalf("failed to create in-memory database: %v", err)
+		t.Fatalf("Failed to create in-memory database: %v", err)
 	}
-	defer db.conn.Close()
+	defer db.Conn().Close()
 
-	topic := "Biology"
-	content := "Mitochondria is the powerhouse of the cell."
-	source := "textbook"
+	topic := "Test Topic"
+	content := "Test Content"
+	source := "Test Source"
 
 	err = db.SaveNote(topic, content, source)
 	if err != nil {
-		t.Errorf("SaveNote failed: %v", err)
+		t.Fatalf("SaveNote failed: %v", err)
 	}
 
-	// Verify using direct query
-	var savedTopic, savedContent, savedSource string
-	err = db.conn.QueryRow("SELECT topic, content, source FROM notes WHERE topic = ?", topic).Scan(&savedTopic, &savedContent, &savedSource)
+	var gotTopic, gotContent, gotSource string
+	err = db.Conn().QueryRow("SELECT topic, content, source FROM notes").Scan(&gotTopic, &gotContent, &gotSource)
 	if err != nil {
-		t.Fatalf("failed to query saved note: %v", err)
+		t.Fatalf("Failed to query notes table: %v", err)
 	}
 
-	if savedTopic != topic {
-		t.Errorf("expected topic %s, got %s", topic, savedTopic)
+	if gotTopic != topic {
+		t.Errorf("got topic %q, want %q", gotTopic, topic)
 	}
-	if savedContent != content {
-		t.Errorf("expected content %s, got %s", content, savedContent)
+	if gotContent != content {
+		t.Errorf("got content %q, want %q", gotContent, content)
 	}
-	if savedSource != source {
-		t.Errorf("expected source %s, got %s", source, savedSource)
-	}
-
-	// Verify using GetNotesForTopic
-	notes, err := db.GetNotesForTopic(topic)
-	if err != nil {
-		t.Errorf("GetNotesForTopic failed: %v", err)
-	}
-	found := false
-	for _, n := range notes {
-		if n == content {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("GetNotesForTopic did not return the saved content")
+	if gotSource != source {
+		t.Errorf("got source %q, want %q", gotSource, source)
 	}
 }

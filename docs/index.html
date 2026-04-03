@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>StudyClaw - Glass &amp; Oxide Edition</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#FF4B3E", // Red-Orange Oxide
+                        "primary-hover": "#E03E32",
+                        "accent-teal": "#2DD4BF", // Teal for blobs
+                        "accent-amber": "#F59E0B", // Amber for blobs
+                        "glass-surface": "rgba(255, 255, 255, 0.03)",
+                        "glass-border": "rgba(255, 255, 255, 0.08)",
+                        "glass-highlight": "rgba(255, 255, 255, 0.1)",
+                        "background-dark": "#0B1120", // Deep Navy Gray
+                        "text-main": "#F8FAFC", // Slate 50
+                        "text-muted": "#94A3B8", // Slate 400
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    borderRadius: {
+                        DEFAULT: "8px",
+                        'sm': '6px',
+                        'md': '10px',
+                        'lg': '16px',
+                        'xl': '24px',
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    },
+                    boxShadow: {
+                        'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+                        'glow-primary': '0 0 20px rgba(255, 75, 62, 0.15)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            background-color: #0B1120;
+            color: #F8FAFC;
+        }
+
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .glass-container {
+            background: rgba(17, 25, 40, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 75, 62, 0.3);
+            box-shadow: 0 0 20px rgba(255, 75, 62, 0.1);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .code-block {
+            counter-reset: line;
+        }
+
+        .code-line::before {
+            counter-increment: line;
+            content: counter(line);
+            display: inline-block;
+            width: 2em;
+            margin-right: 1.5em;
+            color: #475569;
+            text-align: right;
+            font-size: 0.75em;
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0.6;
+        }
+
+        .token-cmd {
+            color: #818cf8;
+        }
+
+        .token-arg {
+            color: #f97316;
+        }
+
+        .token-str {
+            color: #a5b4fc;
+        }
+
+        .token-comment {
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body
+    class="antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white overflow-x-hidden relative">
+    <div class="blob bg-accent-teal w-[600px] h-[600px] rounded-full top-[-100px] left-[-200px]"></div>
+    <div class="blob bg-accent-amber w-[500px] h-[500px] rounded-full bottom-[10%] right-[-100px] opacity-20"></div>
+    <div class="blob bg-indigo-900 w-[800px] h-[800px] rounded-full top-[30%] left-[20%] opacity-20"></div>
+    <div
+        class="w-full max-w-[1400px] mx-auto my-0 lg:my-8 glass-container rounded-none lg:rounded-3xl overflow-hidden min-h-screen relative z-10 w-full overflow-x-hidden">
+        <nav class="border-b border-glass-border sticky top-0 z-50 backdrop-blur-xl bg-[#0B1120]/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-20 items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-3xl font-light">terminal</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-lg tracking-tight leading-none text-white">StudyClaw</span>
+                            <span class="text-[10px] font-mono text-slate-400 tracking-wide uppercase">Oxide Build
+                                v2.1 - Tele Update</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:flex items-center space-x-10">
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#installation">Documentation</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#blog">Blog</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="#errors">Common Errors</a>
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                            href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank">GitHub</a>
+                    </div>
+                    <div class="flex items-center space-x-5">
+                        <a class="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:border-slate-600 transition-all focus:outline-none shadow-lg shadow-black/20"
+                            href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank">
+                            <span>View Source</span>
+                            <span
+                                class="material-symbols-outlined text-sm ml-2 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all">chevron_right</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <section class="relative pt-24 pb-32 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid lg:grid-cols-2 gap-16 items-center">
+                    <div class="space-y-8">
+                        <div
+                            class="inline-flex items-center space-x-2 border border-primary/30 rounded-full bg-primary/10 px-4 py-1.5 shadow-sm backdrop-blur-sm">
+                            <span class="relative flex h-2 w-2">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                            </span>
+                            <span class="text-xs font-mono font-medium text-primary tracking-wide">GEMINI_2.0_FLASH
+                                INTEGRATION</span>
+                        </div>
+                        <h1
+                            class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] text-white break-words">
+                            AI-Native Study <br />
+                            <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-500">Infrastructure</span>
+                            <br />
+                            for Engineering.
+                        </h1>
+                        <p class="text-lg text-slate-400 max-w-lg leading-relaxed font-light">
+                            Direct Gemini AI integration for your syllabus. No new GUI to learn—just a powerful WhatsApp
+                            or Telegram bot for academic mastery directly in your workflow.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                            <a class="flex items-center justify-center px-8 py-3.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 transform hover:-translate-y-0.5"
+                                href="#installation">
+                                <span class="material-symbols-outlined mr-2 text-lg">bolt</span>
+                                Initialize Instance
+                            </a>
+                            <div
+                                class="flex items-center justify-between px-4 sm:px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-xs sm:text-sm w-full max-w-full shadow-sm cursor-text hover:border-slate-500 transition-colors group overflow-hidden">
+                                <span class="mr-4 text-primary select-none">$</span>
+                                <span class="flex-grow truncate mr-2">git clone
+                                    https://github.com/roshan30-git/picoclaw-scholar.git</span>
+                                <span
+                                    class="material-symbols-outlined text-slate-600 text-sm ml-2 group-hover:text-slate-400 cursor-pointer shrink-0">content_copy</span>
+                            </div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-8 text-xs font-medium text-slate-500 font-mono pt-6 border-t border-slate-800 mt-4">
+                            <span class="flex items-center gap-1.5"><span
+                                    class="material-symbols-outlined text-base text-primary">check_circle</span> Open
+                                Source</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="material-symbols-outlined text-base text-primary">lock</span> E2E
+                                Encrypted</span>
+                            <span class="flex items-center gap-1.5"><span
+                                    class="material-symbols-outlined text-base text-primary">speed</span> &lt;50ms
+                                Latency</span>
+                        </div>
+                    </div>
+                    <div class="relative w-full">
+                        <div
+                            class="absolute -inset-1 bg-gradient-to-tr from-primary/20 to-indigo-500/20 rounded-xl blur-xl opacity-50">
+                        </div>
+                        <div
+                            class="relative bg-[#0f172a]/90 backdrop-blur-md rounded-xl border border-slate-700/50 shadow-2xl overflow-hidden font-mono text-sm leading-6 ring-1 ring-white/10">
+                            <div
+                                class="bg-[#1e293b]/50 px-4 py-3 flex items-center justify-between border-b border-slate-700/50">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-[#ef4444] border border-red-900/50"></div>
+                                    <div class="w-3 h-3 rounded-full bg-[#f59e0b] border border-yellow-900/50"></div>
+                                    <div class="w-3 h-3 rounded-full bg-[#10b981] border border-green-900/50"></div>
+                                </div>
+                                <div class="text-slate-500 text-xs font-medium tracking-wide">user@studyclaw:
+                                    ~/picoclaw-scholar</div>
+                            </div>
+                            <div class="flex text-slate-600 gap-2">
+                                <span class="material-symbols-outlined text-xs shrink-0">settings</span>
+                            </div>
+                        </div>
+                        <div
+                            class="p-4 md:p-6 text-slate-300 space-y-2 h-[420px] overflow-auto overflow-x-auto code-block bg-[#0f172a]/80">
+                            <div class="code-line">
+                                <span class="token-cmd">git clone</span> <span
+                                    class="text-slate-400">https://github.com/roshan30-git/picoclaw-scholar.git</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="token-cmd">cd</span> <span class="text-slate-400">picoclaw-scholar</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="token-cmd">go mod</span> <span class="text-slate-400">tidy</span>
+                            </div>
+                            <div class="code-line text-slate-500 italic">Downloading dependencies...
+                                [====================] 100%</div>
+                            <div class="code-line text-primary">✓ Dependencies resolved.</div>
+                            <div class="code-line"><br /></div>
+                            <div class="code-line">
+                                <span class="token-cmd">go run</span> <span class="text-slate-400">cmd/main.go</span>
+                            </div>
+                            <div class="code-line">
+                                <span class="text-indigo-400">@Gemini_Pro:</span> System initialized. WhatsApp bridge
+                                active.
+                            </div>
+                            <div class="code-line">
+                                <span class="text-slate-400">➜</span> <span class="animate-pulse text-primary">_</span>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-[#1e293b]/50 px-4 py-1.5 flex justify-between border-t border-slate-700/50 text-[10px] text-slate-500 uppercase tracking-wider font-medium">
+                            <div class="flex gap-3">
+                                <span>Ready</span>
+                                <span>UTF-8</span>
+                            </div>
+                            <span>Ln 24, Col 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-16 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-12">
+                <div class="text-left md:w-1/3">
+                    <p class="text-xs font-bold font-mono text-primary tracking-wider uppercase mb-3">Powered By</p>
+                    <div class="flex items-center gap-4">
+                        <span class="material-symbols-outlined text-4xl text-slate-400">psychology</span>
+                        <div class="flex flex-col">
+                            <span class="text-xl font-bold text-white">Gemini 2.0 Flash</span>
+                            <span class="text-sm text-slate-500">Free & Open Source</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-16 w-px bg-slate-700 hidden md:block"></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 sm:gap-x-8 md:gap-x-12 gap-y-8 md:w-2/3">
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">99.9%</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Uptime</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">&lt;50ms</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Latency</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">~30MB</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">RAM</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold font-mono text-white tracking-tighter">AES-256</div>
+                        <div class="text-xs text-slate-500 uppercase font-medium tracking-wider mt-1">Security</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="mb-16 md:flex md:justify-between md:items-end">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Core Modules</h2>
+                    <p class="text-slate-400 max-w-2xl text-lg font-light">Essential components for your academic stack.
+                        Built for performance, reliability, and developer experience.</p>
+                </div>
+
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">route</span>
+                        </div>
+                        <span
+                            class="font-mono text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20">CORE</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Smart Message Routing</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                        Intelligent handling: short messages are silently indexed, while long texts are AI-summarized
+                        into concise bullets.
+                    </p>
+                </div>
+                <!-- Card 2 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">travel_explore</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Real-time Web Search</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Instant internet lookups via DuckDuckGo without any API keys. Automated access to current events
+                        and fresh data.
+                    </p>
+                </div>
+                <!-- Card 3 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">picture_as_pdf</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">PDF & Image Ingestion</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Drop curriculum files directly in WhatsApp or Telegram. Fully indexed for instant retrieval and
+                        RAG search.
+                    </p>
+                </div>
+                <!-- Card 4 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">quiz</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Adaptive Quizzes</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Generates MCQs from your own notes, adapting dynamically to your weak topics based on historical
+                        quiz performance.
+                    </p>
+                </div>
+                <!-- Card 5 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">table_view</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Excel Export</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Need structured data? Request your tracked deadlines or quiz history to be exported seamlessly
+                        as .xlsx files.
+                    </p>
+                </div>
+                <!-- Card 6 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">account_tree</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Diagrams & Circuits</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Render complex flowcharts, ER diagrams, mindmaps, and electrical circuit schematics viewable in
+                        the local web server.
+                    </p>
+                </div>
+                <!-- Card 7 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">memory</span>
+                        </div>
+                        <span
+                            class="font-mono text-[10px] bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">NEW</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Dynamic Student Memory</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        A persistent AI profile tracking your pacing, weak points, and study style, injecting deep
+                        personalization into every reply.
+                    </p>
+                </div>
+                <!-- Card 8 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">calendar_today</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Proactive Reminders</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Automated cron scheduler firing off 8 AM deadline briefings and Sunday morning flashcard
+                        generation.
+                    </p>
+                </div>
+                <!-- Card 9 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">lock</span>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Passive Group Privacy</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Read-only college group monitoring. The agent indexes information silently and sends responses
+                        privately to the owner.
+                    </p>
+                </div>
+                <!-- Card 10 -->
+                <div class="glass-card p-8 rounded-xl group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div
+                            class="p-2 bg-slate-800/50 rounded-md border border-slate-700 group-hover:border-primary/50 transition-colors">
+                            <span class="material-symbols-outlined text-primary font-light">send</span>
+                        </div>
+                        <span
+                            class="font-mono text-[10px] bg-blueviolet/10 text-indigo-400 px-2 py-1 rounded border border-indigo-500/20">TELEGRAM</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-3">Native Telegram Bot</h3>
+                    <p class="text-sm text-slate-400 leading-relaxed">
+                        Full support for Telegram bots. Ultra-stable, high-performance channel for those who prefer an
+                        optimized messaging experience.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+    <section class="py-24 relative overflow-hidden" id="installation">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <span
+                    class="font-mono text-primary text-xs font-bold uppercase tracking-widest border border-primary/20 bg-primary/5 px-3 py-1 rounded-full">Zero-Setup
+                    Windows Installation</span>
+                <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">One-Command Launch (Windows)</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">StudyClaw is natively designed to be
+                    completely setup-free on Windows using its unified PowerShell orchestrator script. <strong>No C++
+                        compilers required.</strong></p>
+            </div>
+
+            <div class="max-w-4xl mx-auto space-y-12 mb-24">
+
+                <!-- Windows Step 1 -->
+                <div class="relative pl-8 md:pl-0 group">
+                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                            <div
+                                class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                                <span class="font-mono text-lg font-bold">01</span>
+                            </div>
+                        </div>
+                        <div
+                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                            <h3 class="text-xl font-bold text-white mb-2">Requirements</h3>
+                            <p class="text-slate-400 mb-4">Ensure you have the <a href="https://golang.org/dl/"
+                                    target="_blank" class="text-primary hover:underline">Go compiler</a> installed.
+                                Then, download or clone the repository into your desired working folder.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Windows Step 2 -->
+                <div class="relative pl-8 md:pl-0 group">
+                    <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                        <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                            <div
+                                class="w-12 h-12 bg-[#0B1120] border-2 border-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,75,62,0.3)] text-primary transition-all">
+                                <span class="font-mono text-lg font-bold">02</span>
+                            </div>
+                        </div>
+                        <div
+                            class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-primary/30 shadow-[0_4px_30px_rgba(255,75,62,0.05)] transition-all">
+                            <h3 class="text-xl font-bold text-white mb-2">Launch the Orchestrator</h3>
+                            <p class="text-slate-400 mb-4">Open PowerShell in the folder and execute the interactive
+                                launcher script. It will auto-resolve dependencies, configure your environment file
+                                interactively, and launch the engine directly.</p>
+                            <div class="text-primary truncate">> <span class="text-slate-300">.\run.ps1</span></div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-4 rounded-lg border border-accent-teal/20 mb-4">
+                            <span class="material-symbols-outlined text-xl">rocket_launch</span>
+                            <div>
+                                <p class="font-bold">Premium Frictionless Setup</p>
+                                <p class="text-xs opacity-80">Experience a high-end Glassmorphism UI with automated
+                                    OAuth. Connect Google (Drive/Classroom) and ChatGPT Pro with one click—no manual
+                                    JSON pasting required!</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-3 text-sm font-medium text-slate-400 p-3 rounded-lg border border-slate-800">
+                            <span class="material-symbols-outlined text-xl">check_circle</span>
+                            <span>Installation complete! Message the bot "Hi" on Telegram to begin.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-center mb-16 pt-16 border-t border-slate-800">
+            <span
+                class="font-mono text-slate-400 text-xs font-bold uppercase tracking-widest border border-slate-700/50 bg-slate-800/30 px-3 py-1 rounded-full">Termux
+                Installation Guide (Mobile)</span>
+            <h2 class="text-3xl font-bold text-white mt-6 tracking-tight">Step-by-Step Setup for Android</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto mt-4 text-lg font-light">Run the bot directly on your phone
+                using Termux. No server required. All you need is a free Gemini API key.</p>
+        </div>
+
+        <div class="max-w-4xl mx-auto space-y-12">
+
+            <!-- Step 1 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">01</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
+                            1</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Install Termux & Prerequisites</h3>
+                        <p class="text-slate-400 mb-4">Download <strong class="text-slate-300">Termux</strong> from
+                            F-Droid (do not use the Play Store version). Open it and run the following commands to
+                            install Go, Git, and Clang:</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
+                            <div class="text-slate-500 select-none mb-1"># Update packages and install prerequisites
+                            </div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">pkg update && pkg
+                                    upgrade -y</span></div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">pkg install golang git
+                                    clang make -y</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">02</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
+                            2</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Clone the Repository</h3>
+                        <p class="text-slate-400 mb-4">Download the StudyClaw base image and configure the workspace
+                            environment dependencies.</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
+                            <div class="text-primary truncate">$ <span class="text-slate-300">git clone
+                                    https://github.com/roshan30-git/picoclaw-scholar.git</span></div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">cd
+                                    picoclaw-scholar</span></div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">go mod tidy</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-slate-700 rounded-full flex items-center justify-center shadow-glass text-slate-400 group-hover:border-primary group-hover:text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">03</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 group-hover:border-slate-500 transition-all">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden">
+                            3</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Configure API Keys</h3>
+                        <p class="text-slate-400 mb-4">Get your free Gemini key at <a
+                                href="https://aistudio.google.com/app/apikey" target="_blank"
+                                class="text-primary hover:underline">Google AI Studio</a>. Set it as an environment
+                            variable in Termux.</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner">
+                            <div class="text-primary truncate">$ <span class="text-slate-300">export
+                                    GEMINI_API_KEY="AIzaSy..."</span></div>
+                            <div class="text-slate-500 select-none mt-2 mb-1"># Optional: Set your own number to
+                                access admin tools</div>
+                            <div class="text-primary truncate">$ <span class="text-slate-300">export
+                                    STUDYCLAW_OWNER_NUMBER="91XXXXXXXXXX"</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="relative pl-8 md:pl-0 group">
+                <div class="md:grid md:grid-cols-5 md:gap-8 items-start">
+                    <div class="hidden md:flex flex-col items-end col-span-1 pt-2">
+                        <div
+                            class="w-12 h-12 bg-[#0B1120] border-2 border-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,75,62,0.3)] text-primary transition-all">
+                            <span class="font-mono text-lg font-bold">04</span>
+                        </div>
+                    </div>
+                    <div
+                        class="col-span-4 relative glass-card p-6 md:p-8 rounded-xl border border-slate-700 border-primary/30 shadow-[0_4px_30px_rgba(255,75,62,0.05)]">
+                        <div
+                            class="absolute w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold font-mono text-white text-sm -left-4 top-6 md:hidden shadow-[0_0_10px_rgba(255,75,62,0.6)]">
+                            4</div>
+                        <h3 class="text-xl font-bold text-white mb-2">Launch and Link WhatsApp</h3>
+                        <p class="text-slate-400 mb-4">Run the bot! A QR code will display in the terminal. Open
+                            WhatsApp on your primary phone, go to <strong>Linked Devices</strong>, and scan it.</p>
+                        <div
+                            class="bg-black/60 border border-slate-800 rounded-lg p-4 font-mono text-sm overflow-x-auto text-slate-300 shadow-inner mb-6">
+                            <div class="text-primary truncate">$ <span class="text-slate-300">go run
+                                    cmd/main.go</span></div>
+                        </div>
+                        <div
+                            class="flex items-center space-x-3 text-sm font-medium text-accent-teal bg-accent-teal/10 p-3 rounded-lg border border-accent-teal/20">
+                            <span class="material-symbols-outlined text-xl">check_circle</span>
+                            <span>Installation complete! Message the bot "Hi" on WhatsApp to begin.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+    </section>
+
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+    <!-- Comparison Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-slate-800">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-white tracking-tight">How We Compare</h2>
+            <p class="text-slate-400 mt-4 text-lg font-light">Why students choose sovereign infrastructure over generic
+                AI chat.</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse glass-card rounded-xl overflow-hidden">
+                <thead>
+                    <tr class="bg-slate-800/50 border-b border-slate-700">
+                        <th class="p-6 text-sm font-bold text-white uppercase tracking-widest">Capability</th>
+                        <th class="p-6 text-sm font-bold text-primary uppercase tracking-widest">StudyClaw</th>
+                        <th class="p-6 text-sm font-bold text-slate-500 uppercase tracking-widest">Generic AI Bot</th>
+                    </tr>
+                </thead>
+                <tbody class="text-slate-300 divide-y divide-slate-800">
+                    <tr>
+                        <td class="p-6 font-medium">Privacy</td>
+                        <td class="p-6 text-accent-teal">100% Local Intelligence</td>
+                        <td class="p-6 text-slate-500">Cloud Logging</td>
+                    </tr>
+                    <tr>
+                        <td class="p-6 font-medium">Group Context</td>
+                        <td class="p-6 text-accent-teal">Proactive Monitoring</td>
+                        <td class="p-6 text-slate-500">Manual Copy-Paste</td>
+                    </tr>
+                    <tr>
+                        <td class="p-6 font-medium">Memory</td>
+                        <td class="p-6 text-accent-teal">Persistent Academic Profile</td>
+                        <td class="p-6 text-slate-500">Session-Only Context</td>
+                    </tr>
+                    <tr>
+                        <td class="p-6 font-medium">Diagrams</td>
+                        <td class="p-6 text-accent-teal">Native Circuit/Flowcharts</td>
+                        <td class="p-6 text-slate-500">Textual Description</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Roadmap Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 border-t border-slate-800">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-white tracking-tight">Engineering Roadmap</h2>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="p-8 glass-card rounded-xl border-l-4 border-accent-teal">
+                <span class="text-xs font-mono text-accent-teal font-bold uppercase tracking-widest block mb-4">Q2
+                    2026</span>
+                <h3 class="text-white font-bold mb-2">Voice Synthesis v2</h3>
+                <p class="text-sm text-slate-400">AI-generated audio summaries for lecture halls with native
+                    text-to-speech injection.</p>
+            </div>
+            <div class="p-8 glass-card rounded-xl border-l-4 border-slate-700">
+                <span class="text-xs font-mono text-slate-500 font-bold uppercase tracking-widest block mb-4">Q3
+                    2026</span>
+                <h3 class="text-white font-bold mb-2">Collaborative RAG</h3>
+                <p class="text-sm text-slate-400">Share your indexed notes across group study participants with
+                    decentralized indexing.</p>
+            </div>
+            <div class="p-8 glass-card rounded-xl border-l-4 border-slate-700">
+                <span class="text-xs font-mono text-slate-500 font-bold uppercase tracking-widest block mb-4">Q4
+                    2026</span>
+                <h3 class="text-white font-bold mb-2">Native iOS/Android Bridge</h3>
+                <p class="text-sm text-slate-400">Dedicated Flutter-based administrative portal for managing personas
+                    and RAG storage.</p>
+            </div>
+        </div>
+    </div>
+
+    <section class="py-24 relative overflow-hidden" id="blog">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="mb-16 md:flex md:justify-between md:items-end">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Engineering Blog</h2>
+                    <p class="text-slate-400 max-w-2xl text-lg font-light">Technical deep-dives into AI, exam patterns,
+                        and Android system engineering.</p>
+                </div>
+                <div
+                    class="hidden md:flex items-center space-x-2 text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    <span>Live Documentation</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Blog Post 1 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
+                            <span class="material-symbols-outlined text-xs">psychology</span> AI & Exams
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">How AI
+                            Predicts Exam Questions with 85% Accuracy</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Deep dive into the StudyClaw PYQ engine
+                            and historical pattern analysis using Gemini AI.</p>
+                        <a href="blog/how-ai-predicts-exam-questions.html"
+                            class="inline-flex items-center text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
+                            Read Article <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Blog Post 2 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
+                            <span class="material-symbols-outlined text-xs">terminal</span> System Design
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">Running
+                            a Go-Based AI Bot on Android with Termux</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Solving the architectural challenges of
+                            running non-native binaries on a mobile OS partition.</p>
+                        <a href="blog/running-ai-bot-on-android.html"
+                            class="inline-flex items-center text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
+                            Read Article <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Blog Post 3 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest text-primary">
+                            <span class="material-symbols-outlined text-xs">chat</span> Interface Design
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">Why
+                            WhatsApp is the World's Best Interface for Students</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Analyzing the UX benefits of meeting
+                            students where they already spend 4+ hours a day.</p>
+                        <a href="blog/whatsapp-best-study-interface.html"
+                            class="inline-flex items-center text-sm font-semibold text-primary group-hover:translate-x-1 transition-transform">
+                            Read Article <span class="material-symbols-outlined ml-1 text-sm">arrow_forward</span>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+    <section class="py-24 relative overflow-hidden" id="errors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="mb-16 md:flex md:justify-between md:items-end">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-4 tracking-tight">Common Errors & Patches</h2>
+                    <p class="text-slate-400 max-w-2xl text-lg font-light">Documented solutions for the most frequent
+                        technical hurdles encountered by the community.</p>
+                </div>
+                <div
+                    class="hidden md:flex items-center space-x-2 text-xs font-mono text-slate-500 bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                    <span>Live Documentation</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Blog Style Error 1 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-red-500/10 text-red-400 px-3 py-1 rounded w-fit border border-red-500/20">
+                            <span class="material-symbols-outlined text-xs">bug_report</span> Critical Fix
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">
+                            Resolving "bash: go: command not found"</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Encountered when the Go toolchain isn't
+                            mapped to the system path or missing from the initial Termux bootstrap.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <div class="bg-black/60 p-3 rounded font-mono text-xs text-primary border border-slate-800">
+                                $ pkg install golang -y</div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Blog Style Error 2 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 px-3 py-1 rounded w-fit border border-amber-500/20">
+                            <span class="material-symbols-outlined text-xs">key</span> Auth Error
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">Fixing
+                            "401 Unauthorized" Key Issues</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Commonly caused by hidden characters in
+                            the export command or using a key that hasn't propagation through Google's AI Studio.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <div class="bg-black/60 p-3 rounded font-mono text-xs text-primary border border-slate-800">
+                                $ export GEMINI_API_KEY="...KEY..."</div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Error Fix 3 -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-blue-500/10 text-blue-400 px-3 py-1 rounded w-fit border border-blue-500/20">
+                            <span class="material-symbols-outlined text-xs">aspect_ratio</span> Render Error
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">
+                            WhatsApp QR Code Scaling Issues</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">When the WhatsApp QR code appears broken
+                            or un-scannable due to Termux terminal buffer limitations.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <div class="bg-black/60 p-3 rounded font-mono text-xs text-primary border border-slate-800">
+                                Pinch to zoom out in Termux until QR fills the screen.</div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- New Error Fix 4: 429 Quota -->
+                <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+                    <div class="p-8 flex-1">
+                        <div
+                            class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-purple-500/10 text-purple-400 px-3 py-1 rounded w-fit border border-purple-500/20">
+                            <span class="material-symbols-outlined text-xs">hourglass_empty</span> Quota Error
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">
+                            Handling "429: Rate Limit Exceeded"</h3>
+                        <p class="text-sm text-slate-400 leading-relaxed mb-6">Triggered on Gemini Free Tier keys when
+                            sending too many messages too quickly. The bot may stop responding temporarily.</p>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Patch Action:</h4>
+                            <div class="bg-black/60 p-3 rounded font-mono text-xs text-primary border border-slate-800">
+                                Wait 1 minute for quota reset. Switch to Telegram for better stability.</div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <!-- Blog Style Error 4 -->
+        <article class="glass-card flex flex-col h-full rounded-xl overflow-hidden group">
+            <div class="p-8 flex-1 border-l-2 border-primary/20">
+                <div
+                    class="flex items-center gap-2 mb-6 text-[10px] font-mono font-bold uppercase tracking-widest bg-slate-800 text-slate-400 px-3 py-1 rounded w-fit border border-slate-700">
+                    Knowledge Base
+                </div>
+                <h3 class="text-xl font-bold text-white mb-4 group-hover:text-primary transition-colors">Go Mod
+                    Tidy: Connection Refused</h3>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">Network-level blocks prevent dependency
+                    downloads. Usually tied to DNS or local ISP restrictions in specific regions.</p>
+                <ul class="text-[11px] font-mono text-slate-500 space-y-2">
+                    <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary rounded-full"></span>
+                        Toggle Wi-Fi / Airplane Mode</li>
+                    <li class="flex items-center gap-2"><span class="w-1 h-1 bg-primary rounded-full"></span>
+                        Disable Active VPNs</li>
+                </ul>
+            </div>
+        </article>
+        </div>
+
+        <div class="text-center mt-16 pb-8">
+            <p class="text-slate-500 text-sm">Need deep-level support? <a
+                    href="https://github.com/roshan30-git/picoclaw-scholar/issues" target="_blank"
+                    class="text-primary hover:underline font-bold">Open a Technical Ticket</a></p>
+        </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-slate-800/50 pt-16 pb-12 text-slate-300 bg-[#0B1120]/60 backdrop-blur-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center text-center">
+                <div class="flex items-center gap-2 mb-6">
+                    <span class="material-symbols-outlined text-primary text-3xl">terminal</span>
+                    <span class="font-bold text-white text-xl">StudyClaw</span>
+                </div>
+                <p class="text-slate-400 text-sm leading-relaxed max-w-md mb-8">
+                    Open source technical study infrastructure built for engineering students.
+                    Runs locally on your phone via Termux.
+                </p>
+
+                <div class="flex space-x-6 mb-12">
+                    <a class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+                        href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z">
+                            </path>
+                        </svg>
+                        <span class="text-sm font-mono">GitHub</span>
+                    </a>
+                </div>
+
+                <div
+                    class="w-full border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-slate-500 text-xs font-mono">
+                        © 2026 StudyClaw. Built by <a href="https://github.com/roshan30-git"
+                            class="hover:text-primary transition-colors">Roshan</a>.
+                    </p>
+                    <div
+                        class="flex items-center space-x-2 bg-slate-800/50 px-3 py-1 rounded-full border border-slate-700">
+                        <div class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </div>
+                        <span class="text-primary text-xs font-mono font-medium">System Status: Live Content Only</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    </div>
+
+</body>
+
+</html>

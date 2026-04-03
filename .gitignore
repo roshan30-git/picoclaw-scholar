@@ -1,0 +1,59 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Built executables
+studyclaw
+
+# SQLite databases (if stored in repo)
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Any temporary files
+tmp/
+temp/
+config.json
+
+# Workspace dynamic memory files (Keep structure, ignore content)
+workspace/MEMORY/**/*.json
+workspace/MEMORY/**/*.txt
+!workspace/MEMORY/**/.gitkeep
+
+# Media generated files (Keep Go files, ignore outputs)
+media/**/*.pdf
+media/**/*.png
+media/**/*.svg
+media/**/*.jpg
+media/**/*.jpeg
+!media/**/.gitkeep

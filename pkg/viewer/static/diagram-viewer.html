@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PicoClaw Visualizer</title>
+    <!-- Telegram WebApp JS -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    
+    <!-- KaTeX for formulas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        .formula {
+            font-size: 1.1em;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .circuit-svg {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <p>Loading visual content...</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Expand to full height
+
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: tg.colorScheme === 'dark' ? 'dark' : 'default',
+            securityLevel: 'loose',
+            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+        });
+
+        // Function to render content based on query params (passed from Telegram inline button)
+        async function renderContent() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const contentId = urlParams.get('id');
+            const type = urlParams.get('type'); // 'mermaid', 'formula', 'circuit'
+
+            if (!contentId || !type) {
+                document.getElementById('app').innerHTML = `<div class="card"><p>Error: No content ID provided.</p></div>`;
+                return;
+            }
+
+            try {
+                // Fetch the actual content from the local viewer server
+                const response = await fetch(`/api/content/${contentId}`);
+                if (!response.ok) throw new Error('Failed to load content');
+                const data = await response.json();
+
+                const appDiv = document.getElementById('app');
+                appDiv.innerHTML = `<div class="title">${data.title}</div>`;
+
+                if (type === 'mermaid') {
+                    appDiv.innerHTML += `<div class="card mermaid" id="mermaid-container">${data.source}</div>`;
+                    await mermaid.run({ nodes: [document.getElementById('mermaid-container')] });
+                } 
+                else if (type === 'formula') {
+                    appDiv.innerHTML += `<div class="card formula" id="math-container">${data.source}</div>`;
+                    renderMathInElement(appDiv, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                }
+                else if (type === 'circuit') {
+                    // Expecting data.source to be the raw SVG string from the Go backend templates
+                    appDiv.innerHTML += `<div class="card" style="text-align: center;">${data.source}</div>`;
+                }
+
+                tg.ready();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('app').innerHTML = `<div class="card"><p>Failed to load visual: ${err.message}</p></div>`;
+            }
+        }
+
+        // Run on load
+        document.addEventListener('DOMContentLoaded', renderContent);
+    </script>
+</body>
+</html>

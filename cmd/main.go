@@ -1,83 +1,192 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 
-	"github.com/roshan30-git/picoclaw-scholar/integrations/whatsapp"
+	"github.com/joho/godotenv"
 	"github.com/roshan30-git/picoclaw-scholar/integrations/gdrive"
-	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/integrations/whatsapp"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/agent"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/channels/telegram"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/providers"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/setup"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/viewer"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
 )
 
 func main() {
-	fmt.Println("🦞 PicoClaw: Scholar Edition — Initializing...")
+	_ = godotenv.Load()
+	fmt.Println("🦞 StudyClaw — Initializing...")
 
-	// 1. Load config (minimal impl for now)
-	ctx := context.Background()
-	
-	// 2. Initialize Database
-	db, err := pkgdb.New("studyclaw.db") // Changed to local relative path for testing
+	// Launch local web UI if critical configuration is missing
+	setup.RunServerIfConfigMissing()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// 1. Initialize Database
+	db, err := pkgdb.New("studyclaw.db")
 	if err != nil {
 		log.Fatalf("Failed to init database: %v", err)
 	}
-	// Note: db.Close() would go here but we just use the reference.
 
-	// 3. Initialize Google Drive (for books/syllabus)
-	driveClient, err := gdrive.New(ctx)
-	if err != nil {
-		log.Printf("Warning: Google Drive not linked: %v", err)
-	} else {
-		fmt.Println("✅ Google Drive linked.")
-		_ = driveClient // Use for background indexing later
+	// 2. Initialize Google Drive (strictly silent & optional)
+	var driveClient *gdrive.Client
+	enableDrive := os.Getenv("STUDYCLAW_ENABLE_GDRIVE") == "true"
+	if enableDrive {
+		home, _ := os.UserHomeDir()
+		credPath := filepath.Join(home, ".studyclaw/google_credentials.json")
+		if _, err := os.Stat(credPath); err == nil {
+			driveClient, err = gdrive.New(ctx)
+			if err != nil {
+				log.Printf("Warning: Failed to init Google Drive: %v", err)
+			} else {
+				fmt.Println("✅ Google Drive linked.")
+			}
+		}
 	}
+	_ = driveClient
 
-	// 4. Initialize Message Bus & Agent Loop
+	// 3. Initialize Message Bus
 	msgBus := bus.NewMessageBus()
-	provider, err := providers.NewGeminiProvider(os.Getenv("GEMINI_API_KEY"))
-	if err != nil {
-		log.Printf("Warning: Gemini provider init failed (API key missing?): %v", err)
+
+	// 4. Initialize LLM Provider (antigravity, codex, or gemini)
+	providerType := os.Getenv("LLM_PROVIDER")
+	var provider tools.LLMProvider
+
+	switch providerType {
+	case "antigravity":
+		fmt.Println("🚀 Using Antigravity Provider (Cloud Code Assist)")
+		provider = providers.NewAntigravityProvider()
+	case "codex":
+		fmt.Println("🚀 Using Codex Provider (ChatGPT Pro)")
+		openaiKey := os.Getenv("OPENAI_API_KEY")
+		accountID := os.Getenv("CHATGPT_ACCOUNT_ID")
+		provider = providers.NewCodexProvider(openaiKey, accountID)
+	default:
+		geminiAPIKey := os.Getenv("GEMINI_API_KEY")
+		provider, err = providers.NewGeminiProvider(geminiAPIKey)
+		if err != nil {
+			log.Printf("⚠️  Gemini provider not available (set GEMINI_API_KEY env var): %v", err)
+		}
 	}
-	
-	// Create channels manager
+
+	// 5. Diagram Viewer Server (localhost:8080)
+	viewerSrv := viewer.NewServer(8080)
+	go viewerSrv.Start()
+	fmt.Println("📊 Diagram viewer available at http://127.0.0.1:8080")
+	visManager := visual.NewManager(viewerSrv)
+
+	// 6. Channel Manager
 	chMgr := channels.NewManager()
 
-	// Initialize Agent loop
+	// Initialize Phase 4 Engines
+	cfg := config.LoadConfig()
+	calendarEngine := study.NewCalendarEngine()
+	reflectionManager := memory.NewReflectionManager("workspace")
+	personaRouter := agent.NewPersonaRouter()
+	deadlineTracker := study.NewDeadlineTracker(db)
+	weeklyCards := study.NewWeeklyCardsGenerator(db, provider, msgBus, os.Getenv("STUDYCLAW_OWNER_NUMBER"))
+
+	// 6b. Start proactive cron scheduler
+	ownerID := os.Getenv("STUDYCLAW_OWNER_NUMBER")
+	// Determine active channel for scheduler notifications
+	activeChannel := "whatsapp"
+	if os.Getenv("TELEGRAM_BOT_TOKEN") != "" {
+		activeChannel = "telegram"
+	}
+
+	scheduler := study.NewScheduler(deadlineTracker, weeklyCards, msgBus, ownerID, activeChannel)
+	scheduler.ScheduleReminders()
+	scheduler.ScheduleWeeklyCards()
+	go scheduler.Start(ctx)
+	fmt.Println("📅 Proactive scheduler started (daily reminders + weekly flashcards)")
+
+	// 7. Agent Loop (only started if LLM is available)
 	if provider != nil {
-		agentLoop := agent.NewAgentLoop(config.DefaultConfig(), msgBus, provider)
+		agentLoop := agent.NewAgentLoop(cfg, msgBus, provider, visManager, personaRouter, calendarEngine, reflectionManager, db)
 		agentLoop.RegisterTool(study.NewQuizTool(study.NewQuizEngine(provider, db)))
 		agentLoop.RegisterTool(study.NewIngestTool(study.NewIngestionEngine(db)))
+		agentLoop.RegisterTool(study.NewSearchNotesTool(db))
+		agentLoop.RegisterTool(study.NewAddDeadlineTool(deadlineTracker))
+		agentLoop.RegisterTool(study.NewViewDeadlinesTool(deadlineTracker))
+		agentLoop.RegisterTool(tools.NewReportGeneratorTool(provider))
+		agentLoop.RegisterTool(tools.NewWebSearchTool())
+		agentLoop.RegisterTool(tools.NewExcelTool())
+		agentLoop.RegisterTool(tools.NewDiagramTool())
+		agentLoop.RegisterTool(study.NewHeatmapTool(db))
 		agentLoop.SetChannelManager(chMgr)
+		agentLoop.SetOnShutdown(cancel)
 		go agentLoop.Run(ctx)
-		fmt.Println("🤖 Agent Loop initialized.")
+		fmt.Println("🤖 Agent Loop initialized with current LLM provider")
 	}
 
-	// 5. Initialize WhatsApp Bridge
-	waClient, err := whatsapp.New("whatsapp_session.db", msgBus)
+	// 8. Channels (WhatsApp & Telegram)
+	// Initialize OCR Pipeline for WhatsApp (using current provider)
+	ocrPipeline, err := study.NewOCRPipeline(os.Getenv("GEMINI_API_KEY"), db)
 	if err != nil {
-		log.Fatalf("Failed to init WhatsApp: %v", err)
+		log.Printf("Warning: Failed to init OCR Pipeline: %v", err)
 	}
-	chMgr.Register(waClient)
 
-	// Start all channels
+	waClient, err := whatsapp.New(ctx, "whatsapp_session.db", msgBus, cfg.AllowedGroupJIDs, cfg.PassiveGroupJIDs, ocrPipeline)
+	if err != nil {
+		log.Printf("Warning: Failed to init WhatsApp: %v", err)
+	} else {
+		chMgr.Register(waClient)
+	}
+
+	telegramToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if telegramToken != "" {
+		cfg.Channels.Telegram.Token = telegramToken
+		cfg.Channels.Telegram.Enabled = true
+
+		tgClient, err := telegram.NewTelegramChannel(cfg, msgBus, db)
+		if err != nil {
+			log.Printf("Warning: Failed to init Telegram channel: %v", err)
+		} else {
+			chMgr.Register(tgClient)
+			fmt.Println("✅ Telegram bot linked.")
+		}
+	}
+
+	// 9. Start all channels
 	if err := chMgr.StartAll(ctx); err != nil {
 		log.Fatalf("Failed to start channels: %v", err)
 	}
 	defer chMgr.StopAll(ctx)
 
-	fmt.Println("🚀 StudyClaw is alive! Ready for messages...")
+	fmt.Println("🚀 StudyClaw is alive! Send a message via WhatsApp to start.")
+	fmt.Println("   (Type 'stop' or 'exit' in terminal to shut down)")
 
-	// Wait for interrupt
+	// 10. Terminal Command Listener
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			text := strings.ToLower(strings.TrimSpace(scanner.Text()))
+			if text == "stop" || text == "exit" {
+				fmt.Println("\n🛑 Shutdown command received from terminal...")
+				cancel()
+				return
+			}
+		}
+	}()
+
+	// Graceful shutdown logic remains for signals and context cancellation
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c

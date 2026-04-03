@@ -2,35 +2,62 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/roshan30-git/picoclaw-scholar/pkg/bus"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/channels"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/config"
+	pkgdb "github.com/roshan30-git/picoclaw-scholar/pkg/database"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/memory"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/study"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/visual"
 )
 
 type AgentLoop struct {
-	cfg     *config.Config
-	bus     *bus.MessageBus
-	provider tools.LLMProvider
-	tools   map[string]tools.Tool
-	mgr      *channels.Manager
-	inbox    chan bus.InboundMessage
-	quit     chan struct{}
-	sessions map[string][]tools.Message
+	cfg          *config.Config
+	bus          *bus.MessageBus
+	provider     tools.LLMProvider
+	tools        map[string]tools.Tool
+	mgr          *channels.Manager
+	visParser    *visual.Parser
+	router       *PersonaRouter
+	calendar     *study.CalendarEngine
+	reflections  *memory.ReflectionManager
+	profileMgr   *memory.ProfileManager
+	contextMgr   *memory.ContextManager
+	smartHandler *study.SmartMessageHandler
+	inbox        chan bus.InboundMessage
+	quit         chan struct{}
+	sessions     map[string][]tools.Message
+	onShutdown   func()
 }
 
-func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider) *AgentLoop {
+func NewAgentLoop(cfg *config.Config, b *bus.MessageBus, provider tools.LLMProvider, vm *visual.Manager, router *PersonaRouter, cal *study.CalendarEngine, mem *memory.ReflectionManager, db *pkgdb.DB) *AgentLoop {
 	return &AgentLoop{
-		cfg:      cfg,
-		bus:      b,
-		provider: provider,
-		tools:    make(map[string]tools.Tool),
-		inbox:    b.Subscribe(),
-		quit:     make(chan struct{}),
-		sessions: make(map[string][]tools.Message),
+		cfg:          cfg,
+		bus:          b,
+		provider:     provider,
+		tools:        make(map[string]tools.Tool),
+		visParser:    visual.NewParser(vm),
+		router:       router,
+		calendar:     cal,
+		reflections:  mem,
+		profileMgr:   memory.NewProfileManager(db.Conn()),
+		contextMgr:   memory.NewContextManager(db, provider, memory.NewProfileManager(db.Conn()), study.NewDeadlineTracker(db)),
+		smartHandler: study.NewSmartMessageHandler(provider, db),
+		inbox:        b.Subscribe(),
+		quit:         make(chan struct{}),
+		sessions:     make(map[string][]tools.Message),
 	}
+}
+
+func (l *AgentLoop) SetOnShutdown(f func()) {
+	l.onShutdown = f
 }
 
 func (l *AgentLoop) SetChannelManager(mgr *channels.Manager) {
@@ -61,16 +88,239 @@ func (l *AgentLoop) Stop() {
 }
 
 func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
-	log.Printf("[%s] Message from %s: %s", msg.Channel, msg.From, msg.Content)
+	log.Printf("[%s] Message from %s", msg.Channel, msg.From)
 
-	sessionID := msg.Channel + ":" + msg.ChatID
-	history := l.sessions[sessionID]
+	if l.handleSmartPreprocessing(ctx, msg) {
+		return
+	}
 
-	history = append(history, tools.Message{Role: "user", Content: msg.Content})
+	// 🛑 Manual Stop Command (Owner Only)
+	if strings.TrimSpace(msg.Content) == "!stop" {
+		owner := os.Getenv("STUDYCLAW_OWNER_NUMBER")
+		if msg.From == owner || strings.Contains(msg.From, owner) {
+			log.Printf("[AgentLoop] Shutdown command received from owner (%s)", msg.From)
+			if l.mgr != nil {
+				_ = l.mgr.Send(ctx, bus.OutboundMessage{
+					ChatID: msg.ChatID, Content: "🛑 *StudyClaw is shutting down...* Goodbye!", Channel: msg.Channel,
+				})
+			}
+			if l.onShutdown != nil {
+				l.onShutdown()
+			}
+			return
+		}
+		log.Printf("[AgentLoop] Unauthorized !stop attempt from: %s", msg.From)
+	}
 
-	var toolDefs []tools.ToolDefinition
+	history := l.prepareEnrichedHistory(ctx, msg)
+
+	resp, err := l.runAgentChat(ctx, history)
+	if err != nil {
+		log.Printf("[AgentLoop] Chat failed: %v", err)
+		if l.mgr != nil {
+			_ = l.mgr.Send(ctx, bus.OutboundMessage{
+				ChatID:  msg.ChatID,
+				Content: "⚠️ _Connection to the AI provider failed. Please try again in a moment._",
+				Channel: msg.Channel,
+			})
+		}
+		return
+	}
+
+	l.handlePostChatLogic(ctx, msg, resp, history)
+}
+
+func (l *AgentLoop) handleSmartPreprocessing(ctx context.Context, msg bus.InboundMessage) bool {
+	if l.smartHandler == nil {
+		return false
+	}
+
+	// Questions, commands, and short conversational messages always go to the AI.
+	// Never swallow them silently.
+	content := strings.TrimSpace(msg.Content)
+	if strings.HasSuffix(content, "?") ||
+		len(content) < 80 ||
+		strings.HasPrefix(strings.ToLower(content), "quiz") ||
+		strings.HasPrefix(strings.ToLower(content), "hi") ||
+		strings.HasPrefix(strings.ToLower(content), "hello") ||
+		strings.HasPrefix(strings.ToLower(content), "search") ||
+		strings.HasPrefix(strings.ToLower(content), "deadline") ||
+		strings.HasPrefix(strings.ToLower(content), "report") ||
+		strings.HasPrefix(strings.ToLower(content), "draw") {
+		return false // Let the AI Agent handle it
+	}
+
+	reply, continueToAgent := l.smartHandler.Process(ctx, content)
+	if !continueToAgent {
+		if reply != "" && l.mgr != nil {
+			_ = l.mgr.Send(ctx, bus.OutboundMessage{
+				ChatID: msg.ChatID, Content: reply, Channel: msg.Channel,
+			})
+		}
+		return true
+	}
+	return false
+}
+
+func (l *AgentLoop) prepareEnrichedHistory(ctx context.Context, msg bus.InboundMessage) []tools.Message {
+	history := l.getHistory(msg.Channel, msg.ChatID)
+	l.detectCorrections(msg.Content, history)
+
+	persona := l.router.RouteMessage(msg)
+	summary := l.contextMgr.GetLatestChatSummary(msg.ChatID)
+	enriched := l.enrichContext(msg.Content, persona)
+
+	ctxBlock := l.contextMgr.BuildPrompt(ctx, msg.ChatID, msg.Content, summary)
+	if ctxBlock != "" {
+		enriched = ctxBlock + "\n\n" + enriched
+	}
+
+	return append(history, tools.Message{Role: "user", Content: enriched})
+}
+
+func (l *AgentLoop) runAgentChat(ctx context.Context, history []tools.Message) (*tools.LLMResponse, error) {
+	toolDefs := l.getToolDefinitions()
+	resp, err := l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.ToolCalls) > 0 {
+		history = l.processToolCalls(ctx, history, resp.ToolCalls, toolDefs)
+		return l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
+	}
+
+	return resp, nil
+}
+
+func (l *AgentLoop) handlePostChatLogic(ctx context.Context, msg bus.InboundMessage, resp *tools.LLMResponse, history []tools.Message) {
+	content := strings.TrimSpace(resp.Content)
+	if content == "" {
+		content = "🤔 I couldn't formulate a response. Could you rephrase your question?"
+	}
+
+	history = append(history, tools.Message{Role: "model", Content: content})
+
+	if l.shouldTriggerSummary(history) {
+		l.triggerRollingSummary(ctx, msg, content, history)
+	} else {
+		l.saveHistory(msg.Channel, msg.ChatID, history)
+	}
+
+	out := bus.OutboundMessage{
+		ChatID:  msg.ChatID,
+		Content: content,
+		Channel: msg.Channel,
+	}
+
+	if l.visParser != nil {
+		l.visParser.ApplyVisuals(&out)
+	}
+
+	if l.mgr != nil && out.Content != "" {
+		_ = l.mgr.Send(ctx, out)
+	}
+}
+
+func (l *AgentLoop) shouldTriggerSummary(history []tools.Message) bool {
+	count := 0
+	for _, m := range history {
+		if m.Role == "user" {
+			count++
+		}
+	}
+	return count >= 3
+}
+
+func (l *AgentLoop) triggerRollingSummary(ctx context.Context, msg bus.InboundMessage, lastResp string, history []tools.Message) {
+	l.contextMgr.SummarizeAndClear(ctx, msg.ChatID, history, func(newSummary string) {
+		l.sessions[msg.Channel+":"+msg.ChatID] = []tools.Message{
+			{Role: "model", Content: lastResp},
+		}
+	})
+}
+
+func (l *AgentLoop) getHistory(channel, chatID string) []tools.Message {
+	return l.sessions[channel+":"+chatID]
+}
+
+func (l *AgentLoop) saveHistory(channel, chatID string, history []tools.Message) {
+	if len(history) > 20 {
+		history = history[len(history)-20:]
+	}
+	l.sessions[channel+":"+chatID] = history
+}
+
+func (l *AgentLoop) detectCorrections(content string, history []tools.Message) {
+	if l.reflections == nil || len(history) == 0 {
+		return
+	}
+
+	lowerMsg := strings.ToLower(content)
+	keywords := []string{"wrong", "incorrect", "actually"}
+	for _, kw := range keywords {
+		if strings.Contains(lowerMsg, kw) {
+			lastMsg := history[len(history)-1]
+			if lastMsg.Role == "model" {
+				log.Println("[AgentLoop] Correction detected! Logging reflection.")
+				l.reflections.LogMistake(content, lastMsg.Content)
+				return
+			}
+		}
+	}
+}
+
+func (l *AgentLoop) enrichContext(content string, persona PersonaType) string {
+	var preamble []string
+
+	if personaPrompt := l.loadPersona(persona); personaPrompt != "" {
+		preamble = append(preamble, personaPrompt)
+	}
+
+	if l.calendar != nil {
+		preamble = append(preamble, l.calendar.GetContext())
+	}
+
+	if l.reflections != nil {
+		if lessons := l.reflections.GetRecentReflections(); lessons != "" {
+			preamble = append(preamble, lessons)
+		}
+	}
+
+	if len(preamble) == 0 {
+		return content
+	}
+	return strings.Join(preamble, "\n\n") + "\n\nUser Message:\n" + content
+}
+
+func (l *AgentLoop) loadPersona(persona PersonaType) string {
+	promptName := string(persona)
+	if persona == PersonaNone {
+		promptName = "agent_explainer"
+	}
+
+	paths := []string{
+		filepath.Join("workspace", "PROMPTS", "agents", promptName+".md"),
+		filepath.Join("workspace", "PROMPTS", "agents", promptName+".txt"),
+	}
+
+	for _, p := range paths {
+		if data, err := os.ReadFile(p); err == nil {
+			return fmt.Sprintf("🎭 SYSTEM PERSONA ACTIVE: %s\n%s", promptName, string(data))
+		}
+	}
+
+	// Final fallback
+	if base, err := os.ReadFile(filepath.Join("workspace", "PROMPTS", "agents", "base_soul.md")); err == nil {
+		return "🎭 SYSTEM BASE SOUL:\n" + string(base)
+	}
+	return ""
+}
+
+func (l *AgentLoop) getToolDefinitions() []tools.ToolDefinition {
+	var defs []tools.ToolDefinition
 	for _, t := range l.tools {
-		toolDefs = append(toolDefs, tools.ToolDefinition{
+		defs = append(defs, tools.ToolDefinition{
 			Type: "function",
 			Function: tools.ToolFunctionDefinition{
 				Name:        t.Name(),
@@ -79,49 +329,18 @@ func (l *AgentLoop) handleMessage(ctx context.Context, msg bus.InboundMessage) {
 			},
 		})
 	}
+	return defs
+}
 
-	resp, err := l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
-	if err != nil {
-		log.Printf("LLM error: %v", err)
-		return
-	}
-
-	if len(resp.ToolCalls) > 0 {
-		history = append(history, tools.Message{Role: "model", Content: resp.Content})
-		for _, tc := range resp.ToolCalls {
-			log.Printf("Executing tool: %s", tc.Name)
-			if t, ok := l.tools[tc.Name]; ok {
-				res := t.Execute(ctx, tc.Args)
-				resultMsg := fmt.Sprintf("Tool %s completed. Result: %s", tc.Name, res.ForLLM)
-				history = append(history, tools.Message{Role: "user", Content: resultMsg})
-			} else {
-				history = append(history, tools.Message{Role: "user", Content: fmt.Sprintf("Tool %s not found", tc.Name)})
-			}
-		}
-
-		resp, err = l.provider.Chat(ctx, history, toolDefs, l.cfg.ModelName, nil)
-		if err != nil {
-			log.Printf("LLM error after tool call: %v", err)
-			return
+func (l *AgentLoop) processToolCalls(ctx context.Context, history []tools.Message, calls []tools.ToolCall, defs []tools.ToolDefinition) []tools.Message {
+	history = append(history, tools.Message{Role: "model", Content: ""})
+	for _, tc := range calls {
+		log.Printf("Executing tool: %s", tc.Name)
+		if t, ok := l.tools[tc.Name]; ok {
+			res := t.Execute(ctx, tc.Args)
+			resultMsg := fmt.Sprintf("Tool %s completed. Result: %s", tc.Name, res.ForLLM)
+			history = append(history, tools.Message{Role: "user", Content: resultMsg})
 		}
 	}
-
-	history = append(history, tools.Message{Role: "model", Content: resp.Content})
-	if len(history) > 20 {
-		history = history[len(history)-20:]
-	}
-	l.sessions[sessionID] = history
-
-	if l.mgr != nil && resp.Content != "" {
-		out := bus.OutboundMessage{
-			ChatID:  msg.ChatID,
-			Content: resp.Content,
-			Channel: msg.Channel,
-		}
-		if err := l.mgr.Send(ctx, out); err != nil {
-			log.Printf("Failed to route response: %v", err)
-		}
-	}
-
-	log.Printf("Response: %s", resp.Content)
+	return history
 }

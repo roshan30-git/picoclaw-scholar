@@ -56,7 +56,7 @@ func (m *Manager) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	m.mu.RLock()
 	ch, ok := m.channels[msg.Channel]
 	m.mu.RUnlock()
-	
+
 	if ok {
 		return ch.Send(ctx, msg)
 	}
@@ -90,7 +90,7 @@ func (b *BaseChannel) SetRunning(v bool) {
 	b.mu.Unlock()
 }
 
-func (b *BaseChannel) HandleMessage(from, chatID, text string, media []byte, meta map[string]string) {
+func (b *BaseChannel) HandleMessage(from, chatID, text string, media []string, meta map[string]string) {
 	msg := bus.InboundMessage{
 		From:     from,
 		ChatID:   chatID,
@@ -100,4 +100,16 @@ func (b *BaseChannel) HandleMessage(from, chatID, text string, media []byte, met
 		Channel:  b.name,
 	}
 	b.bus.Publish(msg)
+}
+
+func (b *BaseChannel) IsAllowed(jid string) bool {
+	if len(b.allowed) == 0 {
+		return true // Allow all if not configured
+	}
+	for _, a := range b.allowed {
+		if a == jid {
+			return true
+		}
+	}
+	return false
 }
