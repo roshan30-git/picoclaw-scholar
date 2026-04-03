@@ -67,6 +67,7 @@ func TestBuildAuthorizeURL(t *testing.T) {
 }
 
 func TestBuildAuthorizeURLOpenAIExtras(t *testing.T) {
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-openai-client-id")
 	cfg := OpenAIOAuthConfig()
 	pkce := PKCECodes{CodeVerifier: "test-verifier", CodeChallenge: "test-challenge"}
 
@@ -322,6 +323,7 @@ func TestRefreshAccessTokenPreservesRefreshAndAccountID(t *testing.T) {
 }
 
 func TestOpenAIOAuthConfig(t *testing.T) {
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-openai-client-id")
 	cfg := OpenAIOAuthConfig()
 	if cfg.Issuer != "https://auth.openai.com" {
 		t.Errorf("Issuer = %q, want %q", cfg.Issuer, "https://auth.openai.com")

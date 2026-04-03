@@ -14,6 +14,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/auth"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 	"golang.org/x/oauth2"
 )
 
@@ -296,11 +297,11 @@ func RunServerIfConfigMissing() {
 		return // Initialized
 	}
 
-	fmt.Println("======================================================")
-	fmt.Println("🚀 StudyClaw: Initial Setup Required!")
-	fmt.Println("Please open your browser and visit:")
-	fmt.Println("👉 http://localhost:8080/setup")
-	fmt.Println("======================================================")
+	logger.InfoC("setup", "======================================================")
+	logger.InfoC("setup", "🚀 StudyClaw: Initial Setup Required!")
+	logger.InfoC("setup", "Please open your browser and visit:")
+	logger.InfoC("setup", "👉 http://localhost:8080/setup")
+	logger.InfoC("setup", "======================================================")
 
 	mux := http.NewServeMux()
 	server := &http.Server{Addr: ":8080", Handler: mux}
@@ -429,6 +430,6 @@ func RunServerIfConfigMissing() {
 	}()
 
 	<-done
-	fmt.Println("✅ Setup completed. Resuming startup...")
+	logger.InfoC("setup", "✅ Setup completed. Resuming startup...")
 	_ = godotenv.Load()
 }

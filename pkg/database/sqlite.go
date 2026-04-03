@@ -70,6 +70,13 @@ func New(path string) (*DB, error) {
 			semester TEXT,
 			onboarding_complete BOOLEAN DEFAULT 0
 		)`,
+		`CREATE TABLE IF NOT EXISTS pyq_bank (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			subject TEXT NOT NULL,
+			question_text TEXT NOT NULL,
+			year INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 
 	for _, t := range tables {
@@ -97,8 +104,26 @@ func (db *DB) SaveEmbedding(noteID int64, vector []float64) error {
 }
 
 func (db *DB) GetNotesForTopic(topic string) ([]string, error) {
-	query := "%" + topic + "%"
-	rows, err := db.conn.Query(`SELECT content FROM notes WHERE topic LIKE ? OR content LIKE ? LIMIT 10`, query, query)
+	keywords := strings.Fields(topic)
+	if len(keywords) == 0 {
+		return nil, nil
+	}
+
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT content FROM notes WHERE ")
+
+	args := make([]interface{}, 0, len(keywords)*2)
+	for i, kw := range keywords {
+		if i > 0 {
+			queryBuilder.WriteString(" OR ")
+		}
+		queryBuilder.WriteString("(topic LIKE ? OR content LIKE ?)")
+		pattern := "%" + kw + "%"
+		args = append(args, pattern, pattern)
+	}
+	queryBuilder.WriteString(" LIMIT 10")
+
+	rows, err := db.conn.Query(queryBuilder.String(), args...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +132,9 @@ func (db *DB) GetNotesForTopic(topic string) ([]string, error) {
 	var results []string
 	for rows.Next() {
 		var c string
-		rows.Scan(&c)
+		if err := rows.Scan(&c); err != nil {
+			return nil, err
+		}
 		results = append(results, c)
 	}
 	return results, nil
@@ -175,4 +202,29 @@ func (db *DB) SaveUserProfile(profile *UserProfile) error {
 		onboarding_complete = excluded.onboarding_complete`,
 		profile.ChatID, profile.University, profile.Semester, profile.OnboardingComplete)
 	return err
+}
+
+func (db *DB) SavePYQs(subject string, questions []string, year int) error {
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`INSERT INTO pyq_bank (subject, question_text, year) VALUES (?, ?, ?)`)
+	if err != nil {
+		return fmt.Errorf("prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, q := range questions {
+		if _, err := stmt.Exec(subject, q, year); err != nil {
+			return fmt.Errorf("exec statement: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
+	}
+	return nil
 }
