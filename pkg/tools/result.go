@@ -14,7 +14,11 @@ func SuccessResult(forLLM, forUser string) *ToolResult {
 }
 
 func ErrorResult(msg string) *ToolResult {
-	return &ToolResult{ForLLM: msg, IsError: true}
+	return &ToolResult{
+		ForLLM:  "Error: " + msg,
+		ForUser: "Sorry, I encountered an error: " + msg,
+		IsError: true,
+	}
 }
 
 func SilentResult(forLLM string) *ToolResult {
