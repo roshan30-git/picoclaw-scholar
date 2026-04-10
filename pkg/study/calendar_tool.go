@@ -90,6 +90,15 @@ func (t *ViewDeadlinesTool) Execute(ctx context.Context, params map[string]any) 
 		return tools.ErrorResult(fmt.Sprintf("Failed to fetch deadlines: %v", err))
 	}
 
-	msg := FormatUrgencyMap(upcoming)
-	return tools.SuccessResult(msg, "Retrieved urgency map.")
+	if len(upcoming) == 0 {
+		return tools.SuccessResult("No upcoming deadlines found in the tracker. You are free for now!", "No deadlines.")
+	}
+
+	msg := "📅 **Upcoming Deadlines:**\n\n"
+	for _, d := range upcoming {
+		daysOut := int(time.Until(d.DueDate).Hours() / 24)
+		msg += fmt.Sprintf("- **%s** (Due in %d days)\n", d.Title, daysOut)
+	}
+
+	return tools.SuccessResult(msg, "Retrieved deadlines list.")
 }

@@ -2,7 +2,6 @@ package study
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -62,15 +61,14 @@ func (c *CalendarEngine) GetContext() string {
 		return "No major exams or holidays in the next 45 days."
 	}
 
-	var sb strings.Builder
-	sb.WriteString("📅 SYSTEM CALENDAR CONTEXT (Upcoming Academic Events):\n")
+	ctx := "📅 SYSTEM CALENDAR CONTEXT (Upcoming Academic Events):\n"
 	for _, e := range upcoming {
 		days := int(e.Date.Sub(now).Hours() / 24)
 		if days == 0 {
-			fmt.Fprintf(&sb, "- %s is TODAY!\n", e.Name)
+			ctx += fmt.Sprintf("- %s is TODAY!\n", e.Name)
 		} else {
-			fmt.Fprintf(&sb, "- %s: in %d days\n", e.Name, days)
+			ctx += fmt.Sprintf("- %s: in %d days\n", e.Name, days)
 		}
 	}
-	return sb.String()
+	return ctx
 }

@@ -105,13 +105,7 @@ func main() {
 
 	// 6b. Start proactive cron scheduler
 	ownerID := os.Getenv("STUDYCLAW_OWNER_NUMBER")
-	// Determine active channel for scheduler notifications
-	activeChannel := "whatsapp"
-	if os.Getenv("TELEGRAM_BOT_TOKEN") != "" {
-		activeChannel = "telegram"
-	}
-
-	scheduler := study.NewScheduler(deadlineTracker, weeklyCards, msgBus, ownerID, activeChannel)
+	scheduler := study.NewScheduler(deadlineTracker, weeklyCards, msgBus, ownerID)
 	scheduler.ScheduleReminders()
 	scheduler.ScheduleWeeklyCards()
 	go scheduler.Start(ctx)
@@ -129,7 +123,6 @@ func main() {
 		agentLoop.RegisterTool(tools.NewWebSearchTool())
 		agentLoop.RegisterTool(tools.NewExcelTool())
 		agentLoop.RegisterTool(tools.NewDiagramTool())
-		agentLoop.RegisterTool(study.NewHeatmapTool(db))
 		agentLoop.SetChannelManager(chMgr)
 		agentLoop.SetOnShutdown(cancel)
 		go agentLoop.Run(ctx)

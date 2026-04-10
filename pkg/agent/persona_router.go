@@ -16,7 +16,6 @@ const (
 	PersonaDrill     PersonaType = "agent_drill"
 	PersonaExplainer PersonaType = "agent_explainer"
 	PersonaScheduler PersonaType = "agent_scheduler"
-	PersonaELI5      PersonaType = "agent_eli5"
 )
 
 // PersonaRouter uses a zero-API keyword classification to assign a role to each message
@@ -30,32 +29,29 @@ func NewPersonaRouter() *PersonaRouter {
 func (pr *PersonaRouter) RouteMessage(msg bus.InboundMessage) PersonaType {
 	text := strings.ToLower(msg.Content)
 
-	// 0. ELI5 mode (simple explanations)
-	if pr.matchesAny(text, []string{"eli5", "explain simply", "explain like", "simple terms", "dumb it down"}) {
-		return PersonaELI5
-	}
-
 	// 1. Scheduler checks (time/deadlines)
-	if pr.matchesAny(text, []string{"due", "deadline", "tomorrow", "tonight", "when is", "remind me", "submission", "schedule", "urgency", "upcoming"}) {
+	if pr.matchesAny(text, []string{"due", "deadline", "tomorrow", "tonight", "when is", "remind me", "submission", "schedule"}) {
 		return PersonaScheduler
 	}
 
 	// 2. Drill checks (quizzes)
-	if pr.matchesAny(text, []string{"test me", "quiz", "drill", "mcq", "question", "examine", "recall", "quick recall"}) {
+	if pr.matchesAny(text, []string{"test me", "quiz", "drill", "mcq", "question", "examine"}) {
 		return PersonaDrill
 	}
 
 	// 3. Indexer checks (ingestion)
+	// Usually triggered by attachments too. For text:
 	if pr.matchesAny(text, []string{"index this", "save this", "notes on", "add this to db", "remember this"}) {
 		return PersonaIndexer
 	}
 
 	// 4. Explainer checks (teaching)
-	if pr.matchesAny(text, []string{"what is", "how does", "explain", "i don't understand", "clarify", "tell me about", "concept", "heatmap", "progress", "weak topic"}) {
+	// If the user seems confused or ask "what is", "how does"
+	if pr.matchesAny(text, []string{"what is", "how does", "explain", "i don't understand", "clarify", "tell me about", "concept"}) {
 		return PersonaExplainer
 	}
 
-	// Default fallback
+	// Default fallback (uses base_soul.md gracefully)
 	log.Printf("[Router] No clear persona intended, defaulting to Explainer")
 	return PersonaExplainer
 }
