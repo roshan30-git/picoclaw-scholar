@@ -339,42 +339,56 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 	chatIDStr := fmt.Sprintf("%d", chatID)
 
 	// Onboarding Intercept (Private Chat Only)
-	// Only intercept messages when the user is actively in the onboarding flow
-	// (i.e. they've started /start but haven't finished University/Semester entry)
-	if message.Chat.Type == "private" && c.db != nil && !strings.HasPrefix(content, "/") && !strings.HasPrefix(content, "!") {
+	if message.Chat.Type == "private" && c.db != nil {
 		profile, _ := c.db.GetUserProfile(chatIDStr)
 		if profile != nil && !profile.OnboardingComplete {
-			if profile.University == "" {
-				// Capture university name
-				profile.University = content
-				_ = c.db.SaveUserProfile(profile)
+			// If it's a command, let command handler handle it (like /start)
+			if strings.HasPrefix(content, "/") {
+				if strings.HasPrefix(content, "/start") {
+					// Fallthrough to bh.HandleMessage for /start in telegram_commands.go
+				} else {
+					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), "Please complete the onboarding first! Use /start if you're stuck."))
+					return nil
+				}
+			} else {
+				// We are in middle of onboarding survey
+				if profile.University == "" {
+					profile.University = content
+					_ = c.db.SaveUserProfile(profile)
 
-				keyboard := tu.InlineKeyboard(
-					tu.InlineKeyboardRow(
-						tu.InlineKeyboardButton("Sem 1").WithCallbackData("sem_1st Semester"),
-						tu.InlineKeyboardButton("Sem 2").WithCallbackData("sem_2nd Semester"),
-						tu.InlineKeyboardButton("Sem 3").WithCallbackData("sem_3rd Semester"),
-					),
-					tu.InlineKeyboardRow(
-						tu.InlineKeyboardButton("Sem 4").WithCallbackData("sem_4th Semester"),
-						tu.InlineKeyboardButton("Sem 5").WithCallbackData("sem_5th Semester"),
-						tu.InlineKeyboardButton("Sem 6").WithCallbackData("sem_6th Semester"),
-					),
-					tu.InlineKeyboardRow(
-						tu.InlineKeyboardButton("Sem 7").WithCallbackData("sem_7th Semester"),
-						tu.InlineKeyboardButton("Sem 8").WithCallbackData("sem_8th Semester"),
-					),
-				)
-				_, _ = c.bot.SendMessage(ctx, &telego.SendMessageParams{
-					ChatID:      telego.ChatID{ID: chatID},
-					Text:        fmt.Sprintf("🎓 Got it — <b>%s</b>!\n\nWhich semester are you in?", content),
-					ParseMode:   telego.ModeHTML,
-					ReplyMarkup: keyboard,
-				})
-				return nil
+					keyboard := tu.InlineKeyboard(
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("1st Sem").WithCallbackData("sem_1st Semester"),
+							tu.InlineKeyboardButton("2nd Sem").WithCallbackData("sem_2nd Semester"),
+						),
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("3rd Sem").WithCallbackData("sem_3rd Semester"),
+							tu.InlineKeyboardButton("4th Sem").WithCallbackData("sem_4th Semester"),
+						),
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("5th Sem").WithCallbackData("sem_5th Semester"),
+							tu.InlineKeyboardButton("6th Sem").WithCallbackData("sem_6th Semester"),
+						),
+						tu.InlineKeyboardRow(
+							tu.InlineKeyboardButton("7th Sem").WithCallbackData("sem_7th Semester"),
+							tu.InlineKeyboardButton("8th Sem").WithCallbackData("sem_8th Semester"),
+						),
+					)
+
+					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID),
+						fmt.Sprintf("Got it. %s! 🎓\n\nNow, which semester are you in?", content)).
+						WithReplyMarkup(keyboard))
+					return nil
+				} else if profile.Semester == "" {
+					profile.Semester = content
+					profile.OnboardingComplete = true
+					_ = c.db.SaveUserProfile(profile)
+
+					finalMsg := fmt.Sprintf("Awesome. You're in %s at %s.\n\nSetup complete! 🚀\n\nYou can now send me PDFs, ask questions, or link your Google Drive via the local web setup.", profile.Semester, profile.University)
+					_, _ = c.bot.SendMessage(ctx, tu.Message(tu.ID(chatID), finalMsg))
+					return nil
+				}
 			}
-			// If University is set but Semester is not → semester buttons were shown.
-			// User clicking a button handles this via callback. Plain text here just continues to AI.
 		}
 	}
 
@@ -429,9 +443,6 @@ func (c *TelegramChannel) handleCallbackQuery(ctx context.Context, query telego.
 	chatIDStr := fmt.Sprintf("%d", chatID)
 	data := query.Data
 
-	_ = c.bot.AnswerCallbackQuery(ctx, tu.CallbackQuery(query.ID))
-
-	// ── Semester Selection ───────────────────────────────────────────────
 	if strings.HasPrefix(data, "sem_") {
 		semester := strings.TrimPrefix(data, "sem_")
 		profile, _ := c.db.GetUserProfile(chatIDStr)
@@ -440,47 +451,18 @@ func (c *TelegramChannel) handleCallbackQuery(ctx context.Context, query telego.
 			profile.OnboardingComplete = true
 			_ = c.db.SaveUserProfile(profile)
 
-			finalMsg := fmt.Sprintf(
-				"🎉 <b>Setup Complete!</b>\n\nYou're in <b>%s</b> at <b>%s</b>.\n\n"+
-					"<i>You're now ready! Here's how to get started:</i>\n\n"+
-					"• Send me any <b>PDF or image</b> to index it\n"+
-					"• Type <b>quiz me</b> to start a practice session\n"+
-					"• Type <b>deadlines</b> to check upcoming exams\n"+
-					"• Just <b>ask anything</b> — I'm your 24/7 tutor 🦞",
-				semester, profile.University)
-
+			// Update the message to remove buttons and show confirmation
+			finalMsg := fmt.Sprintf("Awesome! You're in %s at %s.\n\nSetup complete! 🚀\n\nYou can now send me PDFs, ask questions, or link your Google Drive via the local web setup.", semester, profile.University)
 			_, _ = c.bot.EditMessageText(ctx, &telego.EditMessageTextParams{
-				ChatID: telego.ChatID{ID: chatID}, MessageID: query.Message.GetMessageID(),
-				Text: finalMsg, ParseMode: telego.ModeHTML,
+				ChatID:    telego.ChatID{ID: chatID},
+				MessageID: query.Message.GetMessageID(),
+				Text:      finalMsg,
 			})
-		}
-		return nil
-	}
 
-	// ── Action Quick-Access Buttons ──────────────────────────────────────
-	actionMsgs := map[string]string{
-		"action_quiz":            "🎯 Send me a topic or just say <b>quiz me</b> and I'll generate MCQs from your notes!",
-		"action_deadlines":       "📅 Type <b>view deadlines</b> or <b>add deadline: [subject] on [date]</b>",
-		"action_report":          "📊 Type <b>generate report</b> to get your weekly study performance summary.",
-		"action_search":          "🔍 Type <b>search: [topic]</b> to find relevant notes from your indexed PDFs.",
-		"action_upload":          "📥 <b>Just send me a PDF or image!</b>\nI'll automatically index it and make it searchable for quizzes.",
-		"action_help":            "❓ <b>Quick Help:</b>\n\n• <b>quiz me</b> — generate MCQs\n• <b>search: X</b> — search notes\n• <b>deadlines</b> — view upcoming exams\n• <b>add deadline: X on Y</b> — add deadline\n• <b>draw: X</b> — generate a diagram\n• <b>report</b> — weekly performance\n• <b>!stop</b> — shut down the bot (owner only)",
-		"action_skip_onboarding": "✅ <b>No problem!</b> Feel free to ask me anything, upload PDFs, or type <b>quiz me</b>. You can always do setup later with /start.",
-	}
-
-	if txt, ok := actionMsgs[data]; ok {
-		_, _ = c.bot.SendMessage(ctx, &telego.SendMessageParams{
-			ChatID: telego.ChatID{ID: chatID}, Text: txt, ParseMode: telego.ModeHTML,
-		})
-		if data == "action_skip_onboarding" {
-			profile, _ := c.db.GetUserProfile(chatIDStr)
-			if profile != nil {
-				profile.OnboardingComplete = true
-				_ = c.db.SaveUserProfile(profile)
-			}
+			// Answer callback to remove spinner
+			_ = c.bot.AnswerCallbackQuery(ctx, tu.CallbackQuery(query.ID).WithText("Semester selected!"))
 		}
 	}
-
 	return nil
 }
 

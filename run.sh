@@ -87,14 +87,7 @@ fi
 # 5. Launch
 show_header
 echo -e "${GREEN}[LAUNCH] StudyClaw is running!${NC}"
-echo "   (Send !stop from WhatsApp or type 'exit' in terminal to shut down)"
-echo ""
-echo -e "${YELLOW}━━━ WhatsApp Group Setup ━━━${NC}"
-echo "   To monitor a WhatsApp group, send !getid in that group."
-echo "   Then add the JID to .env:"
-echo "   STUDYCLAW_ALLOWED_GROUPS=120363XXXX@g.us"
-echo "   STUDYCLAW_PASSIVE_GROUPS=120363YYYY@g.us  (read-only)"
-echo "   Then restart the bot."
+echo "   (Send !stop from WhatsApp to shut down gracefully)"
 echo ""
 
 # Cleanup on exit
