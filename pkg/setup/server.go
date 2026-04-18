@@ -201,18 +201,18 @@ const setupHTML = `
             <div class="section-title">Step 2: Configuration</div>
             <form action="/save" method="POST">
                 <div class="form-group">
-                    <label>Telegram Bot Token</label>
-                    <input type="text" name="TELEGRAM_BOT_TOKEN" placeholder="123456789:ABC..." required>
+                    <label for="TELEGRAM_BOT_TOKEN">Telegram Bot Token</label>
+                    <input type="text" id="TELEGRAM_BOT_TOKEN" name="TELEGRAM_BOT_TOKEN" placeholder="123456789:ABC..." required>
                     <div class="hint">Get from @BotFather</div>
                 </div>
                 <div class="form-group">
-                    <label>Admin Phone Number</label>
-                    <input type="text" name="STUDYCLAW_OWNER_NUMBER" placeholder="e.g. 919832XXXXXX" required>
+                    <label for="STUDYCLAW_OWNER_NUMBER">Admin Phone Number</label>
+                    <input type="text" id="STUDYCLAW_OWNER_NUMBER" name="STUDYCLAW_OWNER_NUMBER" placeholder="e.g. 919832XXXXXX" required>
                     <div class="hint">With country code, no "+"</div>
                 </div>
                 <div class="form-group">
-                    <label>Gemini API Key (Optional)</label>
-                    <input type="password" name="GEMINI_API_KEY" placeholder="AIzaSy...">
+                    <label for="GEMINI_API_KEY">Gemini API Key (Optional)</label>
+                    <input type="password" id="GEMINI_API_KEY" name="GEMINI_API_KEY" placeholder="AIzaSy...">
                     <div class="hint">For fallback or direct vision features</div>
                 </div>
                 
