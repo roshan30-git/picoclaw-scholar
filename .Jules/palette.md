@@ -1,0 +1,3 @@
+## 2024-04-19 - Accessibility for Form Hints
+**Learning:** The setup form had `.hint` divs below inputs, but screen readers wouldn't associate the hint text with the input fields. This is a common accessibility issue for forms with help text.
+**Action:** Use `aria-describedby="hint-id"` on the input element and add `id="hint-id"` to the corresponding hint element to programmatically link them for assistive technologies. Adding an `aria-hidden="true"` visual required indicator `*` also helps users quickly identify mandatory fields without confusing screen readers (which already announce the `required` attribute).
