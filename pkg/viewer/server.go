@@ -17,15 +17,17 @@ type VisualContent struct {
 }
 
 type Server struct {
-	port  int
-	mu    sync.RWMutex
-	store map[string]VisualContent
+	port           int
+	allowedOrigins []string
+	mu             sync.RWMutex
+	store          map[string]VisualContent
 }
 
-func NewServer(port int) *Server {
+func NewServer(port int, allowedOrigins []string) *Server {
 	return &Server{
-		port:  port,
-		store: make(map[string]VisualContent),
+		port:           port,
+		allowedOrigins: allowedOrigins,
+		store:          make(map[string]VisualContent),
 	}
 }
 
@@ -42,10 +44,18 @@ func (s *Server) StoreContent(id, title, vType, source string) {
 }
 
 func (s *Server) Start() error {
-	fs := http.FileServer(http.Dir("./pkg/viewer/static"))
-	http.Handle("/", fs)
+	mux := s.setupMux()
+	addr := fmt.Sprintf("0.0.0.0:%d", s.port)
+	log.Printf("Viewer server listening on http://%s", addr)
+	return http.ListenAndServe(addr, mux)
+}
 
-	http.HandleFunc("/api/content/", func(w http.ResponseWriter, r *http.Request) {
+func (s *Server) setupMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	fs := http.FileServer(http.Dir("./pkg/viewer/static"))
+	mux.Handle("/", fs)
+
+	mux.HandleFunc("/api/content/", func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/api/content/")
 		if id == "" {
 			http.Error(w, "missing id", http.StatusBadRequest)
@@ -62,11 +72,22 @@ func (s *Server) Start() error {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		// Secure CORS check
+		origin := r.Header.Get("Origin")
+		allowed := false
+		for _, o := range s.allowedOrigins {
+			if o == origin {
+				allowed = true
+				break
+			}
+		}
+		if allowed {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+
 		json.NewEncoder(w).Encode(content)
 	})
 
-	addr := fmt.Sprintf("0.0.0.0:%d", s.port)
-	log.Printf("Viewer server listening on http://%s", addr)
-	return http.ListenAndServe(addr, nil)
+	return mux
 }
