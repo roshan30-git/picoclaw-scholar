@@ -3,21 +3,56 @@ package tools
 import "testing"
 
 func TestErrorResult(t *testing.T) {
-	msg := "test error"
-	res := ErrorResult(msg)
-
-	expectedLLM := "Error: " + msg
-	if res.ForLLM != expectedLLM {
-		t.Errorf("expected ForLLM %q, got %q", expectedLLM, res.ForLLM)
+	tests := []struct {
+		name         string
+		msg          string
+		expectedLLM  string
+		expectedUser string
+	}{
+		{
+			name:         "Standard message",
+			msg:          "something went wrong",
+			expectedLLM:  "Error: something went wrong",
+			expectedUser: "Sorry, I encountered an error: something went wrong",
+		},
+		{
+			name:         "Empty message",
+			msg:          "",
+			expectedLLM:  "Error: ",
+			expectedUser: "Sorry, I encountered an error: ",
+		},
+		{
+			name:         "Special characters",
+			msg:          "!@#$%^&*()",
+			expectedLLM:  "Error: !@#$%^&*()",
+			expectedUser: "Sorry, I encountered an error: !@#$%^&*()",
+		},
 	}
 
-	expectedUser := "Sorry, I encountered an error: " + msg
-	if res.ForUser != expectedUser {
-		t.Errorf("expected ForUser %q, got %q", expectedUser, res.ForUser)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := ErrorResult(tt.msg)
 
-	if !res.IsError {
-		t.Error("expected IsError to be true")
+			if res.ForLLM != tt.expectedLLM {
+				t.Errorf("expected ForLLM %q, got %q", tt.expectedLLM, res.ForLLM)
+			}
+
+			if res.ForUser != tt.expectedUser {
+				t.Errorf("expected ForUser %q, got %q", tt.expectedUser, res.ForUser)
+			}
+
+			if !res.IsError {
+				t.Error("expected IsError to be true")
+			}
+
+			if res.Silent {
+				t.Error("expected Silent to be false")
+			}
+
+			if res.Async {
+				t.Error("expected Async to be false")
+			}
+		})
 	}
 }
 
