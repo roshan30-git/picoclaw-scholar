@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -35,6 +36,8 @@ func main() {
 
 	// Launch local web UI if critical configuration is missing
 	setup.RunServerIfConfigMissing()
+
+	cfg := config.LoadConfig()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -87,7 +90,15 @@ func main() {
 	}
 
 	// 5. Diagram Viewer Server (localhost:8080)
-	viewerSrv := viewer.NewServer(8080)
+	var allowedOrigins []string
+	if cfg.TelegramWebAppURL != "" {
+		if u, err := url.Parse(cfg.TelegramWebAppURL); err == nil {
+			origin := fmt.Sprintf("%s://%s", u.Scheme, u.Host)
+			allowedOrigins = append(allowedOrigins, origin)
+		}
+	}
+
+	viewerSrv := viewer.NewServer(8080, allowedOrigins)
 	go viewerSrv.Start()
 	fmt.Println("📊 Diagram viewer available at http://127.0.0.1:8080")
 	visManager := visual.NewManager(viewerSrv)
@@ -96,7 +107,6 @@ func main() {
 	chMgr := channels.NewManager()
 
 	// Initialize Phase 4 Engines
-	cfg := config.LoadConfig()
 	calendarEngine := study.NewCalendarEngine()
 	reflectionManager := memory.NewReflectionManager("workspace")
 	personaRouter := agent.NewPersonaRouter()
