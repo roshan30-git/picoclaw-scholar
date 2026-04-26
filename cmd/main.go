@@ -37,6 +37,8 @@ func main() {
 	// Launch local web UI if critical configuration is missing
 	setup.RunServerIfConfigMissing()
 
+	cfg := config.LoadConfig()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -87,12 +89,13 @@ func main() {
 		}
 	}
 
-	// 5. Initialize Configuration
-	cfg := config.LoadConfig()
-
-	// 6. Diagram Viewer Server (localhost:8080)
+	// 5. Diagram Viewer Server (localhost:8080)
 	var allowedOrigins []string
-	if u, err := url.Parse(cfg.TelegramWebAppURL); err == nil && u.Scheme != "" && u.Host != "" {
+	if cfg.TelegramWebAppURL == "" {
+		log.Printf("⚠️  TelegramWebAppURL not set; viewer CORS will be restricted (no origin allowed)")
+	} else if u, err := url.Parse(cfg.TelegramWebAppURL); err != nil || u.Scheme == "" || u.Host == "" {
+		log.Printf("⚠️  Failed to parse TelegramWebAppURL %q: viewer CORS will be restricted", cfg.TelegramWebAppURL)
+	} else {
 		allowedOrigins = append(allowedOrigins, fmt.Sprintf("%s://%s", u.Scheme, u.Host))
 	}
 

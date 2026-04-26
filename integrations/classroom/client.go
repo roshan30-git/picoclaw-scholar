@@ -10,10 +10,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-const (
-// TokenFile is legacy and should be removed if possible, but keeping for compatibility if needed.
-)
-
 type Client struct {
 	svc *classroom.Service
 }

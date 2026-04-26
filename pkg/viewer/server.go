@@ -43,6 +43,38 @@ func (s *Server) StoreContent(id, title, vType, source string) {
 	}
 }
 
+func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
+	// Apply CORS headers first so all responses (including 4xx) include them for allowed origins.
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		for _, allowed := range s.allowedOrigins {
+			if allowed == origin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+				break
+			}
+		}
+	}
+
+	id := strings.TrimPrefix(r.URL.Path, "/api/content/")
+	if id == "" {
+		http.Error(w, "missing id", http.StatusBadRequest)
+		return
+	}
+
+	s.mu.RLock()
+	content, ok := s.store[id]
+	s.mu.RUnlock()
+
+	if !ok {
+		http.Error(w, "content not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(content)
+}
+
 func (s *Server) Start() error {
 	mux := s.setupMux()
 	addr := fmt.Sprintf("0.0.0.0:%d", s.port)
@@ -54,40 +86,6 @@ func (s *Server) setupMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	fs := http.FileServer(http.Dir("./pkg/viewer/static"))
 	mux.Handle("/", fs)
-
-	mux.HandleFunc("/api/content/", func(w http.ResponseWriter, r *http.Request) {
-		id := strings.TrimPrefix(r.URL.Path, "/api/content/")
-		if id == "" {
-			http.Error(w, "missing id", http.StatusBadRequest)
-			return
-		}
-
-		s.mu.RLock()
-		content, ok := s.store[id]
-		s.mu.RUnlock()
-
-		if !ok {
-			http.Error(w, "content not found", http.StatusNotFound)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-
-		// Secure CORS check
-		origin := r.Header.Get("Origin")
-		allowed := false
-		for _, o := range s.allowedOrigins {
-			if o == origin {
-				allowed = true
-				break
-			}
-		}
-		if allowed {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-		}
-
-		json.NewEncoder(w).Encode(content)
-	})
-
+	mux.HandleFunc("/api/content/", s.contentHandler)
 	return mux
 }
