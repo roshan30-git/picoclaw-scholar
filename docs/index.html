@@ -210,12 +210,17 @@
                                 Initialize Instance
                             </a>
                             <div
-                                class="flex items-center justify-between px-4 sm:px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-xs sm:text-sm w-full max-w-full shadow-sm cursor-text hover:border-slate-500 transition-colors group overflow-hidden">
+                                class="flex items-center justify-between px-4 sm:px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-xs sm:text-sm w-full max-w-full shadow-sm hover:border-slate-500 transition-colors group overflow-hidden">
                                 <span class="mr-4 text-primary select-none">$</span>
-                                <span class="flex-grow truncate mr-2">git clone
-                                    https://github.com/roshan30-git/picoclaw-scholar.git</span>
-                                <span
-                                    class="material-symbols-outlined text-slate-600 text-sm ml-2 group-hover:text-slate-400 cursor-pointer shrink-0">content_copy</span>
+                                <span class="flex-grow truncate mr-2" id="clone-cmd">git clone https://github.com/roshan30-git/picoclaw-scholar.git</span>
+                                <button
+                                    aria-label="Copy clone command"
+                                    title="Copy to clipboard"
+                                    onclick="navigator.clipboard.writeText(document.getElementById('clone-cmd').innerText); const icon = this.querySelector('span'); icon.textContent='check'; icon.classList.add('text-accent-teal'); setTimeout(() => { icon.textContent='content_copy'; icon.classList.remove('text-accent-teal'); }, 2000);"
+                                    class="p-1 rounded hover:bg-slate-700/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors shrink-0 flex items-center justify-center"
+                                >
+                                    <span class="material-symbols-outlined text-slate-600 text-sm group-hover:text-slate-400 transition-colors">content_copy</span>
+                                </button>
                             </div>
                         </div>
                         <div
