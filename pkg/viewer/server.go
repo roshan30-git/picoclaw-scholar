@@ -44,6 +44,18 @@ func (s *Server) StoreContent(id, title, vType, source string) {
 }
 
 func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
+	// Apply CORS headers first so all responses (including 4xx) include them for allowed origins.
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		for _, allowed := range s.allowedOrigins {
+			if allowed == origin {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+				break
+			}
+		}
+	}
+
 	id := strings.TrimPrefix(r.URL.Path, "/api/content/")
 	if id == "" {
 		http.Error(w, "missing id", http.StatusBadRequest)
@@ -60,28 +72,20 @@ func (s *Server) contentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
-	origin := r.Header.Get("Origin")
-	if origin != "" {
-		for _, allowed := range s.allowedOrigins {
-			if allowed == origin {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-				w.Header().Set("Vary", "Origin")
-				break
-			}
-		}
-	}
-
 	json.NewEncoder(w).Encode(content)
 }
 
 func (s *Server) Start() error {
-	fs := http.FileServer(http.Dir("./pkg/viewer/static"))
-	http.Handle("/", fs)
-
-	http.HandleFunc("/api/content/", s.contentHandler)
-
+	mux := s.setupMux()
 	addr := fmt.Sprintf("0.0.0.0:%d", s.port)
 	log.Printf("Viewer server listening on http://%s", addr)
-	return http.ListenAndServe(addr, nil)
+	return http.ListenAndServe(addr, mux)
+}
+
+func (s *Server) setupMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	fs := http.FileServer(http.Dir("./pkg/viewer/static"))
+	mux.Handle("/", fs)
+	mux.HandleFunc("/api/content/", s.contentHandler)
+	return mux
 }
