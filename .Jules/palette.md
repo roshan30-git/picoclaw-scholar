@@ -1,3 +1,6 @@
 ## 2024-04-19 - Accessibility for Form Hints
 **Learning:** The setup form had `.hint` divs below inputs, but screen readers wouldn't associate the hint text with the input fields. This is a common accessibility issue for forms with help text.
 **Action:** Use `aria-describedby="hint-id"` on the input element and add `id="hint-id"` to the corresponding hint element to programmatically link them for assistive technologies. Adding an `aria-hidden="true"` visual required indicator `*` also helps users quickly identify mandatory fields without confusing screen readers (which already announce the `required` attribute).
+## 2024-05-10 - Accessibility for Interactive Icons
+**Learning:** Icon-only elements (like copy buttons) that are implemented as `<span>` tags with `cursor-pointer` lack keyboard accessibility and screen reader support. This makes them unusable for keyboard-only users and unclear to screen reader users.
+**Action:** Wrap interactive icons in `<button>` tags, include an `aria-label` or `title`, and add `focus-visible` styles (e.g., `focus-visible:ring-2`) to ensure they are fully navigable and clear to assistive technologies. Added an active state copy feedback to improve user experience.
