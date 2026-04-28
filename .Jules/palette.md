@@ -4,3 +4,6 @@
 ## 2024-05-10 - Accessibility for Interactive Icons
 **Learning:** Icon-only elements (like copy buttons) that are implemented as `<span>` tags with `cursor-pointer` lack keyboard accessibility and screen reader support. This makes them unusable for keyboard-only users and unclear to screen reader users.
 **Action:** Wrap interactive icons in `<button>` tags, include an `aria-label` or `title`, and add `focus-visible` styles (e.g., `focus-visible:ring-2`) to ensure they are fully navigable and clear to assistive technologies. Added an active state copy feedback to improve user experience.
+## 2024-05-15 - Accessibility for Tailwind Interactive Elements
+**Learning:** Modern CSS resets and utilities like Tailwind often strip default browser focus outlines. Interactive elements (like `<a>` tags acting as buttons or navigation links) can lose clear visual focus, making the site difficult to navigate for keyboard users.
+**Action:** Always explicitly apply `focus-visible` styling (e.g., `focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`) to interactive elements, such as links and CTAs, to ensure clear visual feedback for keyboard navigation without impacting mouse users.
