@@ -7,3 +7,6 @@
 ## 2024-05-15 - Accessibility for Tailwind Interactive Elements
 **Learning:** Modern CSS resets and utilities like Tailwind often strip default browser focus outlines. Interactive elements (like `<a>` tags acting as buttons or navigation links) can lose clear visual focus, making the site difficult to navigate for keyboard users.
 **Action:** Always explicitly apply `focus-visible` styling (e.g., `focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`) to interactive elements, such as links and CTAs, to ensure clear visual feedback for keyboard navigation without impacting mouse users.
+## 2025-05-18 - Form Input Hint Accessibility
+**Learning:** Using `aria-describedby` to explicitly link helper/hint texts to form `<input>` fields ensures that screen readers announce this supplementary information to users when the input receives focus. Visual proximity alone is insufficient for accessibility.
+**Action:** When creating or modifying forms with helper text or hints, always assign a unique `id` to the helper text element and use `aria-describedby="[helper-id]"` on the corresponding `<input>`. Use systematic IDs like `hint-FIELD_NAME` to keep associations clear and maintainable.

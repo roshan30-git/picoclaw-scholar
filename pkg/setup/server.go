@@ -202,18 +202,18 @@ const setupHTML = `
             <form action="/save" method="POST">
                 <div class="form-group">
                     <label for="TELEGRAM_BOT_TOKEN">Telegram Bot Token <span aria-hidden="true" style="color: var(--primary);">*</span></label>
-                    <input type="text" id="TELEGRAM_BOT_TOKEN" name="TELEGRAM_BOT_TOKEN" placeholder="123456789:ABC..." aria-describedby="hint-telegram" required>
-                    <div id="hint-telegram" class="hint">Get from @BotFather</div>
+                    <input type="text" id="TELEGRAM_BOT_TOKEN" name="TELEGRAM_BOT_TOKEN" placeholder="123456789:ABC..." aria-describedby="hint-TELEGRAM_BOT_TOKEN" required>
+                    <div id="hint-TELEGRAM_BOT_TOKEN" class="hint">Get from @BotFather</div>
                 </div>
                 <div class="form-group">
                     <label for="STUDYCLAW_OWNER_NUMBER">Admin Phone Number <span aria-hidden="true" style="color: var(--primary);">*</span></label>
-                    <input type="text" id="STUDYCLAW_OWNER_NUMBER" name="STUDYCLAW_OWNER_NUMBER" placeholder="e.g. 919832XXXXXX" aria-describedby="hint-phone" required>
-                    <div id="hint-phone" class="hint">With country code, no "+"</div>
+                    <input type="text" id="STUDYCLAW_OWNER_NUMBER" name="STUDYCLAW_OWNER_NUMBER" placeholder="e.g. 919832XXXXXX" aria-describedby="hint-STUDYCLAW_OWNER_NUMBER" required>
+                    <div id="hint-STUDYCLAW_OWNER_NUMBER" class="hint">With country code, no "+"</div>
                 </div>
                 <div class="form-group">
                     <label for="GEMINI_API_KEY">Gemini API Key (Optional)</label>
-                    <input type="password" id="GEMINI_API_KEY" name="GEMINI_API_KEY" placeholder="AIzaSy..." aria-describedby="hint-gemini">
-                    <div id="hint-gemini" class="hint">For fallback or direct vision features</div>
+                    <input type="password" id="GEMINI_API_KEY" name="GEMINI_API_KEY" placeholder="AIzaSy..." aria-describedby="hint-GEMINI_API_KEY">
+                    <div id="hint-GEMINI_API_KEY" class="hint">For fallback or direct vision features</div>
                 </div>
                 
                 <button type="submit" class="submit-btn">Complete Setup & Launch 🚀</button>
