@@ -157,13 +157,13 @@
                         </div>
                     </div>
                     <div class="hidden md:flex items-center space-x-10">
-                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             href="#installation">Documentation</a>
-                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             href="#blog">Blog</a>
-                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             href="#errors">Common Errors</a>
-                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide"
+                        <a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors tracking-wide focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank">GitHub</a>
                     </div>
                     <div class="flex items-center space-x-5">
@@ -204,18 +204,23 @@
                             or Telegram bot for academic mastery directly in your workflow.
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                            <a class="flex items-center justify-center px-8 py-3.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 transform hover:-translate-y-0.5"
+                            <a class="flex items-center justify-center px-8 py-3.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-indigo-500/25 transform hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 href="#installation">
                                 <span class="material-symbols-outlined mr-2 text-lg">bolt</span>
                                 Initialize Instance
                             </a>
                             <div
-                                class="flex items-center justify-between px-4 sm:px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-xs sm:text-sm w-full max-w-full shadow-sm cursor-text hover:border-slate-500 transition-colors group overflow-hidden">
+                                class="flex items-center justify-between px-4 sm:px-6 py-3.5 border border-slate-700 bg-[#0F172A]/80 rounded-lg text-slate-300 font-mono text-xs sm:text-sm w-full max-w-full shadow-sm hover:border-slate-500 transition-colors group overflow-hidden">
                                 <span class="mr-4 text-primary select-none">$</span>
-                                <span class="flex-grow truncate mr-2">git clone
-                                    https://github.com/roshan30-git/picoclaw-scholar.git</span>
-                                <span
-                                    class="material-symbols-outlined text-slate-600 text-sm ml-2 group-hover:text-slate-400 cursor-pointer shrink-0">content_copy</span>
+                                <span class="flex-grow truncate mr-2" id="clone-cmd">git clone https://github.com/roshan30-git/picoclaw-scholar.git</span>
+                                <button
+                                    aria-label="Copy clone command"
+                                    title="Copy to clipboard"
+                                    onclick="navigator.clipboard.writeText(document.getElementById('clone-cmd').innerText); const icon = this.querySelector('span'); icon.textContent='check'; icon.classList.add('text-accent-teal'); setTimeout(() => { icon.textContent='content_copy'; icon.classList.remove('text-accent-teal'); }, 2000);"
+                                    class="p-1 rounded hover:bg-slate-700/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors shrink-0 flex items-center justify-center"
+                                >
+                                    <span class="material-symbols-outlined text-slate-600 text-sm group-hover:text-slate-400 transition-colors">content_copy</span>
+                                </button>
                             </div>
                         </div>
                         <div
@@ -984,7 +989,7 @@
                 </p>
 
                 <div class="flex space-x-6 mb-12">
-                    <a class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+                    <a class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         href="https://github.com/roshan30-git/picoclaw-scholar" target="_blank">
                         <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                             <path

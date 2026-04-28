@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -35,6 +36,8 @@ func main() {
 
 	// Launch local web UI if critical configuration is missing
 	setup.RunServerIfConfigMissing()
+
+	cfg := config.LoadConfig()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -87,16 +90,24 @@ func main() {
 	}
 
 	// 5. Diagram Viewer Server (localhost:8080)
-	viewerSrv := viewer.NewServer(8080)
+	var allowedOrigins []string
+	if cfg.TelegramWebAppURL == "" {
+		log.Printf("⚠️  TelegramWebAppURL not set; viewer CORS will be restricted (no origin allowed)")
+	} else if u, err := url.Parse(cfg.TelegramWebAppURL); err != nil || u.Scheme == "" || u.Host == "" {
+		log.Printf("⚠️  Failed to parse TelegramWebAppURL %q: viewer CORS will be restricted", cfg.TelegramWebAppURL)
+	} else {
+		allowedOrigins = append(allowedOrigins, fmt.Sprintf("%s://%s", u.Scheme, u.Host))
+	}
+
+	viewerSrv := viewer.NewServer(8080, allowedOrigins)
 	go viewerSrv.Start()
 	fmt.Println("📊 Diagram viewer available at http://127.0.0.1:8080")
 	visManager := visual.NewManager(viewerSrv)
 
-	// 6. Channel Manager
+	// 7. Channel Manager
 	chMgr := channels.NewManager()
 
 	// Initialize Phase 4 Engines
-	cfg := config.LoadConfig()
 	calendarEngine := study.NewCalendarEngine()
 	reflectionManager := memory.NewReflectionManager("workspace")
 	personaRouter := agent.NewPersonaRouter()
@@ -111,7 +122,7 @@ func main() {
 	go scheduler.Start(ctx)
 	fmt.Println("📅 Proactive scheduler started (daily reminders + weekly flashcards)")
 
-	// 7. Agent Loop (only started if LLM is available)
+	// 8. Agent Loop (only started if LLM is available)
 	if provider != nil {
 		agentLoop := agent.NewAgentLoop(cfg, msgBus, provider, visManager, personaRouter, calendarEngine, reflectionManager, db)
 		agentLoop.RegisterTool(study.NewQuizTool(study.NewQuizEngine(provider, db)))
@@ -129,7 +140,7 @@ func main() {
 		fmt.Println("🤖 Agent Loop initialized with current LLM provider")
 	}
 
-	// 8. Channels (WhatsApp & Telegram)
+	// 9. Channels (WhatsApp & Telegram)
 	// Initialize OCR Pipeline for WhatsApp (using current provider)
 	ocrPipeline, err := study.NewOCRPipeline(os.Getenv("GEMINI_API_KEY"), db)
 	if err != nil {
@@ -157,7 +168,7 @@ func main() {
 		}
 	}
 
-	// 9. Start all channels
+	// 10. Start all channels
 	if err := chMgr.StartAll(ctx); err != nil {
 		log.Fatalf("Failed to start channels: %v", err)
 	}
@@ -166,7 +177,7 @@ func main() {
 	fmt.Println("🚀 StudyClaw is alive! Send a message via WhatsApp to start.")
 	fmt.Println("   (Type 'stop' or 'exit' in terminal to shut down)")
 
-	// 10. Terminal Command Listener
+	// 11. Terminal Command Listener
 	go func() {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
