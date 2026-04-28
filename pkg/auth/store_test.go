@@ -52,9 +52,7 @@ func TestAuthCredentialNeedsRefresh(t *testing.T) {
 
 func TestStoreRoundtrip(t *testing.T) {
 	tmpDir := t.TempDir()
-	origHome := os.Getenv("HOME")
 	t.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
 
 	cred := &AuthCredential{
 		AccessToken:  "test-access-token",
@@ -89,9 +87,7 @@ func TestStoreRoundtrip(t *testing.T) {
 
 func TestStoreFilePermissions(t *testing.T) {
 	tmpDir := t.TempDir()
-	origHome := os.Getenv("HOME")
 	t.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
 
 	cred := &AuthCredential{
 		AccessToken: "secret-token",
@@ -102,7 +98,7 @@ func TestStoreFilePermissions(t *testing.T) {
 		t.Fatalf("SetCredential() error: %v", err)
 	}
 
-	path := filepath.Join(tmpDir, ".picoclaw", "auth.json")
+	path := filepath.Join(tmpDir, ".studyclaw", "auth.json")
 	info, err := os.Stat(path)
 	if err != nil {
 		t.Fatalf("Stat() error: %v", err)
@@ -115,9 +111,7 @@ func TestStoreFilePermissions(t *testing.T) {
 
 func TestStoreMultiProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	origHome := os.Getenv("HOME")
 	t.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
 
 	openaiCred := &AuthCredential{AccessToken: "openai-token", Provider: "openai", AuthMethod: "oauth"}
 	anthropicCred := &AuthCredential{AccessToken: "anthropic-token", Provider: "anthropic", AuthMethod: "token"}
@@ -148,9 +142,7 @@ func TestStoreMultiProvider(t *testing.T) {
 
 func TestDeleteCredential(t *testing.T) {
 	tmpDir := t.TempDir()
-	origHome := os.Getenv("HOME")
 	t.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
 
 	cred := &AuthCredential{AccessToken: "to-delete", Provider: "openai", AuthMethod: "oauth"}
 	if err := SetCredential("openai", cred); err != nil {
@@ -172,9 +164,7 @@ func TestDeleteCredential(t *testing.T) {
 
 func TestLoadStoreEmpty(t *testing.T) {
 	tmpDir := t.TempDir()
-	origHome := os.Getenv("HOME")
 	t.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
 
 	store, err := LoadStore()
 	if err != nil {
@@ -185,5 +175,37 @@ func TestLoadStoreEmpty(t *testing.T) {
 	}
 	if len(store.Credentials) != 0 {
 		t.Errorf("expected empty credentials, got %d", len(store.Credentials))
+	}
+}
+
+func TestDeleteAllCredentials(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Setenv("HOME", tmpDir)
+
+	// Test deleting when file doesn't exist
+	if err := DeleteAllCredentials(); err != nil {
+		t.Errorf("DeleteAllCredentials() error when file doesn't exist: %v", err)
+	}
+
+	// Create file
+	cred := &AuthCredential{AccessToken: "to-delete", Provider: "openai", AuthMethod: "oauth"}
+	if err := SetCredential("openai", cred); err != nil {
+		t.Fatalf("SetCredential() error: %v", err)
+	}
+
+	// Verify file exists
+	path := filepath.Join(tmpDir, ".studyclaw", "auth.json")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t.Fatal("auth file should exist after SetCredential")
+	}
+
+	// Delete all
+	if err := DeleteAllCredentials(); err != nil {
+		t.Fatalf("DeleteAllCredentials() error: %v", err)
+	}
+
+	// Verify file is gone
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Error("auth file should be deleted after DeleteAllCredentials")
 	}
 }
