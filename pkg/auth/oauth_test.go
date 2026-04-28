@@ -67,6 +67,7 @@ func TestBuildAuthorizeURL(t *testing.T) {
 }
 
 func TestBuildAuthorizeURLOpenAIExtras(t *testing.T) {
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
 	cfg := OpenAIOAuthConfig()
 	pkce := PKCECodes{CodeVerifier: "test-verifier", CodeChallenge: "test-challenge"}
 
@@ -277,6 +278,7 @@ func TestRefreshAccessToken(t *testing.T) {
 }
 
 func TestRefreshAccessTokenNoRefreshToken(t *testing.T) {
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
 	cfg := OpenAIOAuthConfig()
 	cred := &AuthCredential{
 		AccessToken: "old-token",
@@ -322,15 +324,34 @@ func TestRefreshAccessTokenPreservesRefreshAndAccountID(t *testing.T) {
 }
 
 func TestOpenAIOAuthConfig(t *testing.T) {
+	t.Setenv("STUDYCLAW_OPENAI_CLIENT_ID", "test-client-id")
 	cfg := OpenAIOAuthConfig()
 	if cfg.Issuer != "https://auth.openai.com" {
 		t.Errorf("Issuer = %q, want %q", cfg.Issuer, "https://auth.openai.com")
 	}
-	if cfg.ClientID == "" {
-		t.Error("ClientID is empty")
+	if cfg.ClientID != "test-client-id" {
+		t.Errorf("ClientID = %q, want %q", cfg.ClientID, "test-client-id")
 	}
 	if cfg.Port != 1455 {
 		t.Errorf("Port = %d, want 1455", cfg.Port)
+	}
+}
+
+func TestGoogleAntigravityOAuthConfig(t *testing.T) {
+	t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_ID", "test-google-id")
+	t.Setenv("STUDYCLAW_ANTIGRAVITY_CLIENT_SECRET", "test-google-secret")
+	cfg := GoogleAntigravityOAuthConfig()
+	if cfg.Issuer != "https://accounts.google.com/o/oauth2/v2" {
+		t.Errorf("Issuer = %q, want %q", cfg.Issuer, "https://accounts.google.com/o/oauth2/v2")
+	}
+	if cfg.ClientID != "test-google-id" {
+		t.Errorf("ClientID = %q, want %q", cfg.ClientID, "test-google-id")
+	}
+	if cfg.ClientSecret != "test-google-secret" {
+		t.Errorf("ClientSecret = %q, want %q", cfg.ClientSecret, "test-google-secret")
+	}
+	if cfg.Port != 51121 {
+		t.Errorf("Port = %d, want 51121", cfg.Port)
 	}
 }
 
