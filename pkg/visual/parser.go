@@ -22,6 +22,12 @@ type ParseResult struct {
 	VisualType   string
 }
 
+var (
+	diagramRe = regexp.MustCompile(`(?s)<diagram>(.*?)</diagram>`)
+	formulaRe = regexp.MustCompile(`(?s)<formula>(.*?)</formula>`)
+	circuitRe = regexp.MustCompile(`(?s)<circuit>(.*?)</circuit>`)
+)
+
 // ParseContent extracts <diagram>, <formula>, and <circuit> tags from a message and interacts with the visual manager.
 func (p *Parser) ParseContent(content string) ParseResult {
 	if p.manager == nil {
@@ -29,10 +35,6 @@ func (p *Parser) ParseContent(content string) ParseResult {
 	}
 
 	res := ParseResult{CleanContent: content}
-
-	diagramRe := regexp.MustCompile(`(?s)<diagram>(.*?)</diagram>`)
-	formulaRe := regexp.MustCompile(`(?s)<formula>(.*?)</formula>`)
-	circuitRe := regexp.MustCompile(`(?s)<circuit>(.*?)</circuit>`)
 
 	if matches := diagramRe.FindStringSubmatch(content); len(matches) > 1 {
 		res.CleanContent = diagramRe.ReplaceAllString(content, "*(Diagram generated ✨)*")
