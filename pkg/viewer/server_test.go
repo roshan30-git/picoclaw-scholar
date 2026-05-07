@@ -1,6 +1,7 @@
 package viewer
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -135,5 +136,54 @@ func TestCORSOnErrorResponses(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestStoreContent(t *testing.T) {
+	srv := NewServer(8080, []string{"https://app.studyclaw.com"})
+
+	id := "test-id-1"
+	title := "Test Mermaid"
+	vType := "mermaid"
+	source := "graph TD; A-->B"
+
+	srv.StoreContent(id, title, vType, source)
+
+	// Verify internal store
+	srv.mu.RLock()
+	content, ok := srv.store[id]
+	srv.mu.RUnlock()
+
+	if !ok {
+		t.Fatalf("expected content with id %s to be stored", id)
+	}
+	if content.Title != title {
+		t.Errorf("expected title %q, got %q", title, content.Title)
+	}
+	if content.Type != vType {
+		t.Errorf("expected type %q, got %q", vType, content.Type)
+	}
+	if content.Source != source {
+		t.Errorf("expected source %q, got %q", source, content.Source)
+	}
+
+	// Verify via API
+	mux := srv.setupMux()
+	req, _ := http.NewRequest("GET", "/api/content/"+id, nil)
+	req.Header.Set("Origin", "https://app.studyclaw.com")
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status OK, got %v", rr.Code)
+	}
+
+	var got VisualContent
+	if err := json.NewDecoder(rr.Body).Decode(&got); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+
+	if got != content {
+		t.Errorf("API response does not match stored content: %+v != %+v", got, content)
 	}
 }
