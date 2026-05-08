@@ -137,7 +137,15 @@ func (c *Client) listGroups() {
 // It only processes plain text and media messages from allowed senders.
 func (c *Client) handleEvent(evt interface{}) {
 	switch v := evt.(type) {
+	case *events.HistorySync:
+		// Ignore history sync events to speed up initialization and prevent hanging
+		return
 	case *events.Message:
+		// Ignore messages sent by ourselves
+		if v.Info.IsFromMe {
+			return
+		}
+
 		chatID := v.Info.Chat.String()
 		sender := v.Info.Sender.String()
 
