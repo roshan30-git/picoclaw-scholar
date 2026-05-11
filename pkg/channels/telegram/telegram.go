@@ -622,9 +622,8 @@ func extractInlineCodes(text string) inlineCodeMatch {
 	return inlineCodeMatch{text: text, codes: codes}
 }
 
+var htmlEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
+
 func escapeHTML(text string) string {
-	text = strings.ReplaceAll(text, "&", "&amp;")
-	text = strings.ReplaceAll(text, "<", "&lt;")
-	text = strings.ReplaceAll(text, ">", "&gt;")
-	return text
+	return htmlEscaper.Replace(text)
 }
