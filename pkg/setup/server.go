@@ -137,6 +137,10 @@ const setupHTML = `
             border: 1px solid transparent;
             cursor: pointer;
         }
+        .connect-btn:focus-visible, .submit-btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 4px;
+        }
         .btn-google {
             background: rgba(255, 255, 255, 0.05);
             color: white;
