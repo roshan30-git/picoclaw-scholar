@@ -15,6 +15,7 @@ import (
 	"github.com/roshan30-git/picoclaw-scholar/pkg/auth"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/logger"
 	"github.com/roshan30-git/picoclaw-scholar/pkg/tools"
+	"github.com/roshan30-git/picoclaw-scholar/pkg/utils"
 )
 
 const (
@@ -700,7 +701,7 @@ func FetchAntigravityProjectID(accessToken string) (string, error) {
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("loadCodeAssist failed: %s", string(body))
+		return "", fmt.Errorf("loadCodeAssist failed: %s", utils.Truncate(string(body), 500))
 	}
 
 	var result struct {
@@ -744,7 +745,7 @@ func FetchAntigravityModels(accessToken, projectID string) ([]AntigravityModelIn
 		return nil, fmt.Errorf(
 			"fetchAvailableModels failed (HTTP %d): %s",
 			resp.StatusCode,
-			truncateString(string(body), 200),
+			utils.Truncate(string(body), 200),
 		)
 	}
 
@@ -806,13 +807,6 @@ type AntigravityModelInfo struct {
 
 // --- Helpers ---
 
-func truncateString(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen] + "..."
-}
-
 func randomString(n int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, n)
@@ -833,7 +827,7 @@ func (p *AntigravityProvider) parseAntigravityError(statusCode int, body []byte)
 	}
 
 	if err := json.Unmarshal(body, &errResp); err != nil {
-		return fmt.Errorf("antigravity API error (HTTP %d): %s", statusCode, truncateString(string(body), 500))
+		return fmt.Errorf("antigravity API error (HTTP %d): %s", statusCode, utils.Truncate(string(body), 500))
 	}
 
 	msg := errResp.Error.Message

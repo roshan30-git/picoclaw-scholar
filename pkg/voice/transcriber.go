@@ -126,9 +126,9 @@ func (t *GroqTranscriber) Transcribe(ctx context.Context, audioFilePath string) 
 	if resp.StatusCode != http.StatusOK {
 		logger.ErrorCF("voice", "API error", map[string]any{
 			"status_code": resp.StatusCode,
-			"response":    string(body),
+			"response":    utils.Truncate(string(body), 500),
 		})
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, utils.Truncate(string(body), 500))
 	}
 
 	logger.DebugCF("voice", "Received response from Groq API", map[string]any{

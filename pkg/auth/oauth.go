@@ -18,6 +18,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/roshan30-git/picoclaw-scholar/pkg/utils"
 )
 
 type OAuthProviderConfig struct {
@@ -239,7 +241,7 @@ func LoginDeviceCode(cfg OAuthProviderConfig) (*AuthCredential, error) {
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("device code request failed: %s", string(body))
+		return nil, fmt.Errorf("device code request failed: %s", utils.Truncate(string(body), 500))
 	}
 
 	deviceResp, err := parseDeviceCodeResponse(body)
@@ -340,7 +342,7 @@ func RefreshAccessToken(cred *AuthCredential, cfg OAuthProviderConfig) (*AuthCre
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("token refresh failed: %s", string(body))
+		return nil, fmt.Errorf("token refresh failed: %s", utils.Truncate(string(body), 500))
 	}
 
 	refreshed, err := parseTokenResponse(body, cred.Provider)
@@ -432,7 +434,7 @@ func ExchangeCodeForTokens(cfg OAuthProviderConfig, code, codeVerifier, redirect
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("token exchange failed: %s", string(body))
+		return nil, fmt.Errorf("token exchange failed: %s", utils.Truncate(string(body), 500))
 	}
 
 	return parseTokenResponse(body, provider)
