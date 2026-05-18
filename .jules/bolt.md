@@ -1,3 +1,6 @@
 ## 2025-02-18 - Repeated Regex Compilation in Go
 **Learning:** Found multiple instances of `regexp.MustCompile` being called inside frequently invoked functions (like `ParseContent` in `pkg/visual/parser.go`). This leads to unnecessary CPU cycles and memory allocations on the hot path. Go's compiled `regexp.Regexp` objects are safe for concurrent use.
 **Action:** Always move `regexp.MustCompile` calls to package-level variables (`var (...)`) so they are compiled exactly once at application startup.
+## 2025-05-18 - Replacing string manipulation via closure in Regex logic
+**Learning:** Found multiple instances of `regexp.ReplaceAllStringFunc` being called in string-heavy routines like Telegram Markdown parsers, resulting in the runtime allocating closures and heavily copying strings on each regex match (doubling execution time on string heavy code).
+**Action:** Replace `ReplaceAllStringFunc` with simple `ReplaceAllString` where substitution expressions like `$1` work. For complex replacement logic (like substituting different formats per block item), instead use `FindAllStringSubmatchIndex` combined with a single pass through a `strings.Builder`. This avoids repetitive garbage collection and is exceptionally fast.
