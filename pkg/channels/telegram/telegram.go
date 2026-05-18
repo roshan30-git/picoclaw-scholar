@@ -547,13 +547,7 @@ func markdownToTelegramHTML(text string) string {
 
 	text = reBold2.ReplaceAllString(text, "<b>$1</b>")
 
-	text = reItalic.ReplaceAllStringFunc(text, func(s string) string {
-		match := reItalic.FindStringSubmatch(s)
-		if len(match) < 2 {
-			return s
-		}
-		return "<i>" + match[1] + "</i>"
-	})
+	text = reItalic.ReplaceAllString(text, "<i>$1</i>")
 
 	text = reStrikethrough.ReplaceAllString(text, "<s>$1</s>")
 
@@ -582,21 +576,24 @@ type codeBlockMatch struct {
 }
 
 func extractCodeBlocks(text string) codeBlockMatch {
-	matches := reCodeBlock.FindAllStringSubmatch(text, -1)
-
-	codes := make([]string, 0, len(matches))
-	for _, match := range matches {
-		codes = append(codes, match[1])
+	matches := reCodeBlock.FindAllStringSubmatchIndex(text, -1)
+	if len(matches) == 0 {
+		return codeBlockMatch{text: text, codes: nil}
 	}
 
-	i := 0
-	text = reCodeBlock.ReplaceAllStringFunc(text, func(m string) string {
-		placeholder := fmt.Sprintf("\x00CB%d\x00", i)
-		i++
-		return placeholder
-	})
+	codes := make([]string, 0, len(matches))
+	var sb strings.Builder
+	lastEnd := 0
 
-	return codeBlockMatch{text: text, codes: codes}
+	for i, match := range matches {
+		sb.WriteString(text[lastEnd:match[0]])
+		sb.WriteString(fmt.Sprintf("\x00CB%d\x00", i))
+		codes = append(codes, text[match[2]:match[3]])
+		lastEnd = match[1]
+	}
+	sb.WriteString(text[lastEnd:])
+
+	return codeBlockMatch{text: sb.String(), codes: codes}
 }
 
 type inlineCodeMatch struct {
@@ -605,21 +602,24 @@ type inlineCodeMatch struct {
 }
 
 func extractInlineCodes(text string) inlineCodeMatch {
-	matches := reInlineCode.FindAllStringSubmatch(text, -1)
-
-	codes := make([]string, 0, len(matches))
-	for _, match := range matches {
-		codes = append(codes, match[1])
+	matches := reInlineCode.FindAllStringSubmatchIndex(text, -1)
+	if len(matches) == 0 {
+		return inlineCodeMatch{text: text, codes: nil}
 	}
 
-	i := 0
-	text = reInlineCode.ReplaceAllStringFunc(text, func(m string) string {
-		placeholder := fmt.Sprintf("\x00IC%d\x00", i)
-		i++
-		return placeholder
-	})
+	codes := make([]string, 0, len(matches))
+	var sb strings.Builder
+	lastEnd := 0
 
-	return inlineCodeMatch{text: text, codes: codes}
+	for i, match := range matches {
+		sb.WriteString(text[lastEnd:match[0]])
+		sb.WriteString(fmt.Sprintf("\x00IC%d\x00", i))
+		codes = append(codes, text[match[2]:match[3]])
+		lastEnd = match[1]
+	}
+	sb.WriteString(text[lastEnd:])
+
+	return inlineCodeMatch{text: sb.String(), codes: codes}
 }
 
 var htmlEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
