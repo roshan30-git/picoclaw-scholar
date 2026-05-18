@@ -60,25 +60,43 @@ func newRateLimiter(rpm int) *rateLimiter {
 	return &rateLimiter{tokens: rpm, maxTok: rpm, lastFil: time.Now()}
 }
 
-// Wait blocks until a token is available.
-func (r *rateLimiter) Wait() {
+// Wait blocks until a token is available or the context is canceled.
+func (r *rateLimiter) Wait(ctx context.Context) error {
+	refillDuration := time.Duration(float64(time.Minute) / float64(r.maxTok))
+
 	for {
 		r.mu.Lock()
 		now := time.Now()
-		// Refill at 1 token per (60/maxTok) seconds
+
+		// Refill tokens based on elapsed time since last refill
 		elapsed := now.Sub(r.lastFil)
-		refill := int(elapsed.Seconds() / (60.0 / float64(r.maxTok)))
-		if refill > 0 {
+		if refill := int(elapsed / refillDuration); refill > 0 {
 			r.tokens = min(r.maxTok, r.tokens+refill)
-			r.lastFil = now
+			// Advance lastFil by the exact time of the refilled tokens to preserve fractional time
+			r.lastFil = r.lastFil.Add(time.Duration(refill) * refillDuration)
 		}
+
+		// Fast path: if we have tokens, take one and return
 		if r.tokens > 0 {
 			r.tokens--
 			r.mu.Unlock()
-			return
+			return nil
 		}
+
+		// If out of tokens, calculate time until next token
+		nextTokenTime := r.lastFil.Add(refillDuration)
+		waitTime := nextTokenTime.Sub(now)
 		r.mu.Unlock()
-		time.Sleep(500 * time.Millisecond)
+
+		// Wait for the next token or context cancellation
+		timer := time.NewTimer(waitTime)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+			// Woke up after waitTime, loop again to claim the token
+		}
 	}
 }
 
@@ -158,13 +176,21 @@ func (g *GeminiProvider) Chat(
 	}
 
 	// Apply rate-limit token bucket (api-patterns)
-	g.limiter.Wait()
+	if err := g.limiter.Wait(ctx); err != nil {
+		return nil, fmt.Errorf("gemini rate limiter context canceled: %w", err)
+	}
 
 	// Retry once on 429 (rate limit exceeded from service side)
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
 		if attempt > 0 {
-			time.Sleep(10 * time.Second)
+			timer := time.NewTimer(10 * time.Second)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return nil, fmt.Errorf("gemini retry context canceled: %w", ctx.Err())
+			case <-timer.C:
+			}
 		}
 
 		resp, err := g.client.Models.GenerateContent(ctx, model, contents, cfg)
