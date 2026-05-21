@@ -60,25 +60,50 @@ func newRateLimiter(rpm int) *rateLimiter {
 	return &rateLimiter{tokens: rpm, maxTok: rpm, lastFil: time.Now()}
 }
 
-// Wait blocks until a token is available.
-func (r *rateLimiter) Wait() {
+// Wait blocks until a token is available or the context is cancelled.
+func (r *rateLimiter) Wait(ctx context.Context) error {
 	for {
+		// First check if context is already done
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
 		r.mu.Lock()
 		now := time.Now()
 		// Refill at 1 token per (60/maxTok) seconds
+		refillPeriod := 60.0 / float64(r.maxTok)
 		elapsed := now.Sub(r.lastFil)
-		refill := int(elapsed.Seconds() / (60.0 / float64(r.maxTok)))
+		refill := int(elapsed.Seconds() / refillPeriod)
+
 		if refill > 0 {
 			r.tokens = min(r.maxTok, r.tokens+refill)
 			r.lastFil = now
 		}
+
 		if r.tokens > 0 {
 			r.tokens--
 			r.mu.Unlock()
-			return
+			return nil
+		}
+
+		// Calculate exact time until next token
+		timeUntilNextToken := time.Duration(refillPeriod*float64(time.Second)) - elapsed
+
+		// If somehow negative or zero, just use a small sleep
+		if timeUntilNextToken <= 0 {
+			timeUntilNextToken = 10 * time.Millisecond
 		}
 		r.mu.Unlock()
-		time.Sleep(500 * time.Millisecond)
+
+		// Wait for either the next token or context cancellation
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(timeUntilNextToken):
+			// loop again
+		}
 	}
 }
 
@@ -158,13 +183,19 @@ func (g *GeminiProvider) Chat(
 	}
 
 	// Apply rate-limit token bucket (api-patterns)
-	g.limiter.Wait()
+	if err := g.limiter.Wait(ctx); err != nil {
+		return nil, fmt.Errorf("rate limiter wait: %w", err)
+	}
 
 	// Retry once on 429 (rate limit exceeded from service side)
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
 		if attempt > 0 {
-			time.Sleep(10 * time.Second)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(10 * time.Second):
+			}
 		}
 
 		resp, err := g.client.Models.GenerateContent(ctx, model, contents, cfg)
