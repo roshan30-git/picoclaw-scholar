@@ -60,49 +60,42 @@ func newRateLimiter(rpm int) *rateLimiter {
 	return &rateLimiter{tokens: rpm, maxTok: rpm, lastFil: time.Now()}
 }
 
-// Wait blocks until a token is available or the context is cancelled.
+// Wait blocks until a token is available or the context is canceled.
 func (r *rateLimiter) Wait(ctx context.Context) error {
-	for {
-		// First check if context is already done
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
+	refillDuration := time.Duration(float64(time.Minute) / float64(r.maxTok))
 
+	for {
 		r.mu.Lock()
 		now := time.Now()
-		// Refill at 1 token per (60/maxTok) seconds
-		refillPeriod := 60.0 / float64(r.maxTok)
-		elapsed := now.Sub(r.lastFil)
-		refill := int(elapsed.Seconds() / refillPeriod)
 
-		if refill > 0 {
+		// Refill tokens based on elapsed time since last refill
+		elapsed := now.Sub(r.lastFil)
+		if refill := int(elapsed / refillDuration); refill > 0 {
 			r.tokens = min(r.maxTok, r.tokens+refill)
-			r.lastFil = now
+			// Advance lastFil by the exact time of the refilled tokens to preserve fractional time
+			r.lastFil = r.lastFil.Add(time.Duration(refill) * refillDuration)
 		}
 
+		// Fast path: if we have tokens, take one and return
 		if r.tokens > 0 {
 			r.tokens--
 			r.mu.Unlock()
 			return nil
 		}
 
-		// Calculate exact time until next token
-		timeUntilNextToken := time.Duration(refillPeriod*float64(time.Second)) - elapsed
-
-		// If somehow negative or zero, just use a small sleep
-		if timeUntilNextToken <= 0 {
-			timeUntilNextToken = 10 * time.Millisecond
-		}
+		// If out of tokens, calculate time until next token
+		nextTokenTime := r.lastFil.Add(refillDuration)
+		waitTime := nextTokenTime.Sub(now)
 		r.mu.Unlock()
 
-		// Wait for either the next token or context cancellation
+		// Wait for the next token or context cancellation
+		timer := time.NewTimer(waitTime)
 		select {
 		case <-ctx.Done():
+			timer.Stop()
 			return ctx.Err()
-		case <-time.After(timeUntilNextToken):
-			// loop again
+		case <-timer.C:
+			// Woke up after waitTime, loop again to claim the token
 		}
 	}
 }
@@ -184,17 +177,19 @@ func (g *GeminiProvider) Chat(
 
 	// Apply rate-limit token bucket (api-patterns)
 	if err := g.limiter.Wait(ctx); err != nil {
-		return nil, fmt.Errorf("rate limiter wait: %w", err)
+		return nil, fmt.Errorf("gemini rate limiter context canceled: %w", err)
 	}
 
 	// Retry once on 429 (rate limit exceeded from service side)
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
 		if attempt > 0 {
+			timer := time.NewTimer(10 * time.Second)
 			select {
 			case <-ctx.Done():
-				return nil, ctx.Err()
-			case <-time.After(10 * time.Second):
+				timer.Stop()
+				return nil, fmt.Errorf("gemini retry context canceled: %w", ctx.Err())
+			case <-timer.C:
 			}
 		}
 
