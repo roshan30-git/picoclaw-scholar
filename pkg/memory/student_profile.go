@@ -2,8 +2,8 @@ package memory
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
+	"strings"
 )
 
 // StudentProfile is a persistent, personalized learning model for the student.
@@ -26,11 +26,6 @@ func NewProfileManager(db *sql.DB) *ProfileManager {
 
 // GetProfile returns the current student profile, creating a default if none exists.
 func (m *ProfileManager) GetProfile() *StudentProfile {
-	row := m.db.QueryRow(`
-		SELECT topic, avg_score, pace_label FROM learning_profile
-		ORDER BY avg_score ASC LIMIT 10
-	`)
-
 	// Build a profile from the learning_profile table
 	profile := &StudentProfile{
 		Pace:        "medium",
@@ -43,7 +38,6 @@ func (m *ProfileManager) GetProfile() *StudentProfile {
 		return profile
 	}
 	defer rows.Close()
-	_ = row // avoid unused var
 
 	for rows.Next() {
 		var topic, pace string
@@ -87,24 +81,25 @@ func (p *StudentProfile) FormatForPrompt() string {
 		return ""
 	}
 
-	blob, _ := json.Marshal(p)
-	_ = blob
-
-	result := "🎓 STUDENT LEARNING PROFILE:\n"
-	result += "• Pace: " + p.Pace + "\n"
-	result += "• Style: " + p.Style + "\n"
+	var sb strings.Builder
+	sb.WriteString("🎓 STUDENT LEARNING PROFILE:\n")
+	sb.WriteString("• Pace: ")
+	sb.WriteString(p.Pace)
+	sb.WriteString("\n• Style: ")
+	sb.WriteString(p.Style)
+	sb.WriteString("\n")
 
 	if len(p.WeakTopics) > 0 {
-		result += "• Weak topics (prioritize these): "
+		sb.WriteString("• Weak topics (prioritize these): ")
 		for i, t := range p.WeakTopics {
 			if i > 0 {
-				result += ", "
+				sb.WriteString(", ")
 			}
-			result += t
+			sb.WriteString(t)
 		}
-		result += "\n"
+		sb.WriteString("\n")
 	}
 
-	result += "Adapt your explanation pace, depth, and examples to match this profile.\n"
-	return result
+	sb.WriteString("Adapt your explanation pace, depth, and examples to match this profile.\n")
+	return sb.String()
 }
