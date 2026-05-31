@@ -10,3 +10,6 @@
 ## 2025-05-18 - Form Input Hint Accessibility
 **Learning:** Using `aria-describedby` to explicitly link helper/hint texts to form `<input>` fields ensures that screen readers announce this supplementary information to users when the input receives focus. Visual proximity alone is insufficient for accessibility.
 **Action:** When creating or modifying forms with helper text or hints, always assign a unique `id` to the helper text element and use `aria-describedby="[helper-id]"` on the corresponding `<input>`. Use systematic IDs like `hint-FIELD_NAME` to keep associations clear and maintainable.
+## 2025-05-19 - Keyboard Accessibility for CSS Links
+**Learning:** When using custom CSS templates (like in blog articles) or utility frameworks, `<a>` tags might lack distinct focus rings for keyboard navigation.
+**Action:** Explicitly define `a:focus-visible` styles with a clear outline or box-shadow (e.g., `box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--teal);`) to ensure keyboard accessibility without affecting mouse hover states.
