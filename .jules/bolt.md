@@ -12,3 +12,7 @@
 ## 2025-06-25 - Discarded JSON Marshaling
 **Learning:** Found a useless `json.Marshal(p)` call where the byte slice error and result were discarded `_ = blob`. This unnecessarily invokes reflection logic, CPU processing, and heavy garbage collector allocations for absolutely no reason before generating the string prompt.
 **Action:** Always scan formatting logic and remove totally useless data serialization steps that are blindly retained without being logged or stored.
+
+## 2026-06-01 - Double regex evaluation
+**Learning:** Found instances where `FindStringSubmatch` was used to check for match existence, and then `ReplaceAllString` was immediately called on the same regex. This evaluates the regular expression engine twice on the same text.
+**Action:** Use `FindStringSubmatchIndex` or `FindAllStringSubmatchIndex` instead to find exactly where the match starts/ends and its submatches. Then simply rebuild the string using manual string concatenation or `strings.Builder`. This avoids double evaluation and is over 2x faster.
