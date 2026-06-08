@@ -187,7 +187,7 @@ const setupHTML = `
 <body>
     <div class="container">
         <div class="glass-card">
-            <div class="logo">🦞</div>
+            <div aria-hidden="true" class="logo">🦞</div>
             <h1>StudyClaw Setup</h1>
             
             <div class="section-title">Step 1: Connect Accounts</div>
@@ -197,7 +197,7 @@ const setupHTML = `
                     Google Drive
                 </a>
                 <a href="/auth/chatgpt" class="connect-btn btn-chatgpt">
-                    <span>✨</span>
+                    <span aria-hidden="true">✨</span>
                     ChatGPT Pro
                 </a>
             </div>

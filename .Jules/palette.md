@@ -13,3 +13,6 @@
 ## 2025-05-19 - Keyboard Accessibility for CSS Links
 **Learning:** When using custom CSS templates (like in blog articles) or utility frameworks, `<a>` tags might lack distinct focus rings for keyboard navigation.
 **Action:** Explicitly define `a:focus-visible` styles with a clear outline or box-shadow (e.g., `box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--teal);`) to ensure keyboard accessibility without affecting mouse hover states.
+## 2025-05-20 - Accessibility for Purely Decorative Icons
+**Learning:** Using modern icon fonts (like Material Symbols) or decorative emojis injects visual content that screen readers often read aloud as confusing or unrelated text (e.g., reading "terminal" or "bolt" in the middle of a sentence).
+**Action:** Always add `aria-hidden="true"` to purely decorative icon elements (like `<span class="material-symbols-outlined">`) or decorative emojis. This ensures screen readers skip over the visual flair and focus on the meaningful content or proper ARIA labels of interactive elements.
