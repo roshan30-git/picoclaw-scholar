@@ -553,18 +553,23 @@ func markdownToTelegramHTML(text string) string {
 
 	text = reListItem.ReplaceAllString(text, "• ")
 
+	// Optimization: Batch all string replacements into a single replacer
+	// to avoid O(N) string re-allocations where N is the number of code blocks.
+	var replacements []string
+
 	for i, code := range inlineCodes.codes {
 		escaped := escapeHTML(code)
-		text = strings.ReplaceAll(text, fmt.Sprintf("\x00IC%d\x00", i), fmt.Sprintf("<code>%s</code>", escaped))
+		replacements = append(replacements, fmt.Sprintf("\x00IC%d\x00", i), fmt.Sprintf("<code>%s</code>", escaped))
 	}
 
 	for i, code := range codeBlocks.codes {
 		escaped := escapeHTML(code)
-		text = strings.ReplaceAll(
-			text,
-			fmt.Sprintf("\x00CB%d\x00", i),
-			fmt.Sprintf("<pre><code>%s</code></pre>", escaped),
-		)
+		replacements = append(replacements, fmt.Sprintf("\x00CB%d\x00", i), fmt.Sprintf("<pre><code>%s</code></pre>", escaped))
+	}
+
+	if len(replacements) > 0 {
+		replacer := strings.NewReplacer(replacements...)
+		text = replacer.Replace(text)
 	}
 
 	return text

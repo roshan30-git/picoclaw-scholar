@@ -16,3 +16,7 @@
 ## 2026-06-01 - Double regex evaluation
 **Learning:** Found instances where `FindStringSubmatch` was used to check for match existence, and then `ReplaceAllString` was immediately called on the same regex. This evaluates the regular expression engine twice on the same text.
 **Action:** Use `FindStringSubmatchIndex` or `FindAllStringSubmatchIndex` instead to find exactly where the match starts/ends and its submatches. Then simply rebuild the string using manual string concatenation or `strings.Builder`. This avoids double evaluation and is over 2x faster.
+
+## 2026-06-01 - Sequential `strings.ReplaceAll` Allocations
+**Learning:** Found multiple instances where `strings.ReplaceAll` was called iteratively inside loops to replace varying placeholders (like code block markers) in a large string. Each iteration reallocates the entire string.
+**Action:** For replacing multiple distinct sets of placeholders, build a slice of replacement pairs `[]string{old1, new1, old2, new2}` and execute them simultaneously using a single `strings.NewReplacer(...).Replace(text)`. This is much faster and completely avoids O(N) full string copying.
