@@ -187,7 +187,7 @@ const setupHTML = `
 <body>
     <div class="container">
         <div class="glass-card">
-            <div class="logo">🦞</div>
+            <div class="logo" aria-hidden="true">🦞</div>
             <h1>StudyClaw Setup</h1>
             
             <div class="section-title">Step 1: Connect Accounts</div>
@@ -197,7 +197,7 @@ const setupHTML = `
                     Google Drive
                 </a>
                 <a href="/auth/chatgpt" class="connect-btn btn-chatgpt">
-                    <span>✨</span>
+                    <span aria-hidden="true">✨</span>
                     ChatGPT Pro
                 </a>
             </div>
@@ -241,7 +241,7 @@ const successHTML = `
     </style>
 </head>
 <body>
-    <div class="success-logo">✅</div>
+    <div class="success-logo" aria-hidden="true">✅</div>
     <h1>Setup Complete!</h1>
     <p>StudyClaw is now fully configured and launching.</p>
     <p>You can close this tab and return to your terminal.</p>
