@@ -13,3 +13,6 @@
 ## 2025-05-19 - Keyboard Accessibility for CSS Links
 **Learning:** When using custom CSS templates (like in blog articles) or utility frameworks, `<a>` tags might lack distinct focus rings for keyboard navigation.
 **Action:** Explicitly define `a:focus-visible` styles with a clear outline or box-shadow (e.g., `box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--teal);`) to ensure keyboard accessibility without affecting mouse hover states.
+## 2025-06-29 - Accessibility for Scrollable Regions
+**Learning:** Horizontally scrollable containers (using `overflow-x-auto` or `overflow-auto`, common for tables and code blocks) are inaccessible to keyboard users unless they are explicitly focusable. A screen reader also needs context on what the region contains.
+**Action:** Always add `tabindex="0"`, a `role="region"`, and an appropriate `aria-label` to containers that use overflow for scrolling. Ensure they also have clear focus styling (e.g., `focus:outline-none focus-visible:ring-2` for Tailwind or custom `:focus-visible` CSS) so the focus indicator is visible without breaking mouse interaction.
