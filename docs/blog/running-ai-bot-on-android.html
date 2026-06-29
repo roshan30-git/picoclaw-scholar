@@ -138,6 +138,12 @@
             line-height: 1.6;
         }
 
+        pre:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px #0D1117, 0 0 0 4px #00BFA5;
+            border-radius: 4px;
+        }
+
         code {
             background: var(--bg2);
             border: 1px solid var(--border);
@@ -188,35 +194,35 @@
         <p>Do <strong>not</strong> install Termux from the Play Store — that version is outdated. Instead, download from
             <a href="https://f-droid.org/packages/com.termux/" target="_blank">F-Droid</a>. Once installed, open it and
             update the package list:</p>
-        <pre>pkg update && pkg upgrade -y</pre>
+        <pre tabindex="0" role="region" aria-label="Code snippet">pkg update && pkg upgrade -y</pre>
 
         <h2>Step 2: Install Go, Git, and Build Tools</h2>
-        <pre>pkg install golang git clang make -y</pre>
+        <pre tabindex="0" role="region" aria-label="Code snippet">pkg install golang git clang make -y</pre>
         <p>Verify Go is installed correctly:</p>
-        <pre>go version
+        <pre tabindex="0" role="region" aria-label="Code snippet">go version
 # Expected: go version go1.22.x linux/arm64</pre>
 
         <h2>Step 3: Clone StudyClaw</h2>
-        <pre>git clone https://github.com/roshan30-git/picoclaw-scholar.git
+        <pre tabindex="0" role="region" aria-label="Code snippet">git clone https://github.com/roshan30-git/picoclaw-scholar.git
 cd picoclaw-scholar
 go mod tidy</pre>
 
         <h2>Step 4: Get Your Free Gemini API Key</h2>
         <p>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> and create a
             free API key. No credit card needed. Then set it in Termux:</p>
-        <pre>export GEMINI_API_KEY="AIzaSy_your_key_here"</pre>
+        <pre tabindex="0" role="region" aria-label="Code snippet">export GEMINI_API_KEY="AIzaSy_your_key_here"</pre>
         <div class="callout">💡 Add this to your <code>~/.bashrc</code> or <code>~/.profile</code> so it persists across
             sessions: <code>echo 'export GEMINI_API_KEY="..."' >> ~/.bashrc</code></div>
 
         <h2>Step 5: Run the Bot and Scan QR</h2>
-        <pre>go run cmd/main.go</pre>
+        <pre tabindex="0" role="region" aria-label="Code snippet">go run cmd/main.go</pre>
         <p>A QR code will appear as ASCII art in your Termux terminal. Open WhatsApp on another device → Linked Devices
             → Link a Device → Scan the code. Done!</p>
 
         <h2>Step 6: Keep It Running 24/7 with nohup</h2>
         <p>By default, Termux processes stop when you close the app. To run the bot in the background continuously, use
             <code>nohup</code>:</p>
-        <pre>nohup go run cmd/main.go > studyclaw.log 2>&1 &
+        <pre tabindex="0" role="region" aria-label="Code snippet">nohup go run cmd/main.go > studyclaw.log 2>&1 &
 echo "Bot started. PID: $!"</pre>
         <p>To check logs: <code>tail -f studyclaw.log</code></p>
         <p>To stop the bot: <code>pkill -f "studyclaw"</code></p>
